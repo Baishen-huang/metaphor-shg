@@ -1,0 +1,52 @@
+{
+  "spectral": {
+    "doc_project": {
+      "num_nodes": 61,
+      "num_hyperedges": 30,
+      "isolated_nodes": 0,
+      "S_rowsum_min": 0.9999999999999999,
+      "S_rowsum_max": 1.0,
+      "S_rowsum_max_live": 1.0,
+      "S_rowsum_min_live": 0.9999999999999999,
+      "S_rowsum_exact_one_live": true,
+      "S_rho": 1.0000000000000002,
+      "M_rowsum_max_live": 1.0000000000000002,
+      "M_rowsum_min_live": 0.9999999999999998,
+      "M_rho": 1.0000000000000002,
+      "M_sym": false,
+      "num_components": 5
+    },
+    "doc_relationship": {
+      "num_nodes": 31,
+      "num_hyperedges": 17,
+      "isolated_nodes": 0,
+      "S_rowsum_min": 0.9999999999999999,
+      "S_rowsum_max": 1.0,
+      "S_rowsum_max_live": 1.0,
+      "S_rowsum_min_live": 0.9999999999999999,
+      "S_rowsum_exact_one_live": true,
+      "S_rho": 1.0000000000000024,
+      "M_rowsum_max_live": 1.0,
+      "M_rowsum_min_live": 0.9999999999999998,
+      "M_rho": 1.000000000000001,
+      "M_sym": false,
+      "num_components": 3
+    }
+  },
+  "undriven_convergence_500": {
+    "doc_project": {
+      "within_cos_mean": 0.9999999940074278,
+      "n_pairs": 372,
+      "max_unit_dev": 7.590736670581855e-05
+    },
+    "doc_relationship": {
+      "within_cos_mean": 1.0,
+      "n_pairs": 155,
+      "max_unit_dev": 6.106226635438361e-16
+    }
+  },
+  "driven_source_identity": {
+    "doc_project": 0.19931344662518372,
+    "doc_relationship": 0.22596824024541384
+  }
+}

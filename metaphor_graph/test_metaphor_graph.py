@@ -1295,6 +1295,194 @@ class TestNeo4jStore(unittest.TestCase):
             server.shutdown()
 
 
+class TestHGNDriven(unittest.TestCase):
+    """驱动/源项版 HGNN（α）与严格次随机阻尼（ε）。
+
+    背景：S 行和恰为 1（行随机），无源项迭代 X ← M X 收敛到连通分量的
+    平稳分布 → 同分量节点向量趋同 → metaphor_coherence 退化为「同分量」
+    指示。加源项 X ← (1-α)X0 + α·M·X 后不动点保留源身份，退化被阻止。
+    """
+
+    def setUp(self):
+        self.shg = MetaphorSHGBuilder().build(CHUNKS, doc_id=DOC_ID)
+
+    # ---- 默认行为不回归 ----
+    def test_default_is_undriven_and_unchanged(self):
+        """alpha=1.0 必须与历史无源项实现 X ← M·X **逐位相同**。"""
+        import numpy as np
+        a = MetaphorHGNN(self.shg, layers=2).forward()
+        b = MetaphorHGNN(self.shg, layers=2, alpha=1.0).forward()
+        c = MetaphorHGNN(self.shg, layers=2, alpha=1.0, leak=0.0).forward()
+        self.assertTrue(np.array_equal(a, b))
+        self.assertTrue(np.array_equal(a, c))
+
+    def test_alpha_one_equals_matrix_power(self):
+        """alpha=1 时 H 应等于 M^layers · X0（用稠密算子交叉验证）。"""
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=2, alpha=1.0)
+        H = g.forward()
+        M = g.propagation_matrix()
+        ref = M @ M @ g.X
+        self.assertTrue(np.allclose(H, ref, atol=1e-10))
+
+    def test_propagation_matrix_matches_conv(self):
+        """propagation_matrix() 必须与 _conv 的循环实现逐元素一致。"""
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=1, alpha=1.0)
+        M = g.propagation_matrix()
+        self.assertTrue(np.allclose(M @ g.X, g._conv(g.X), atol=1e-10))
+
+    def test_alpha_zero_returns_source(self):
+        """alpha=0 → 不传播，H == X0。"""
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=2, alpha=0.0)
+        self.assertTrue(np.array_equal(g.forward(), g.X))
+
+    # ---- 谱 / 行和性质 ----
+    def test_S_rowsum_is_exactly_one(self):
+        """S 行和恰为 1（行随机）—— 这是「无源项必然坍缩」的根源。"""
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=1)
+        M = g.propagation_matrix()
+        S = 2.0 * M - np.eye(g.num_nodes)      # ε=0 时 M = 0.5(I+S)
+        live = np.abs(S).sum(axis=1) > 0
+        self.assertTrue(np.allclose(S[live].sum(axis=1), 1.0, atol=1e-12))
+
+    def test_spectral_radius_S_is_one(self):
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=1)
+        S = 2.0 * g.propagation_matrix() - np.eye(g.num_nodes)
+        rho = float(np.max(np.abs(np.linalg.eigvals(S))))
+        self.assertAlmostEqual(rho, 1.0, places=9)
+
+    def test_leak_makes_rowsum_strictly_substochastic(self):
+        """ε>0 → M 行和 = 1-ε/2 < 1 严格成立，ρ(M) ≤ 1-ε/2。"""
+        import numpy as np
+        for eps in (0.01, 0.05, 0.1, 0.5):
+            g = MetaphorHGNN(self.shg, layers=1, leak=eps)
+            M = g.propagation_matrix()
+            live = np.abs(M).sum(axis=1) > 0
+            rs = M[live].sum(axis=1)
+            self.assertTrue(np.all(rs < 1.0), f"ε={eps} 行和未严格小于 1")
+            self.assertTrue(np.allclose(rs, 1.0 - eps / 2.0, atol=1e-12))
+            rho = float(np.max(np.abs(np.linalg.eigvals(M))))
+            self.assertLessEqual(rho, 1.0 - eps / 2.0 + 1e-9)
+
+    # ---- 源项确实阻止坍缩 ----
+    def test_source_term_prevents_collapse(self):
+        """无源项深层迭代坍缩到同分量同向量；源项版不坍缩。
+
+        只比较**同连通分量内**的节点对（跨分量本来就该不同）。
+        """
+        import numpy as np
+
+        def components(g):
+            parent = list(range(g.num_nodes))
+
+            def find(x):
+                while parent[x] != x:
+                    parent[x] = parent[parent[x]]
+                    x = parent[x]
+                return x
+
+            for members in g.he_members:
+                if not members:
+                    continue
+                r = find(members[0])
+                for m in members[1:]:
+                    rm = find(m)
+                    if rm != r:
+                        parent[rm] = r
+            out = {}
+            for i in range(g.num_nodes):
+                out.setdefault(find(i), []).append(i)
+            return list(out.values())
+
+        def within_cos_mean(H, g):
+            vals = []
+            for comp in components(g):
+                for x in range(len(comp)):
+                    for y in range(x + 1, len(comp)):
+                        va, vb = H[comp[x]], H[comp[y]]
+                        na, nb = np.linalg.norm(va), np.linalg.norm(vb)
+                        if na < 1e-12 or nb < 1e-12:
+                            continue
+                        vals.append(float(np.dot(va, vb) / (na * nb)))
+            return float(np.mean(vals))
+
+        g_u = MetaphorHGNN(self.shg, layers=200, alpha=1.0)
+        Hu = g_u.forward()
+        g_d = MetaphorHGNN(self.shg, layers=200, alpha=0.5)
+        Hd = g_d.forward()
+        cos_u, cos_d = within_cos_mean(Hu, g_u), within_cos_mean(Hd, g_d)
+        # 无源项深层迭代：同分量内已完全坍缩（余弦 = 1）
+        self.assertGreater(cos_u, 0.999)
+        # 源项版显著保留个体差异
+        self.assertLess(cos_d, cos_u)
+        self.assertLess(cos_d, 0.8)
+
+    def test_driven_fixed_point_matches_iteration(self):
+        """α<1 时长迭代应收敛到解析不动点 u* = (1-α)(I-αM)^{-1}X0。"""
+        import numpy as np
+        alpha = 0.5
+        g = MetaphorHGNN(self.shg, layers=400, alpha=alpha)
+        H = g.forward()
+        M = g.propagation_matrix()
+        A = np.eye(g.num_nodes) - alpha * M
+        fp = (1.0 - alpha) * np.linalg.solve(A, g.X)
+        scale = np.max(np.abs(fp)) + 1e-12
+        self.assertLess(float(np.max(np.abs(H - fp))) / scale, 1e-6)
+
+    def test_alpha_one_has_no_fixed_point(self):
+        """α=1 时 I-αM 奇异（ρ(M)=1）→ 无唯一不动点，这正是坍缩的数学根源。"""
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=1, alpha=1.0)
+        M = g.propagation_matrix()
+        cond = float(np.linalg.cond(np.eye(g.num_nodes) - M))
+        self.assertGreater(cond, 1e10)
+
+    # ---- 参数校验 ----
+    def test_invalid_params_raise(self):
+        with self.assertRaises(ValueError):
+            MetaphorHGNN(self.shg, layers=2, leak=1.0)
+        with self.assertRaises(ValueError):
+            MetaphorHGNN(self.shg, layers=2, leak=-0.1)
+        with self.assertRaises(ValueError):
+            MetaphorHGNN(self.shg, layers=2, alpha=-0.1)
+        # α>1 且无阻尼 → 发散，必须拒绝
+        with self.assertRaises(ValueError):
+            MetaphorHGNN(self.shg, layers=2, alpha=1.5, leak=0.0)
+        # α>1 且阻尼不足（α(1-ε/2) = 1.5·0.75 = 1.125 ≥ 1）→ 也必须拒绝
+        with self.assertRaises(ValueError):
+            MetaphorHGNN(self.shg, layers=2, alpha=1.5, leak=0.5)
+        # α>1 但阻尼足够（α(1-ε/2) = 1.5·0.6 = 0.9 < 1）→ 允许
+        MetaphorHGNN(self.shg, layers=2, alpha=1.5, leak=0.8)
+
+    # ---- 下游 API 在驱动模式下仍然可用 ----
+    def test_downstream_apis_work_in_driven_mode(self):
+        import numpy as np
+        g = MetaphorHGNN(self.shg, layers=2, alpha=0.5, leak=0.1)
+        H = g.forward()
+        self.assertEqual(H.shape, (g.num_nodes, EMB_DIM))
+        c = g.metaphor_coherence("机器", "紧绷")
+        self.assertTrue(-1.0 - 1e-9 <= c <= 1.0 + 1e-9)
+        v = g.entity_vec("机器")
+        self.assertEqual(v.shape, (EMB_DIM,))
+        l1 = [e for e in self.shg.edges if not e.is_extended]
+        ranked = g.retrieve("发条", l1, k=3)
+        self.assertTrue(ranked)
+        self.assertEqual(ranked[0][0].__class__.__name__, "MetaphorHyperedge")
+
+    def test_cross_layer_flag_still_works_with_source_term(self):
+        import numpy as np
+        gf = MetaphorHGNN(self.shg, layers=2, cross_layer=False, alpha=0.5)
+        gf.forward()
+        g = MetaphorHGNN(self.shg, layers=2, cross_layer=True, alpha=0.5)
+        g.forward()
+        # 关掉跨层后超边数更少
+        self.assertLess(len(gf.he_members), len(g.he_members))
+
+
 class TestDeterministicIds(unittest.TestCase):
     """边/扩展边 id 必须跨构建可复现 —— 金标缓存与本体重放都跨进程引用 id。
     曾经 uuid4 随机 id 导致 judge 缓存重放时边对不上号（全零金标，实测踩坑）。"""
