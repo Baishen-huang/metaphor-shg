@@ -25,3 +25,6 @@ Thumbs.db
 # ---- 实验临时产物（结果文件另行提交）----
 experiments/**/_tmp/
 experiments/**/*.log.tmp
+
+# ---- 并行实验的 worktree（各自是独立检出，不嵌套入库）----
+.wt/
