@@ -1,0 +1,838 @@
+{
+  "frames": {
+    "F_ARG_WAR": {
+      "id": "F_ARG_WAR",
+      "name": "ARGUMENT_IS_WAR",
+      "mapping_type": "ARGUMENT_IS_WAR",
+      "source_domain": "战争",
+      "target_domain": "争论",
+      "ground": [
+        "对抗",
+        "胜负",
+        "进攻",
+        "防守",
+        "战略"
+      ],
+      "triggers": [
+        "开火",
+        "攻击",
+        "防守",
+        "攻势",
+        "战壕",
+        "击败",
+        "阵地",
+        "交锋"
+      ],
+      "source_type": "WAR"
+    },
+    "F_COMP_WAR": {
+      "id": "F_COMP_WAR",
+      "name": "COMPETITION_IS_WAR",
+      "mapping_type": "COMPETITION_IS_WAR",
+      "source_domain": "战争",
+      "target_domain": "商业竞争",
+      "ground": [
+        "对手",
+        "阵地",
+        "突围",
+        "卡位"
+      ],
+      "triggers": [
+        "商战",
+        "抢滩",
+        "攻城略地",
+        "护城河",
+        "突围"
+      ],
+      "source_type": "WAR"
+    },
+    "F_TIME_MONEY": {
+      "id": "F_TIME_MONEY",
+      "name": "TIME_IS_MONEY",
+      "mapping_type": "TIME_IS_MONEY",
+      "source_domain": "金钱",
+      "target_domain": "时间",
+      "ground": [
+        "稀缺",
+        "可花费",
+        "可浪费",
+        "有预算",
+        "可投资"
+      ],
+      "triggers": [
+        "花时间",
+        "浪费时间",
+        "时间预算",
+        "投入时间",
+        "省时间"
+      ],
+      "source_type": "FINANCIAL"
+    },
+    "F_EFFORT_CUR": {
+      "id": "F_EFFORT_CUR",
+      "name": "EFFORT_IS_CURRENCY",
+      "mapping_type": "EFFORT_IS_CURRENCY",
+      "source_domain": "货币",
+      "target_domain": "努力",
+      "ground": [
+        "成本",
+        "回报",
+        "投资",
+        "折旧"
+      ],
+      "triggers": [
+        "投入精力",
+        "付出代价",
+        "血本",
+        "回报"
+      ],
+      "source_type": "FINANCIAL"
+    },
+    "F_PROG_JOURNEY": {
+      "id": "F_PROG_JOURNEY",
+      "name": "PROGRESS_IS_JOURNEY",
+      "mapping_type": "PROGRESS_IS_JOURNEY",
+      "source_domain": "旅程",
+      "target_domain": "项目进展",
+      "ground": [
+        "起点",
+        "方向",
+        "障碍",
+        "里程碑",
+        "停滞"
+      ],
+      "triggers": [
+        "推进",
+        "前进",
+        "停滞",
+        "迈步",
+        "抵达",
+        "路途"
+      ],
+      "source_type": "MOTION"
+    },
+    "F_CHANGE_MOTION": {
+      "id": "F_CHANGE_MOTION",
+      "name": "CHANGE_IS_MOTION",
+      "mapping_type": "CHANGE_IS_MOTION",
+      "source_domain": "运动",
+      "target_domain": "变化",
+      "ground": [
+        "转向",
+        "加速",
+        "倒车",
+        "惯性"
+      ],
+      "triggers": [
+        "转向",
+        "提速",
+        "急刹",
+        "倒车"
+      ],
+      "source_type": "MOTION"
+    },
+    "F_LIFE_MACHINE": {
+      "id": "F_LIFE_MACHINE",
+      "name": "LIFE_IS_A_MACHINE",
+      "mapping_type": "LIFE_IS_A_MACHINE",
+      "source_domain": "机器",
+      "target_domain": "生活状态",
+      "ground": [
+        "紧绷",
+        "需要放松",
+        "机械重复",
+        "缺乏弹性"
+      ],
+      "triggers": [
+        "发条",
+        "拧紧",
+        "齿轮",
+        "上弦",
+        "机械"
+      ],
+      "source_type": "MACHINE"
+    },
+    "F_BODY_MACHINE": {
+      "id": "F_BODY_MACHINE",
+      "name": "BODY_IS_A_MACHINE",
+      "mapping_type": "BODY_IS_A_MACHINE",
+      "source_domain": "机器",
+      "target_domain": "身体",
+      "ground": [
+        "运转",
+        "零件",
+        "磨损",
+        "检修"
+      ],
+      "triggers": [
+        "零件",
+        "磨损",
+        "检修",
+        "运转"
+      ],
+      "source_type": "MACHINE"
+    },
+    "F_OBST_TERRAIN": {
+      "id": "F_OBST_TERRAIN",
+      "name": "OBSTACLE_IS_TERRAIN",
+      "mapping_type": "OBSTACLE_IS_TERRAIN",
+      "source_domain": "地形",
+      "target_domain": "项目困境",
+      "ground": [
+        "泥潭",
+        "深坑",
+        "陡坡",
+        "沼泽"
+      ],
+      "triggers": [
+        "泥潭",
+        "陷进",
+        "沼泽",
+        "深坑",
+        "泥沼"
+      ],
+      "source_type": "NATURAL_PHENOMENON"
+    },
+    "F_DIFF_TERRAIN": {
+      "id": "F_DIFF_TERRAIN",
+      "name": "DIFFICULTY_IS_TERRAIN",
+      "mapping_type": "DIFFICULTY_IS_TERRAIN",
+      "source_domain": "地形",
+      "target_domain": "困难",
+      "ground": [
+        "攀登",
+        "悬崖",
+        "陡坡"
+      ],
+      "triggers": [
+        "攀登",
+        "悬崖",
+        "陡坡"
+      ],
+      "source_type": "NATURAL_PHENOMENON"
+    },
+    "F_ANGER_HEAT": {
+      "id": "F_ANGER_HEAT",
+      "name": "ANGER_IS_HEAT",
+      "mapping_type": "ANGER_IS_HEAT",
+      "source_domain": "热",
+      "target_domain": "愤怒",
+      "ground": [
+        "升温",
+        "爆发",
+        "灼烧",
+        "沸腾"
+      ],
+      "triggers": [
+        "火大",
+        "怒火",
+        "爆发",
+        "升温",
+        "沸腾"
+      ],
+      "source_type": "BODY_SENSATION"
+    },
+    "F_AFF_WARM": {
+      "id": "F_AFF_WARM",
+      "name": "AFFECTION_IS_WARMTH",
+      "mapping_type": "AFFECTION_IS_WARMTH",
+      "source_domain": "温暖",
+      "target_domain": "喜爱",
+      "ground": [
+        "亲近",
+        "舒适",
+        "融化"
+      ],
+      "triggers": [
+        "暖心",
+        "温暖",
+        "融化",
+        "贴心"
+      ],
+      "source_type": "BODY_SENSATION"
+    },
+    "F_MIND_CONT": {
+      "id": "F_MIND_CONT",
+      "name": "MIND_IS_CONTAINER",
+      "mapping_type": "MIND_IS_CONTAINER",
+      "source_domain": "容器",
+      "target_domain": "心智",
+      "ground": [
+        "装满",
+        "溢出",
+        "封闭",
+        "空洞"
+      ],
+      "triggers": [
+        "装满",
+        "溢出",
+        "塞满",
+        "脑容量"
+      ],
+      "source_type": "CONTAINER"
+    },
+    "F_EMO_CONT": {
+      "id": "F_EMO_CONT",
+      "name": "EMOTION_IS_CONTAINER",
+      "mapping_type": "EMOTION_IS_CONTAINER",
+      "source_domain": "容器",
+      "target_domain": "情绪",
+      "ground": [
+        "积压",
+        "释放",
+        "压抑",
+        "满溢"
+      ],
+      "triggers": [
+        "积压",
+        "释放",
+        "压抑",
+        "满溢",
+        "装不下"
+      ],
+      "source_type": "CONTAINER"
+    },
+    "F_LIFE_JOURNEY": {
+      "id": "F_LIFE_JOURNEY",
+      "name": "LIFE IS A JOURNEY",
+      "mapping_type": "LIFE_IS_JOURNEY",
+      "source_domain": "旅程",
+      "target_domain": "生活",
+      "ground": [
+        "起点",
+        "方向",
+        "障碍",
+        "同行者",
+        "终点"
+      ],
+      "triggers": [
+        "人生旅程",
+        "迈步",
+        "走到",
+        "同行",
+        "拐弯",
+        "停滞不前",
+        "走到尽头"
+      ],
+      "source_type": "MOTION"
+    },
+    "F_LOVE_JOURNEY": {
+      "id": "F_LOVE_JOURNEY",
+      "name": "LOVE IS A JOURNEY",
+      "mapping_type": "LOVE_IS_JOURNEY",
+      "source_domain": "旅程",
+      "target_domain": "爱情",
+      "ground": [
+        "同行",
+        "波折",
+        "终点",
+        "迷路"
+      ],
+      "triggers": [
+        "携手",
+        "同行",
+        "走下去",
+        "婚姻旅程",
+        "走到尽头"
+      ],
+      "source_type": "MOTION"
+    },
+    "F_IDEAS_FOOD": {
+      "id": "F_IDEAS_FOOD",
+      "name": "IDEAS ARE FOOD",
+      "mapping_type": "IDEAS_ARE_FOOD",
+      "source_domain": "食物",
+      "target_domain": "想法",
+      "ground": [
+        "生熟",
+        "消化",
+        "营养",
+        "口味"
+      ],
+      "triggers": [
+        "半生不熟",
+        "消化",
+        "细品",
+        "精髓",
+        "食粮",
+        "大餐"
+      ],
+      "source_type": "PHYSICAL_OBJECT"
+    },
+    "F_THEORY_BUILDING": {
+      "id": "F_THEORY_BUILDING",
+      "name": "THEORIES ARE BUILDINGS",
+      "mapping_type": "THEORIES_ARE_BUILDINGS",
+      "source_domain": "建筑",
+      "target_domain": "理论",
+      "ground": [
+        "地基",
+        "框架",
+        "结构",
+        "倒塌"
+      ],
+      "triggers": [
+        "基础",
+        "框架",
+        "构建",
+        "支柱",
+        "坍塌",
+        "大厦",
+        "建筑"
+      ],
+      "source_type": "PHYSICAL_OBJECT"
+    },
+    "F_KNOWING_SEEING": {
+      "id": "F_KNOWING_SEEING",
+      "name": "KNOWING IS SEEING",
+      "mapping_type": "KNOWING_IS_SEEING",
+      "source_domain": "视觉",
+      "target_domain": "理解",
+      "ground": [
+        "清晰",
+        "视角",
+        "盲区",
+        "照亮"
+      ],
+      "triggers": [
+        "看清",
+        "视角",
+        "洞察",
+        "阐明",
+        "盲区",
+        "照亮"
+      ],
+      "source_type": "BODY_SENSATION"
+    },
+    "F_PURPOSE_DEST": {
+      "id": "F_PURPOSE_DEST",
+      "name": "PURPOSES ARE DESTINATIONS",
+      "mapping_type": "PURPOSES_ARE_DESTINATIONS",
+      "source_domain": "目的地",
+      "target_domain": "目标",
+      "ground": [
+        "到达",
+        "路线",
+        "偏离"
+      ],
+      "triggers": [
+        "达成",
+        "抵达",
+        "方向",
+        "偏离",
+        "路线图"
+      ],
+      "source_type": "MOTION"
+    },
+    "F_ORG_PLANT": {
+      "id": "F_ORG_PLANT",
+      "name": "SOCIAL ORGANIZATIONS ARE PLANTS",
+      "mapping_type": "ORG_ARE_PLANTS",
+      "source_domain": "植物",
+      "target_domain": "组织",
+      "ground": [
+        "根",
+        "枝",
+        "枯萎",
+        "繁茂"
+      ],
+      "triggers": [
+        "扎根",
+        "分支",
+        "枯萎",
+        "壮大",
+        "枝繁叶茂",
+        "根基"
+      ],
+      "source_type": "NATURAL_PHENOMENON"
+    },
+    "F_COMM_SENDING": {
+      "id": "F_COMM_SENDING",
+      "name": "COMMUNICATION IS SENDING",
+      "mapping_type": "COMM_IS_SENDING",
+      "source_domain": "物体传递",
+      "target_domain": "交流",
+      "ground": [
+        "传递",
+        "接收",
+        "丢失",
+        "包装"
+      ],
+      "triggers": [
+        "传达",
+        "接收",
+        "灌输",
+        "传递",
+        "转达"
+      ],
+      "source_type": "PHYSICAL_OBJECT"
+    },
+    "F_IMPORTANT_BIG": {
+      "id": "F_IMPORTANT_BIG",
+      "name": "IMPORTANT IS BIG",
+      "mapping_type": "IMPORTANT_IS_BIG",
+      "source_domain": "体量",
+      "target_domain": "重要性",
+      "ground": [
+        "大",
+        "重",
+        "中心"
+      ],
+      "triggers": [
+        "重大",
+        "核心",
+        "举足轻重",
+        "分量"
+      ],
+      "source_type": "PHYSICAL_OBJECT"
+    },
+    "F_VALENCE_VERTICAL": {
+      "id": "F_VALENCE_VERTICAL",
+      "name": "HAPPY IS UP / SAD IS DOWN",
+      "mapping_type": "VALENCE_IS_VERTICAL",
+      "source_domain": "上下",
+      "target_domain": "情绪效价",
+      "ground": [
+        "高",
+        "低",
+        "跌落"
+      ],
+      "triggers": [
+        "高涨",
+        "低落",
+        "跌入谷底",
+        "情绪高涨"
+      ],
+      "source_type": "MOTION"
+    },
+    "F_MORAL_PURITY": {
+      "id": "F_MORAL_PURITY",
+      "name": "MORALITY IS PURITY",
+      "mapping_type": "MORALITY_IS_PURITY",
+      "source_domain": "洁净",
+      "target_domain": "道德",
+      "ground": [
+        "纯净",
+        "污点",
+        "洗清"
+      ],
+      "triggers": [
+        "纯洁",
+        "污点",
+        "洗白",
+        "清白"
+      ],
+      "source_type": "MORAL"
+    }
+  },
+  "cascades": {
+    "C_ARG_WAR": {
+      "id": "C_ARG_WAR",
+      "name": "ARGUMENT_IS_WAR",
+      "member_frames": [
+        "F_ARG_WAR",
+        "F_COMP_WAR"
+      ],
+      "discourse_domains": [
+        "政治评论",
+        "商业竞争"
+      ],
+      "typical_triggers": [
+        "开火",
+        "商战",
+        "护城河",
+        "攻城略地"
+      ]
+    },
+    "C_TIME_MONEY": {
+      "id": "C_TIME_MONEY",
+      "name": "TIME_IS_MONEY",
+      "member_frames": [
+        "F_TIME_MONEY",
+        "F_EFFORT_CUR"
+      ],
+      "discourse_domains": [
+        "职场",
+        "财经"
+      ],
+      "typical_triggers": [
+        "花时间",
+        "投入精力",
+        "回报"
+      ]
+    },
+    "C_PROGRESS_JOURNEY": {
+      "id": "C_PROGRESS_JOURNEY",
+      "name": "PROGRESS_IS_JOURNEY",
+      "member_frames": [
+        "F_PROG_JOURNEY",
+        "F_CHANGE_MOTION",
+        "F_OBST_TERRAIN"
+      ],
+      "discourse_domains": [
+        "项目管理",
+        "政策"
+      ],
+      "typical_triggers": [
+        "推进",
+        "转向",
+        "停滞"
+      ]
+    },
+    "C_LIFE_MACHINE": {
+      "id": "C_LIFE_MACHINE",
+      "name": "LIFE_IS_A_MACHINE",
+      "member_frames": [
+        "F_LIFE_MACHINE",
+        "F_BODY_MACHINE"
+      ],
+      "discourse_domains": [
+        "生活",
+        "健康"
+      ],
+      "typical_triggers": [
+        "发条",
+        "机械",
+        "磨损"
+      ]
+    },
+    "C_DIFFICULTY_TERRAIN": {
+      "id": "C_DIFFICULTY_TERRAIN",
+      "name": "DIFFICULTY_IS_TERRAIN",
+      "member_frames": [
+        "F_DIFF_TERRAIN"
+      ],
+      "discourse_domains": [
+        "项目困境",
+        "创业"
+      ],
+      "typical_triggers": [
+        "泥潭",
+        "沼泽",
+        "悬崖"
+      ]
+    },
+    "C_ANGER_HEAT": {
+      "id": "C_ANGER_HEAT",
+      "name": "ANGER_IS_HEAT",
+      "member_frames": [
+        "F_ANGER_HEAT",
+        "F_AFF_WARM"
+      ],
+      "discourse_domains": [
+        "情绪",
+        "文学"
+      ],
+      "typical_triggers": [
+        "火大",
+        "暖心",
+        "沸腾"
+      ]
+    },
+    "C_MIND_CONTAINER": {
+      "id": "C_MIND_CONTAINER",
+      "name": "MIND_IS_CONTAINER",
+      "member_frames": [
+        "F_MIND_CONT",
+        "F_EMO_CONT"
+      ],
+      "discourse_domains": [
+        "心理",
+        "文学"
+      ],
+      "typical_triggers": [
+        "装满",
+        "积压",
+        "释放"
+      ]
+    },
+    "C_LIFE_JOURNEY": {
+      "id": "C_LIFE_JOURNEY",
+      "name": "LIFE IS A JOURNEY",
+      "member_frames": [
+        "F_LIFE_JOURNEY"
+      ],
+      "discourse_domains": [
+        "旅程→生活"
+      ],
+      "typical_triggers": [
+        "人生旅程",
+        "迈步",
+        "走到"
+      ]
+    },
+    "C_LOVE_JOURNEY": {
+      "id": "C_LOVE_JOURNEY",
+      "name": "LOVE IS A JOURNEY",
+      "member_frames": [
+        "F_LOVE_JOURNEY"
+      ],
+      "discourse_domains": [
+        "旅程→爱情"
+      ],
+      "typical_triggers": [
+        "携手",
+        "同行",
+        "走下去"
+      ]
+    },
+    "C_IDEAS_FOOD": {
+      "id": "C_IDEAS_FOOD",
+      "name": "IDEAS ARE FOOD",
+      "member_frames": [
+        "F_IDEAS_FOOD"
+      ],
+      "discourse_domains": [
+        "食物→想法"
+      ],
+      "typical_triggers": [
+        "半生不熟",
+        "消化",
+        "细品"
+      ]
+    },
+    "C_THEORY_BUILDING": {
+      "id": "C_THEORY_BUILDING",
+      "name": "THEORIES ARE BUILDINGS",
+      "member_frames": [
+        "F_THEORY_BUILDING"
+      ],
+      "discourse_domains": [
+        "建筑→理论"
+      ],
+      "typical_triggers": [
+        "基础",
+        "框架",
+        "构建"
+      ]
+    },
+    "C_KNOWING_SEEING": {
+      "id": "C_KNOWING_SEEING",
+      "name": "KNOWING IS SEEING",
+      "member_frames": [
+        "F_KNOWING_SEEING"
+      ],
+      "discourse_domains": [
+        "视觉→理解"
+      ],
+      "typical_triggers": [
+        "看清",
+        "视角",
+        "洞察"
+      ]
+    },
+    "C_PURPOSE_DEST": {
+      "id": "C_PURPOSE_DEST",
+      "name": "PURPOSES ARE DESTINATIONS",
+      "member_frames": [
+        "F_PURPOSE_DEST"
+      ],
+      "discourse_domains": [
+        "目的地→目标"
+      ],
+      "typical_triggers": [
+        "达成",
+        "抵达",
+        "方向"
+      ]
+    },
+    "C_ORG_PLANT": {
+      "id": "C_ORG_PLANT",
+      "name": "SOCIAL ORGANIZATIONS ARE PLANTS",
+      "member_frames": [
+        "F_ORG_PLANT"
+      ],
+      "discourse_domains": [
+        "植物→组织"
+      ],
+      "typical_triggers": [
+        "扎根",
+        "分支",
+        "枯萎"
+      ]
+    },
+    "C_COMM_SENDING": {
+      "id": "C_COMM_SENDING",
+      "name": "COMMUNICATION IS SENDING",
+      "member_frames": [
+        "F_COMM_SENDING"
+      ],
+      "discourse_domains": [
+        "物体传递→交流"
+      ],
+      "typical_triggers": [
+        "传达",
+        "接收",
+        "灌输"
+      ]
+    },
+    "C_IMPORTANT_BIG": {
+      "id": "C_IMPORTANT_BIG",
+      "name": "IMPORTANT IS BIG",
+      "member_frames": [
+        "F_IMPORTANT_BIG"
+      ],
+      "discourse_domains": [
+        "体量→重要性"
+      ],
+      "typical_triggers": [
+        "重大",
+        "核心",
+        "举足轻重"
+      ]
+    },
+    "C_VALENCE_VERTICAL": {
+      "id": "C_VALENCE_VERTICAL",
+      "name": "HAPPY IS UP / SAD IS DOWN",
+      "member_frames": [
+        "F_VALENCE_VERTICAL"
+      ],
+      "discourse_domains": [
+        "上下→情绪效价"
+      ],
+      "typical_triggers": [
+        "高涨",
+        "低落",
+        "跌入谷底"
+      ]
+    },
+    "C_MORAL_PURITY": {
+      "id": "C_MORAL_PURITY",
+      "name": "MORALITY IS PURITY",
+      "member_frames": [
+        "F_MORAL_PURITY"
+      ],
+      "discourse_domains": [
+        "洁净→道德"
+      ],
+      "typical_triggers": [
+        "纯洁",
+        "污点",
+        "洗白"
+      ]
+    }
+  },
+  "type_constraints_ext": {
+    "MOTION": [
+      "LIFE_IS_JOURNEY",
+      "LOVE_IS_JOURNEY",
+      "PURPOSES_ARE_DESTINATIONS",
+      "VALENCE_IS_VERTICAL"
+    ],
+    "PHYSICAL_OBJECT": [
+      "IDEAS_ARE_FOOD",
+      "THEORIES_ARE_BUILDINGS",
+      "COMM_IS_SENDING",
+      "IMPORTANT_IS_BIG"
+    ],
+    "BODY_SENSATION": [
+      "KNOWING_IS_SEEING"
+    ],
+    "NATURAL_PHENOMENON": [
+      "ORG_ARE_PLANTS"
+    ],
+    "MORAL": [
+      "MORALITY_IS_PURITY"
+    ]
+  }
+}

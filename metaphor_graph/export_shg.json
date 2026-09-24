@@ -1,0 +1,730 @@
+{
+  "edges": [
+    {
+      "id": "L1_53d552bc",
+      "source_domain": "旅程",
+      "target_domain": "项目进展",
+      "ground": [
+        "起点",
+        "方向",
+        "障碍",
+        "里程碑",
+        "停滞"
+      ],
+      "triggers": [
+        "前进"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c0",
+          "start": 14,
+          "end": 16,
+          "text": "前进",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_PROGRESS_JOURNEY",
+      "frame_id": "F_PROG_JOURNEY",
+      "novelty": "novel",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 0.6,
+      "source_type": "MOTION",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_28970c85",
+      "source_domain": "地形",
+      "target_domain": "项目困境",
+      "ground": [
+        "泥潭",
+        "深坑",
+        "陡坡",
+        "沼泽"
+      ],
+      "triggers": [
+        "泥潭"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c0",
+          "start": 9,
+          "end": 11,
+          "text": "泥潭",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_PROGRESS_JOURNEY",
+      "frame_id": "F_OBST_TERRAIN",
+      "novelty": "novel",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 0.6,
+      "source_type": "NATURAL_PHENOMENON",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_42055406",
+      "source_domain": "机器",
+      "target_domain": "生活状态",
+      "ground": [
+        "紧绷",
+        "需要放松",
+        "机械重复",
+        "缺乏弹性"
+      ],
+      "triggers": [
+        "发条",
+        "拧紧"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c1",
+          "start": 5,
+          "end": 7,
+          "text": "发条",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c1",
+          "start": 11,
+          "end": 13,
+          "text": "拧紧",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_LIFE_MACHINE",
+      "frame_id": "F_LIFE_MACHINE",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": 0.0,
+        "arousal": 0.3
+      },
+      "confidence": 0.8,
+      "source_type": "MACHINE",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_112e7e21",
+      "source_domain": "机器",
+      "target_domain": "生活状态",
+      "ground": [
+        "紧绷",
+        "需要放松",
+        "机械重复",
+        "缺乏弹性"
+      ],
+      "triggers": [
+        "拧紧",
+        "机械"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c2",
+          "start": 3,
+          "end": 5,
+          "text": "拧紧",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c2",
+          "start": 8,
+          "end": 10,
+          "text": "机械",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_LIFE_MACHINE",
+      "frame_id": "F_LIFE_MACHINE",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": 0.0,
+        "arousal": 0.3
+      },
+      "confidence": 0.8,
+      "source_type": "MACHINE",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_a759152a",
+      "source_domain": "战争",
+      "target_domain": "商业竞争",
+      "ground": [
+        "对手",
+        "阵地",
+        "突围",
+        "卡位"
+      ],
+      "triggers": [
+        "商战",
+        "抢滩",
+        "护城河"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c3",
+          "start": 2,
+          "end": 4,
+          "text": "商战",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c3",
+          "start": 8,
+          "end": 10,
+          "text": "抢滩",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c3",
+          "start": 15,
+          "end": 18,
+          "text": "护城河",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_ARG_WAR",
+      "frame_id": "F_COMP_WAR",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 1.0,
+      "source_type": "WAR",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_78ef9ba0",
+      "source_domain": "战争",
+      "target_domain": "争论",
+      "ground": [
+        "对抗",
+        "胜负",
+        "进攻",
+        "防守",
+        "战略"
+      ],
+      "triggers": [
+        "战壕"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c3",
+          "start": 25,
+          "end": 27,
+          "text": "战壕",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_ARG_WAR",
+      "frame_id": "F_ARG_WAR",
+      "novelty": "novel",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 0.6,
+      "source_type": "WAR",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_e91f31b2",
+      "source_domain": "热",
+      "target_domain": "愤怒",
+      "ground": [
+        "升温",
+        "爆发",
+        "灼烧",
+        "沸腾"
+      ],
+      "triggers": [
+        "怒火",
+        "火大",
+        "爆发"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c5",
+          "start": 7,
+          "end": 9,
+          "text": "火大",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c5",
+          "start": 13,
+          "end": 15,
+          "text": "怒火",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c5",
+          "start": 19,
+          "end": 21,
+          "text": "爆发",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_ANGER_HEAT",
+      "frame_id": "F_ANGER_HEAT",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 1.0,
+      "source_type": "BODY_SENSATION",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_000c9e5b",
+      "source_domain": "容器",
+      "target_domain": "情绪",
+      "ground": [
+        "积压",
+        "释放",
+        "压抑",
+        "满溢"
+      ],
+      "triggers": [
+        "积压"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c5",
+          "start": 10,
+          "end": 12,
+          "text": "积压",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_MIND_CONTAINER",
+      "frame_id": "F_EMO_CONT",
+      "novelty": "novel",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 0.6,
+      "source_type": "CONTAINER",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_2bf6759a",
+      "source_domain": "容器",
+      "target_domain": "心智",
+      "ground": [
+        "装满",
+        "溢出",
+        "封闭",
+        "空洞"
+      ],
+      "triggers": [
+        "溢出",
+        "装满"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c6",
+          "start": 3,
+          "end": 5,
+          "text": "装满",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c6",
+          "start": 17,
+          "end": 19,
+          "text": "溢出",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_MIND_CONTAINER",
+      "frame_id": "F_MIND_CONT",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": 0.0,
+        "arousal": 0.3
+      },
+      "confidence": 0.8,
+      "source_type": "CONTAINER",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "L1_a0555b1d",
+      "source_domain": "容器",
+      "target_domain": "情绪",
+      "ground": [
+        "积压",
+        "释放",
+        "压抑",
+        "满溢"
+      ],
+      "triggers": [
+        "满溢",
+        "装不下"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c6",
+          "start": 16,
+          "end": 18,
+          "text": "满溢",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c6",
+          "start": 20,
+          "end": 23,
+          "text": "装不下",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_MIND_CONTAINER",
+      "frame_id": "F_EMO_CONT",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": 0.0,
+        "arousal": 0.3
+      },
+      "confidence": 0.8,
+      "source_type": "CONTAINER",
+      "is_extended": false,
+      "layer": 1,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "EXT_4522711d",
+      "source_domain": "机器",
+      "target_domain": "生活状态",
+      "ground": [
+        "机械重复",
+        "紧绷",
+        "缺乏弹性",
+        "需要放松"
+      ],
+      "triggers": [
+        "发条",
+        "拧紧",
+        "机械"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c1",
+          "start": 5,
+          "end": 7,
+          "text": "发条",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c1",
+          "start": 11,
+          "end": 13,
+          "text": "拧紧",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c2",
+          "start": 3,
+          "end": 5,
+          "text": "拧紧",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c2",
+          "start": 8,
+          "end": 10,
+          "text": "机械",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_LIFE_MACHINE",
+      "frame_id": "F_LIFE_MACHINE",
+      "novelty": "conventional",
+      "sentiment": {
+        "polarity": 0.0,
+        "arousal": 0.3
+      },
+      "confidence": 0.8,
+      "source_type": "MACHINE",
+      "is_extended": true,
+      "layer": 1.5,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    },
+    {
+      "id": "EXT_ee9fbfc4",
+      "source_domain": "容器",
+      "target_domain": "情绪",
+      "ground": [
+        "压抑",
+        "满溢",
+        "积压",
+        "释放"
+      ],
+      "triggers": [
+        "满溢",
+        "积压",
+        "装不下"
+      ],
+      "chunk_spans": [
+        {
+          "chunk_id": "demo_doc_c5",
+          "start": 10,
+          "end": 12,
+          "text": "积压",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c6",
+          "start": 16,
+          "end": 18,
+          "text": "满溢",
+          "doc_id": "demo_doc"
+        },
+        {
+          "chunk_id": "demo_doc_c6",
+          "start": 20,
+          "end": 23,
+          "text": "装不下",
+          "doc_id": "demo_doc"
+        }
+      ],
+      "cascade_id": "C_MIND_CONTAINER",
+      "frame_id": "F_EMO_CONT",
+      "novelty": "novel",
+      "sentiment": {
+        "polarity": -0.4,
+        "arousal": 0.7
+      },
+      "confidence": 0.8,
+      "source_type": "CONTAINER",
+      "is_extended": true,
+      "layer": 1.5,
+      "evidence": [],
+      "extractor_version": "1.0.0",
+      "deprecated": false
+    }
+  ],
+  "frames": [
+    {
+      "id": "F_PROG_JOURNEY",
+      "name": "PROGRESS_IS_JOURNEY",
+      "member_mapping_ids": [
+        "L1_53d552bc"
+      ],
+      "source_frame": "Path",
+      "target_frame": "Project",
+      "layer": 2
+    },
+    {
+      "id": "F_OBST_TERRAIN",
+      "name": "OBSTACLE_IS_TERRAIN",
+      "member_mapping_ids": [
+        "L1_28970c85"
+      ],
+      "source_frame": "Terrain",
+      "target_frame": "Difficulty",
+      "layer": 2
+    },
+    {
+      "id": "F_LIFE_MACHINE",
+      "name": "LIFE_IS_A_MACHINE",
+      "member_mapping_ids": [
+        "L1_42055406",
+        "L1_112e7e21",
+        "EXT_4522711d"
+      ],
+      "source_frame": "Machine",
+      "target_frame": "Life",
+      "layer": 2
+    },
+    {
+      "id": "F_COMP_WAR",
+      "name": "COMPETITION_IS_WAR",
+      "member_mapping_ids": [
+        "L1_a759152a"
+      ],
+      "source_frame": "Combat",
+      "target_frame": "Business",
+      "layer": 2
+    },
+    {
+      "id": "F_ARG_WAR",
+      "name": "ARGUMENT_IS_WAR",
+      "member_mapping_ids": [
+        "L1_78ef9ba0"
+      ],
+      "source_frame": "Combat",
+      "target_frame": "Communication",
+      "layer": 2
+    },
+    {
+      "id": "F_ANGER_HEAT",
+      "name": "ANGER_IS_HEAT",
+      "member_mapping_ids": [
+        "L1_e91f31b2"
+      ],
+      "source_frame": "Heat",
+      "target_frame": "Emotion",
+      "layer": 2
+    },
+    {
+      "id": "F_EMO_CONT",
+      "name": "EMOTION_IS_CONTAINER",
+      "member_mapping_ids": [
+        "L1_000c9e5b",
+        "L1_a0555b1d",
+        "EXT_ee9fbfc4"
+      ],
+      "source_frame": "Container",
+      "target_frame": "Emotion",
+      "layer": 2
+    },
+    {
+      "id": "F_MIND_CONT",
+      "name": "MIND_IS_CONTAINER",
+      "member_mapping_ids": [
+        "L1_2bf6759a"
+      ],
+      "source_frame": "Container",
+      "target_frame": "Mind",
+      "layer": 2
+    }
+  ],
+  "cascades": [
+    {
+      "id": "C_PROGRESS_JOURNEY",
+      "name": "PROGRESS_IS_JOURNEY",
+      "member_frame_ids": [
+        "F_PROG_JOURNEY",
+        "F_OBST_TERRAIN"
+      ],
+      "discourse_domains": [
+        "项目管理",
+        "政策"
+      ],
+      "typical_triggers": [
+        "推进",
+        "转向",
+        "停滞"
+      ],
+      "layer": 3
+    },
+    {
+      "id": "C_LIFE_MACHINE",
+      "name": "LIFE_IS_A_MACHINE",
+      "member_frame_ids": [
+        "F_LIFE_MACHINE"
+      ],
+      "discourse_domains": [
+        "生活",
+        "健康"
+      ],
+      "typical_triggers": [
+        "发条",
+        "机械",
+        "磨损"
+      ],
+      "layer": 3
+    },
+    {
+      "id": "C_ARG_WAR",
+      "name": "ARGUMENT_IS_WAR",
+      "member_frame_ids": [
+        "F_COMP_WAR",
+        "F_ARG_WAR"
+      ],
+      "discourse_domains": [
+        "政治评论",
+        "商业竞争"
+      ],
+      "typical_triggers": [
+        "开火",
+        "商战",
+        "护城河",
+        "攻城略地"
+      ],
+      "layer": 3
+    },
+    {
+      "id": "C_ANGER_HEAT",
+      "name": "ANGER_IS_HEAT",
+      "member_frame_ids": [
+        "F_ANGER_HEAT"
+      ],
+      "discourse_domains": [
+        "情绪",
+        "文学"
+      ],
+      "typical_triggers": [
+        "火大",
+        "暖心",
+        "沸腾"
+      ],
+      "layer": 3
+    },
+    {
+      "id": "C_MIND_CONTAINER",
+      "name": "MIND_IS_CONTAINER",
+      "member_frame_ids": [
+        "F_EMO_CONT",
+        "F_MIND_CONT"
+      ],
+      "discourse_domains": [
+        "心理",
+        "文学"
+      ],
+      "typical_triggers": [
+        "装满",
+        "积压",
+        "释放"
+      ],
+      "layer": 3
+    }
+  ]
+}

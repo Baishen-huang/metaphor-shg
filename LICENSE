@@ -1,0 +1,90 @@
+本仓库采用**分项许可**。代码与资源适用不同条款，请按用途对应遵守。
+
+---
+
+## 1. 代码 — MIT License
+
+适用：`metaphor_graph/` 下全部 `.py` 文件，以及仓库根目录的构建/脚本文件。
+
+```
+MIT License
+
+Copyright (c) 2026 Baishen-huang
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
+```
+
+---
+
+## 2. 本体资源与基准数据 — CC BY-NC-SA 4.0
+
+适用：
+
+- `metaphor_graph/ontology_default.json`（中文级联本体，2,177 框架）
+- `metaphor_graph/ontology_bilingual.json`（双语对齐本体）
+- `metaphor_graph/bootstrap_triggers.json`（自举触发词表）
+- `metaphor_graph/llm_ontology_train.json`
+- `release/metaphor_resources/**`
+- `release/MetaphorRAG-Bench/**`
+
+许可：**Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International**（署名—非商业性使用—相同方式共享 4.0 国际）。
+
+全文见：https://creativecommons.org/licenses/by-nc-sa/4.0/legalcode
+
+**为什么是 NC**：上述本体由 CCL2018 中文隐喻识别评测数据集（大连理工 DUTIR）
+的训练集经 LLM 自举构建，属评测数据的派生作品。CCL2018 自身声明**仅限学术
+研究、禁止商业用途**，因此其派生资源沿用非商业口径。详见 [DATA.md](DATA.md)。
+
+**为什么是 SA**：如你修改并再分发本体，请以相同条款共享。
+
+---
+
+## 3. 论文与文档 — CC BY 4.0
+
+适用：`论文初稿.md`、`论文初稿_en.md`、`知识隐喻分析任务方案.md`、
+`效果对比.md`、`论文表述改写.md`、`README.md`、`DATA.md`、`后续待办.md`。
+
+许可：**Creative Commons Attribution 4.0 International**。
+全文见：https://creativecommons.org/licenses/by/4.0/legalcode
+
+---
+
+## 4. 未包含的第三方内容
+
+本仓库**不包含**任何语料原文。CCL2018、人民网新闻等第三方数据不在本仓库中，
+不受上述任何许可覆盖；请遵循其原始条款自行获取（见 [DATA.md](DATA.md) §1）。
+
+引用的方法（MetaNet、HGNN、HyperRAG、MedGraphRAG、HL-index 等）版权归各自
+作者所有，本仓库仅含独立实现。
+
+---
+
+## 5. 引用
+
+学术使用请引用：
+
+```bibtex
+@misc{metaphorshg2026,
+  title  = {MetaphorSHG: Hyper-Hypergraph Representation for Metaphor-Aware Retrieval-Augmented Generation},
+  author = {Baishen-huang},
+  year   = {2026},
+  note   = {Preprint. Code and Chinese cascade ontology released.}
+}
+```
