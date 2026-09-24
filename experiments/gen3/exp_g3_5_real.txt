@@ -1,0 +1,53 @@
+  doc 0/110 …
+  doc 20/110 …
+  doc 40/110 …
+  doc 60/110 …
+  doc 80/110 …
+  doc 100/110 …
+====================================================================================================
+gen3 实验五：real-embedder（缓存真实句向量）处置对照
+====================================================================================================
+向量模型 embedding-3 ｜ 命中 25520 / 未命中 0 ｜ 110 伪文档 ｜ 632 条查询
+  命中率 100% —— 可离线精确重放
+
+real 口径下学到的权重均值： {'sem': 0.6948, 'struct': 0.0172, 'clue': 1.2483, 'type': 0.0383, 'same_frame': 0.1972, 'same_cascade': 0.1952, 'ground_jaccard': 0.4919}
+→ M3 四维按学到比例： {'sem': 0.3476, 'struct': 0.0086, 'clue': 0.6246, 'type': 0.0192}
+
+【表 A】real-embedder 处置对照（LLM 非构造金标）
+处置                                     配置               MRR@10   Hits@3     n
+D0 baseline7                           trained_self     0.7512   0.8703   632
+D0 baseline7                           trained_weak     0.7340   0.8608   632
+D1 drop_type                           trained_self     0.7577   0.8734   632
+D1 drop_type                           trained_weak     0.7472   0.8576   632
+D11 repl type<-n_emergent              trained_self     0.7540   0.8655   632
+D11 repl type<-n_emergent              trained_weak     0.6726   0.8038   632
+D2 drop_same_cascade                   trained_self     0.7540   0.8703   632
+D2 drop_same_cascade                   trained_weak     0.7356   0.8608   632
+D3 drop_type+cascade                   trained_self     0.7581   0.8750   632
+D3 drop_type+cascade                   trained_weak     0.7480   0.8608   632
+D8 repl type<-frame_support_norm       trained_self     0.7555   0.8687   632
+D8 repl type<-frame_support_norm       trained_weak     0.6868   0.8117   632
+D9 repl type<-frame_tier_core          trained_self     0.7564   0.8592   632
+D9 repl type<-frame_tier_core          trained_weak     0.6940   0.8101   632
+M0 4d .35/.25/.20/.20                  manual           0.6734   0.7832   632
+M1 3d .35/.25/.40                      manual           0.7073   0.8149   632
+M3 4d learned-share                    manual           0.7740   0.8956   632
+N2 sem only                            manual           0.7688   0.8813   632
+
+【表 B】配对 bootstrap 95% CI（vs D0 基线，各自路径）
+对照                                                                 Δ                 95% CI       p
+  去 type（重训 6 维）− 基线 7 维                                       +0.0065 [ -0.0009, +0.0141]  0.077   
+  去 same_cascade − 基线                                          +0.0028 [ -0.0007, +0.0066]  0.131   
+  去 type+cascade − 基线                                          +0.0069 [ -0.0007, +0.0146]  0.080   
+  换 type→frame_support − 基线                                    +0.0043 [ -0.0068, +0.0152]  0.448   
+  换 type→frame_tier − 基线                                       +0.0052 [ -0.0074, +0.0168]  0.390   
+  换 type→n_emergent − 基线                                       +0.0028 [ -0.0103, +0.0164]  0.674   
+  人工去 type（权重给 clue）− 基线人工                                     +0.0339 [ +0.0203, +0.0479]  0.000 **
+  人工按学到比例 − 基线人工                                               +0.1006 [ +0.0806, +0.1203]  0.000 **
+  纯 sem 单信号 − 训练后 7 维                                        跳过
+  纯 sem 单信号 − 基线人工                                             +0.0954 [ +0.0730, +0.1177]  0.000 **
+
+  已上报 real-embedder 基线：人工加权 0.707 ｜ 自监督 0.758 ｜ 弱监督 0.755
+  本次重放：人工加权 0.6734 ｜ 自监督 0.7512 ｜ 弱监督 0.7340
+
+产物：E:\02_AI项目\元图隐喻分析\.wt\typefeat\experiments\gen3\exp_g3_5_real.json

@@ -25,3 +25,7 @@ Thumbs.db
 # ---- 实验临时产物（结果文件另行提交）----
 experiments/**/_tmp/
 experiments/**/*.log.tmp
+
+# ---- gen3 重放缓存（二进制、可复算：cache_default ~5s / cache_real ~60s）----
+# 不入库：JSON/TXT 结果已提交，缓存可由 exp_g3_*.py 首次运行时自动重建
+experiments/gen3/*.pkl
