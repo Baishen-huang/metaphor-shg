@@ -1544,5 +1544,247 @@ class TestDeterministicIds(unittest.TestCase):
         self.assertEqual(st1, st2)
 
 
+class TestCascadeConstructionRules(unittest.TestCase):
+    """L3 级联构造规则（`cascade_rules` 模块）的回归护栏。
+
+    背景（gen2 实验，见 experiments/gen2/REPORT.md）：生产本体的级联按**目标域**
+    打包，导致 99.2% 的级联成员共享单一目标域、中位规模 1 —— 级联退化成
+    「框架别名」，`cross_domain_retrieve` 的级联扩展段取不到新目标域。
+    这里钉住四件事：
+      1. 默认（`json`）行为**必须**与改动前逐位一致 —— 替代规则不得静默生效；
+      2. 每条替代规则的**结构性质**（source 规则必须跨目标域）；
+      3. 规则 id 的**确定性**（跨进程可复现）；
+      4. `apply_rule` 必须重建 `_frame_to_cascade` 反向索引。
+    """
+
+    @staticmethod
+    def _frames():
+        from metaphor_graph.ontology import FrameSpec
+        return [
+            FrameSpec(id="FA", name="A", mapping_type="M", source_domain="旅程",
+                      target_domain="生活", ground=["起点", "终点"],
+                      triggers=[], source_type="MOTION", support=5),
+            FrameSpec(id="FB", name="B", mapping_type="M", source_domain="旅程",
+                      target_domain="爱情", ground=["同行", "波折"],
+                      triggers=[], source_type="MOTION", support=3),
+            FrameSpec(id="FC", name="C", mapping_type="M", source_domain="战争",
+                      target_domain="生活", ground=["进攻", "阵地"],
+                      triggers=[], source_type="WAR", support=1),
+        ]
+
+    def test_all_rules_registered(self):
+        from metaphor_graph.cascade_rules import CASCADE_RULES
+        for r in ("json", "target", "source", "ground", "metanet",
+                  "source_type", "none"):
+            self.assertIn(r, CASCADE_RULES)
+
+    def test_unknown_rule_rejected(self):
+        from metaphor_graph.cascade_rules import build_cascades
+        with self.assertRaises(ValueError):
+            build_cascades(self._frames(), "no_such_rule")
+
+    def test_json_rule_returns_base_unchanged(self):
+        """json 规则必须原样返回传入的 base_cascades（默认行为不变）。"""
+        from metaphor_graph.cascade_rules import build_cascades
+        from metaphor_graph.ontology import CascadeSpec
+        base = {"C_X": CascadeSpec(id="C_X", name="X", member_frames=["FA", "FB"])}
+        out = build_cascades(self._frames(), "json", base_cascades=base)
+        self.assertEqual(set(out), {"C_X"})
+        self.assertIs(out["C_X"], base["C_X"])
+
+    def test_target_rule_singleton_per_distinct_target(self):
+        from metaphor_graph.cascade_rules import build_cascades
+        out = build_cascades(self._frames(), "target")
+        # 目标域 {生活, 爱情} → 2 个级联；生活 下有 FA/FC
+        sizes = sorted(len(c.member_frames) for c in out.values())
+        self.assertEqual(sizes, [1, 2])
+        members = {tuple(sorted(c.member_frames)) for c in out.values()}
+        self.assertIn(("FA", "FC"), members)
+
+    def test_source_rule_crosses_target_domains(self):
+        """source 规则的核心性质：同一级联可覆盖多个目标域。"""
+        from metaphor_graph.cascade_rules import build_cascades, cascade_stats
+        from metaphor_graph.ontology import FrameSpec
+        frames = self._frames()
+        out = build_cascades(frames, "source")
+        self.assertEqual(len(out), 2)                  # 旅程 / 战争
+        j = next(c for c in out.values() if set(c.member_frames) == {"FA", "FB"})
+        st = cascade_stats(out, {f.id: f for f in frames})
+        self.assertGreaterEqual(st["cross_target_rate"], 0.5)
+        # 该级联确实覆盖两个目标域（生活 + 爱情）
+        self.assertEqual({frames[0].target_domain, frames[1].target_domain},
+                         {"生活", "爱情"})
+        self.assertEqual(len(j.member_frames), 2)
+
+    def test_none_rule_is_empty(self):
+        from metaphor_graph.cascade_rules import build_cascades, cascade_stats
+        frames = self._frames()
+        out = build_cascades(frames, "none")
+        self.assertEqual(out, {})
+        st = cascade_stats(out, {f.id: f for f in frames})
+        self.assertEqual(st["frame_cascade_coverage"], 0.0)
+
+    def test_rules_deterministic(self):
+        """同一输入 → 同一 id 集合（跨进程可复现；内置 hash 会破坏这点）。"""
+        from metaphor_graph.cascade_rules import build_cascades
+        for r in ("target", "source", "ground", "source_type"):
+            a = build_cascades(self._frames(), r)
+            b = build_cascades(self._frames(), r)
+            self.assertEqual(sorted(a), sorted(b), r)
+            for k in a:
+                self.assertEqual(a[k].member_frames, b[k].member_frames, r)
+
+    def test_apply_rule_rebuilds_reverse_index(self):
+        """apply_rule 必须重建 _frame_to_cascade —— 不重建则 get_cascade 返回旧归属。"""
+        from metaphor_graph.cascade_rules import apply_rule
+        from metaphor_graph.ontology import CascadeOntology
+        ont = CascadeOntology(
+            frames={f.id: f for f in self._frames()},
+            cascades={})
+        self.assertIsNone(ont.get_cascade("FA"))
+        apply_rule(ont, "source")
+        cid_a = ont.get_cascade("FA")
+        cid_b = ont.get_cascade("FB")
+        self.assertIsNotNone(cid_a)
+        self.assertEqual(cid_a, cid_b, "FA/FB 同源域 → 必须归入同一级联")
+        self.assertNotEqual(cid_a, ont.get_cascade("FC"))
+        # 反向索引与正向成员表必须一致
+        spec = ont.get_cascade_spec(cid_a)
+        self.assertIn("FA", spec.member_frames)
+
+    def test_ground_rule_groups_by_shared_ground(self):
+        from metaphor_graph.cascade_rules import build_cascades
+        out = build_cascades(self._frames(), "ground")
+        # FA/FB 无共同喻底且各自喻底 Jaccard=0 → 各自成组；FC 同样独立
+        self.assertEqual(len(out), 3)
+
+    def test_metanet_rule_keeps_seed_cascades(self):
+        """metanet 规则保留种子级联（非 C_LLM_ 前缀），C_LLM_ 级联不参与归属。"""
+        from metaphor_graph.cascade_rules import build_cascades
+        from metaphor_graph.ontology import CascadeSpec
+        base = {
+            "C_SEED": CascadeSpec(id="C_SEED", name="SEED",
+                                  member_frames=["FA"]),
+            "C_LLM_1": CascadeSpec(id="C_LLM_1", name="LLM",
+                                   member_frames=["FB"]),
+        }
+        out = build_cascades(self._frames(), "metanet", base_cascades=base)
+        self.assertIn("C_SEED", out)
+        self.assertIn("FA", out["C_SEED"].member_frames)
+        self.assertNotIn("C_LLM_1", out)
+        # FB 脱离 C_LLM_1 后被兜底规则重组（默认 source → 与 FA 同级联）
+        self.assertEqual(out["C_SEED"].member_frames, ["FA"])
+
+    def test_builder_default_orphan_rule_is_target(self):
+        """默认必须仍是 target（不得静默改默认）—— 已上报数字依赖它。"""
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        b = MetaphorSHGBuilder()
+        self.assertEqual(b.orphan_cascade_rule, "target")
+
+    # ---- 孤儿打包规则：直接驱动 _ensure_cascades（合成输入，快且可控）----
+    @staticmethod
+    def _orphan_inputs():
+        """3 个孤儿框架，目标域各不相同、源域两两相同/不同 —— 让各规则可分。"""
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.models import (MetaphorFrame, MetaphorHyperedge,
+                                           ChunkSpan)
+        from metaphor_graph.ontology import FrameSpec
+
+        def edge(eid, frame_id, src, tgt, ground):
+            return MetaphorHyperedge(
+                id=eid, source_domain=src, target_domain=tgt,
+                ground=list(ground), triggers=["x"],
+                chunk_spans=[ChunkSpan(chunk_id="d_c0", start=0, end=1, text="x")],
+                frame_id=frame_id, confidence=0.9)
+
+        edges = [
+            edge("e1", "F_ORPH_A", "旅程", "生活", ["起点"]),
+            edge("e2", "F_ORPH_B", "旅程", "爱情", ["同行"]),
+            edge("e3", "F_ORPH_C", "战争", "生活", ["进攻"]),
+        ]
+        frames = [MetaphorFrame(id=fid, name=fid, member_mapping_ids=[eid])
+                  for fid, eid in (("F_ORPH_A", "e1"), ("F_ORPH_B", "e2"),
+                                   ("F_ORPH_C", "e3"))]
+        return MetaphorSHGBuilder, edges, frames
+
+    def test_orphan_target_rule_groups_by_target_domain(self):
+        """原口径：同目标域的孤儿进同一级联（A/C 同「生活」）。"""
+        Builder, edges, frames = self._orphan_inputs()
+        cascades = []
+        Builder(orphan_cascade_rule="target")._ensure_cascades(
+            edges, frames, cascades)
+        self.assertEqual(len(cascades), 2)                    # 生活 / 爱情
+        groups = {tuple(c.member_frame_ids) for c in cascades}
+        self.assertIn(("F_ORPH_A", "F_ORPH_C"), groups)
+        self.assertTrue(all(c.id.startswith("C_ADHOC_") for c in cascades),
+                        "原口径的 id 前缀必须保持 C_ADHOC_（缓存/导出都引用它）")
+
+    def test_orphan_source_rule_groups_by_source_domain(self):
+        """替代规则：同源域的孤儿进同一级联（A/B 同「旅程」），且 id 前缀可区分。"""
+        Builder, edges, frames = self._orphan_inputs()
+        cascades = []
+        Builder(orphan_cascade_rule="source")._ensure_cascades(
+            edges, frames, cascades)
+        self.assertEqual(len(cascades), 2)                    # 旅程 / 战争
+        groups = {tuple(c.member_frame_ids) for c in cascades}
+        self.assertIn(("F_ORPH_A", "F_ORPH_B"), groups)
+        self.assertTrue(all(c.id.startswith("C_ADHOC_SOURCE_") for c in cascades))
+        # 与 target 规则的 id 集合必须不同（否则说明规则没生效）
+        t = []
+        Builder(orphan_cascade_rule="target")._ensure_cascades(edges, frames, t)
+        self.assertNotEqual(sorted(c.id for c in cascades),
+                            sorted(c.id for c in t))
+
+    def test_orphan_none_rule_adds_nothing(self):
+        """orphan_cascade_rule='none' 是 L3 消融开关：一条级联都不补。"""
+        Builder, edges, frames = self._orphan_inputs()
+        cascades = []
+        Builder(orphan_cascade_rule="none")._ensure_cascades(
+            edges, frames, cascades)
+        self.assertEqual(cascades, [])
+
+    def test_orphan_rule_deterministic(self):
+        """同一输入 → 同一 id（跨进程可复现，md5 而非内置 hash）。"""
+        Builder, edges, frames = self._orphan_inputs()
+        for rule in ("target", "source", "source_type", "ground"):
+            a, b = [], []
+            Builder(orphan_cascade_rule=rule)._ensure_cascades(edges, frames, a)
+            Builder(orphan_cascade_rule=rule)._ensure_cascades(edges, frames, b)
+            self.assertEqual(sorted(c.id for c in a), sorted(c.id for c in b),
+                             rule)
+
+    def test_orphan_rule_rejects_unknown(self):
+        Builder, edges, frames = self._orphan_inputs()
+        with self.assertRaises(ValueError):
+            Builder(orphan_cascade_rule="bogus")._ensure_cascades(
+                edges, frames, [])
+
+    def test_production_ontology_defect_is_pinned(self):
+        """把缺陷本身钉成回归护栏：生产本体的级联必须**仍然是**单一目标域主导。
+
+        这条测试在默认本体上跑；若未来有人修好了本体级联（如改用 source 规则
+        重新沉淀 ontology_default.json），本测试会失败 —— 那时应更新断言并
+        同步论文 §6.3 的表述，而不是删掉测试。
+        """
+        # 注意：evaluate_fullcorpus 在模块级调用 logging.disable(CRITICAL)
+        # （评测脚本不希望被日志刷屏）。测试套件里 import 它会**顺带静音**
+        # 后续用例的 assertLogs（实测让 TestOpenAIBackendHTTP 的 2 条降级
+        # 测试失败）。故此处保存并恢复全局 disable 级别。
+        import logging as _logging
+        _saved = _logging.root.manager.disable
+        try:
+            from metaphor_graph.evaluate_fullcorpus import build_replay_ontology
+            from metaphor_graph.cascade_rules import cascade_stats
+            ont, _nf = build_replay_ontology()
+        finally:
+            _logging.disable(_saved)
+        st = cascade_stats(ont.cascades, ont.frames)
+        self.assertGreater(st["n_cascades"], 700)
+        self.assertLess(st["cross_target_rate"], 0.02,
+                        "生产本体级联应几乎全是单目标域（实测 0.8%）")
+        self.assertLessEqual(st["size_median"], 1.0)
+        self.assertGreater(st["singleton_rate"], 0.5)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

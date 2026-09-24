@@ -1,0 +1,226 @@
+{
+ "A 生产现状（本体级联+兜底）": {
+  "label": "A 生产现状（本体级联+兜底）",
+  "rule": "json",
+  "orphan_rule": "target",
+  "n_l1": 856,
+  "cascade_coverage_min": 1.0,
+  "cascade_coverage_mean": 1.0,
+  "frame_coverage_min": 1.0,
+  "n_cascades_ont": 758,
+  "n_cascades_shg_mean": 7.5181818181818185,
+  "paths": {
+   "path_cross": {
+    "rec": 0.041666666666666664,
+    "h3": 0.04113924050632911,
+    "n": 632
+   },
+   "path_literal": {
+    "rec": 0.0,
+    "h3": 0.0,
+    "n": 632
+   }
+  },
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5466608900944339,
+    "h3": 0.634493670886076,
+    "rec": 1.0,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5471355736387374,
+    "h3": 0.6329113924050633,
+    "rec": 1.0,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "rec": 1.0,
+    "n": 632
+   }
+  },
+  "a8": {
+   "on": 0.25,
+   "off": 0.25,
+   "n": 6
+  },
+  "n_llm_queries": 632,
+  "omega": {
+   "n": 635,
+   "mean": 0.005085000745330535,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.014173228346456693,
+   "omega_n_pos_frac": 0.014173228346456693
+  }
+ },
+ "B 本体级联，兜底关闭": {
+  "label": "B 本体级联，兜底关闭",
+  "rule": "json",
+  "orphan_rule": "none",
+  "n_l1": 856,
+  "cascade_coverage_min": 0.3333333333333333,
+  "cascade_coverage_mean": 0.7671856174128902,
+  "frame_coverage_min": 1.0,
+  "n_cascades_ont": 758,
+  "n_cascades_shg_mean": 5.8090909090909095,
+  "paths": {
+   "path_cross": {
+    "rec": 0.041666666666666664,
+    "h3": 0.04113924050632911,
+    "n": 632
+   },
+   "path_literal": {
+    "rec": 0.0,
+    "h3": 0.0,
+    "n": 632
+   }
+  },
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5466608900944339,
+    "h3": 0.634493670886076,
+    "rec": 1.0,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5471355736387374,
+    "h3": 0.6329113924050633,
+    "rec": 1.0,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "rec": 1.0,
+    "n": 632
+   }
+  },
+  "a8": {
+   "on": 0.25,
+   "off": 0.25,
+   "n": 6
+  },
+  "n_llm_queries": 632,
+  "omega": {
+   "n": 635,
+   "mean": 0.005085000745330535,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.014173228346456693,
+   "omega_n_pos_frac": 0.014173228346456693
+  }
+ },
+ "C source 级联，兜底关闭": {
+  "label": "C source 级联，兜底关闭",
+  "rule": "source",
+  "orphan_rule": "none",
+  "n_l1": 856,
+  "cascade_coverage_min": 0.3333333333333333,
+  "cascade_coverage_mean": 0.7671856174128902,
+  "frame_coverage_min": 1.0,
+  "n_cascades_ont": 543,
+  "n_cascades_shg_mean": 5.454545454545454,
+  "paths": {
+   "path_cross": {
+    "rec": 0.0759493670886076,
+    "h3": 0.07120253164556962,
+    "n": 632
+   },
+   "path_literal": {
+    "rec": 0.0,
+    "h3": 0.0,
+    "n": 632
+   }
+  },
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5462916917821976,
+    "h3": 0.634493670886076,
+    "rec": 1.0,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5462125778581469,
+    "h3": 0.6313291139240507,
+    "rec": 1.0,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "rec": 1.0,
+    "n": 632
+   }
+  },
+  "a8": {
+   "on": 0.75,
+   "off": 0.75,
+   "n": 6
+  },
+  "n_llm_queries": 632,
+  "omega": {
+   "n": 635,
+   "mean": 0.02311064070395779,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.14803149606299212,
+   "omega_n_pos_frac": 0.14803149606299212
+  }
+ },
+ "D 无级联（L3 全消融）": {
+  "label": "D 无级联（L3 全消融）",
+  "rule": "none",
+  "orphan_rule": "none",
+  "n_l1": 849,
+  "cascade_coverage_min": 0.0,
+  "cascade_coverage_mean": 0.0,
+  "frame_coverage_min": 1.0,
+  "n_cascades_ont": 0,
+  "n_cascades_shg_mean": 0.0,
+  "paths": {
+   "path_cross": {
+    "rec": 0.0352,
+    "h3": 0.0352,
+    "n": 625
+   },
+   "path_literal": {
+    "rec": 0.0,
+    "h3": 0.0,
+    "n": 625
+   }
+  },
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5445352380952371,
+    "h3": 0.6224,
+    "rec": 1.0,
+    "n": 625
+   },
+   "trained_no_role": {
+    "mrr": 0.5437352380952372,
+    "h3": 0.6224,
+    "rec": 1.0,
+    "n": 625
+   },
+   "hand_weighted": {
+    "mrr": 0.4680895238095235,
+    "h3": 0.5552,
+    "rec": 1.0,
+    "n": 625
+   }
+  },
+  "a8": {
+   "on": 0.25,
+   "off": 0.25,
+   "n": 6
+  },
+  "n_llm_queries": 625,
+  "omega": {
+   "n": 628,
+   "mean": 0.0027053865576391898,
+   "zero_frac": 0.8184713375796179,
+   "omega_n_mean": 0.0,
+   "omega_n_pos_frac": 0.0
+  }
+ }
+}

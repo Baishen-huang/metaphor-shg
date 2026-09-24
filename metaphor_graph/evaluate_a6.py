@@ -127,10 +127,19 @@ def build_cs_neighbors(backend, terms: list, batch_size: int = 16) -> dict:
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description="A6 知识源消融（离线缓存重放）")
+    ap.add_argument("--cascade-rule", default="json",
+                    choices=("json", "target", "source", "ground", "metanet",
+                             "source_type", "none"),
+                    help="L3 级联构造规则（默认 json = 改动前行为）")
+    ap.add_argument("--orphan-cascade-rule", default="target",
+                    choices=("target", "source", "ground", "source_type", "none"))
+    args = ap.parse_args()
     # ---- 重建 llmgold 同款文档图（CCL2018 伪文档 fc*，缓存重放零请求）----
     # 注意：改写查询与 LLM 金标缓存键都是 fc 文档 —— A6 必须在同一查询集上比较
     # （初版误用语料库文档 cj/gov/lx，键对不上，n=0，已修正）。
-    ont, _ = build_replay_ontology()
+    ont, _ = build_replay_ontology(cascade_rule=args.cascade_rule)
     samples = load_ccl2018()
     pre = build_replay_backend(ont, DEFAULT_DISCOVER_CACHE)
     gen_cache = json.load(open(GEN_CACHE, encoding="utf-8"))         if os.path.exists(GEN_CACHE) else {}
@@ -146,8 +155,9 @@ def main():
     for did, ss in sorted(by_doc.items()):
         chunk_texts = [x.text for x in ss]
         doc_chunks[did] = chunk_texts
-        shg = MetaphorSHGBuilder(ontology=ont, extractor=ex,
-                                 llm_backend=pre).build(chunk_texts, doc_id=did)
+        shg = MetaphorSHGBuilder(ontology=ont, extractor=ex, llm_backend=pre,
+                                 orphan_cascade_rule=args.orphan_cascade_rule
+                                 ).build(chunk_texts, doc_id=did)
         engines[did] = RetrievalEngine(shg, chunk_texts, doc_id=did,
                                        ontology=ont)
         for e in shg.edges:

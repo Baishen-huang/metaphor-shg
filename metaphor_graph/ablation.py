@@ -74,12 +74,21 @@ def measure(ex, samples) -> Dict[str, float]:
             "tp": tp, "fp": fp}
 
 
+# L3 级联构造规则（gen2 实验用）。默认 "json" = 原样载入本体级联（已上报口径）。
+CASCADE_RULE = "json"
+
+
 def make_ontology(use_llm_ontology: bool, path: Optional[str]):
     base = build_bootstrap_ontology(build_metanet_ontology())
     if use_llm_ontology:
-        return build_llm_ontology(path=path, base=base) if path \
+        ont = build_llm_ontology(path=path, base=base) if path \
             else build_llm_ontology(base=base)
-    return base
+    else:
+        ont = base
+    if CASCADE_RULE != "json":
+        from .cascade_rules import apply_rule
+        apply_rule(ont, CASCADE_RULE)
+    return ont
 
 
 def row(label: str, m: Dict[str, float], expected: str, note: str = ""):
@@ -228,7 +237,15 @@ def main():
     ap.add_argument("--cache", default=os.path.join("data", "llm_cache_deepseek.json"))
     ap.add_argument("--ontology", default=os.path.join(
         os.path.dirname(os.path.abspath(__file__)), "llm_ontology_train.json"))
+    ap.add_argument("--cascade-rule", default="json",
+                    choices=("json", "target", "source", "ground", "metanet",
+                             "source_type", "none"),
+                    help="L3 级联构造规则（默认 json = 改动前行为）")
     args = ap.parse_args()
+    global CASCADE_RULE
+    CASCADE_RULE = args.cascade_rule
+    if args.cascade_rule != "json":
+        print(f"级联构造规则：{args.cascade_rule}")
 
     samples = load_ccl2018()
     print(f"测试集 {len(samples)} 句（中性 "

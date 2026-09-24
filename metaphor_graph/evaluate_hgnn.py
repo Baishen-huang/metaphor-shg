@@ -38,6 +38,25 @@ from metaphor_graph import embeddings
 from collections import defaultdict
 from typing import Dict, List, Tuple
 
+# 级联构造规则的模块级开关（gen2 实验用；默认 None = 用 DEFAULT_ONTOLOGY +
+# 原口径孤儿打包，即已上报数字的口径）。设置后 build_shg() 会改用
+# 「生产重放本体 + 指定级联规则」，用于检验 H4 结论是否依赖级联层质量。
+_ONT = None
+_ORPHAN_RULE = "target"
+
+
+def set_ontology(ont, orphan_rule: str = "target"):
+    """注入本体与孤儿打包规则（None → 恢复 DEFAULT_ONTOLOGY）。"""
+    global _ONT, _ORPHAN_RULE
+    _ONT, _ORPHAN_RULE = ont, orphan_rule
+
+
+def build_shg(chunks, doc_id):
+    """统一的建图入口（所有 measure_* 必须走这里，避免口径漂移）。"""
+    return MetaphorSHGBuilder(ontology=_ONT,
+                              orphan_cascade_rule=_ORPHAN_RULE).build(
+        chunks, doc_id=doc_id)
+
 
 def _chunk_id_of(edge):
     for s in edge.chunk_spans:
@@ -65,7 +84,7 @@ def measure_p4a():
            for c in ("hgnn", "raw")}
     detail = []
     for did, chunks in DOCS.items():
-        shg = MetaphorSHGBuilder().build(chunks, doc_id=did)
+        shg = build_shg(chunks, did)
         g = MetaphorHGNN(shg, layers=2)
         g.forward()
         l1 = [e for e in shg.edges if not e.is_extended]
@@ -96,7 +115,7 @@ def measure_p4b():
     pos, neg = [], []
     rng = np.random.default_rng(20260830)
     for did, chunks in DOCS.items():
-        shg = MetaphorSHGBuilder().build(chunks, doc_id=did)
+        shg = build_shg(chunks, did)
         g = MetaphorHGNN(shg, layers=2)
         g.forward()
         # 真边：每条 L1 边的 (source_domain 实体, target_domain 实体)
@@ -217,7 +236,7 @@ def measure_h4():
     scores = {m: {"pos": [], "neg": []} for m in methods}
     rng = np.random.default_rng(20260830)   # 与 measure_p4b 同种子，配对可比
     for did, chunks in DOCS.items():
-        shg = MetaphorSHGBuilder().build(chunks, doc_id=did)
+        shg = build_shg(chunks, did)
         g = MetaphorHGNN(shg, layers=2)
         g.forward()
         gf = MetaphorHGNN(shg, layers=2, cross_layer=False)
@@ -284,7 +303,23 @@ def main():
     ap.add_argument("--embedder", choices=("default", "real"), default="default",
                     help="real=用 EMBED_API_KEY 注入真实句向量（检索层专用，"
                          "propagate=False 冻结抽取管线，保证与缓存重放对照干净）")
+    ap.add_argument("--cascade-rule", default="seed",
+                    choices=("seed", "json", "source", "ground", "metanet",
+                             "source_type", "none"),
+                    help="L3 级联构造规则。默认 seed = DEFAULT_ONTOLOGY 种子本体"
+                         "（已上报数字的口径）；json/source/... = 生产重放本体 + "
+                         "该规则（gen2 实验用，检验 H4 是否依赖级联层质量）")
+    ap.add_argument("--orphan-cascade-rule", default="target",
+                    choices=("target", "source", "ground", "source_type", "none"))
     args = ap.parse_args()
+    if args.cascade_rule != "seed":
+        from metaphor_graph.evaluate_fullcorpus import build_replay_ontology
+        ont, _nf = build_replay_ontology(cascade_rule=args.cascade_rule)
+        set_ontology(ont, args.orphan_cascade_rule)
+        print(f"级联规则 {args.cascade_rule} / 孤儿 {args.orphan_cascade_rule}"
+              f"（生产重放本体 {len(ont.frames)} 框架 / {len(ont.cascades)} 级联）")
+    elif args.orphan_cascade_rule != "target":
+        set_ontology(None, args.orphan_cascade_rule)
     if args.embedder == "real":
         from metaphor_graph import embeddings as _emb
         emb_real = _emb.embedder_from_env()

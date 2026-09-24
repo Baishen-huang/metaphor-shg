@@ -17,7 +17,7 @@ from typing import Callable, Dict, List, Optional
 from .extended import link_extended_metaphors
 from .extractor import MetaphorExtractor
 from .models import MetaphorCascade, MetaphorFrame, MetaphorHyperedge, MetaphorSHG
-from .ontology import CascadeOntology, DEFAULT_ONTOLOGY
+from .ontology import CascadeOntology, DEFAULT_ONTOLOGY, FrameSpec
 from .llm_backend import MetaphorLLMBackend
 
 
@@ -29,11 +29,19 @@ class MetaphorSHGBuilder:
                  use_extended: bool = True,
                  extended_continuity: str = "ground1",
                  llm_verify_extended: bool = False,
-                 verify_cache_path: Optional[str] = None):
+                 verify_cache_path: Optional[str] = None,
+                 orphan_cascade_rule: str = "target"):
         self.ont = ontology or DEFAULT_ONTOLOGY
         self.llm_verify_extended = llm_verify_extended
         self.verify_cache_path = verify_cache_path
         self.llm_backend = llm_backend
+        # 孤儿框架（本体没有级联归属的 F_LLM_* / F_NOVEL_*）打包规则。
+        # 默认 "target" = 改动前的原口径（按目标域打包），保持已上报行为不变；
+        # 可选 "source"/"ground"/"source_type" —— 见 cascade_rules 模块的说明
+        # 与 experiments/gen2/REPORT.md 的对照表。
+        # "none" = 不补 L3 归属（**真正的 L3 消融**：注意 graph_health 的
+        # cascade_coverage 会因此掉到 0，这正是"覆盖率 100% 由本函数保证"的证据）。
+        self.orphan_cascade_rule = orphan_cascade_rule
         # 未显式传入 extractor 时，把 LLM 后端透传下去（discover + refine 通道生效）
         self.extractor = extractor or MetaphorExtractor(ontology=self.ont,
                                                         llm_backend=self.llm_backend)
@@ -150,12 +158,22 @@ class MetaphorSHGBuilder:
         （级联是「围绕同一目标概念组织、共同出现的映射集合」），
         也与 `llm_ontology` 构成本体级联时用的规则一致。
 
+        **已知结构缺陷（gen2 实测，见 experiments/gen2/REPORT.md）**：按目标域
+        打包与 `llm_ontology.build_specs` 的级联构造规则**完全相同**，因此本函数
+        补出来的级联与本体级联在结构上同构 —— 成员共享单一目标域，跨域扩展能力
+        为零（实测 110 次 build 共补出 399 个 C_ADHOC_ 级联，size 中位数 1、max 1）。
+        它唯一的量化收益是 `graph_health.cascade_coverage` 从 ~0.78 抬到 1.000。
+        替代规则见 `cascade_rules` 模块（`orphan_cascade_rule=` 参数）。
+
         id 用 md5 而非内置 hash —— 后者受 PYTHONHASHSEED 随机化影响，
         会导致同一份语料每次构建的级联 id 都不同，本体无法复现。
         """
         covered = {fid for c in cascade_objs for fid in c.member_frame_ids}
         orphans = [f for f in frame_objs if f.id not in covered]
         if not orphans:
+            return
+        if self.orphan_cascade_rule == "none":
+            # L3 消融：不给孤儿框架补归属（覆盖率会掉，这正是要测的变量）
             return
 
         edges_by_frame: Dict[str, List[MetaphorHyperedge]] = defaultdict(list)
@@ -164,13 +182,52 @@ class MetaphorSHGBuilder:
                 edges_by_frame[e.frame_id].append(e)
 
         groups: Dict[str, List[str]] = defaultdict(list)
-        for f in orphans:
-            mem = edges_by_frame.get(f.id) or []
-            tgt = mem[0].target_domain if mem else "未标注"
-            groups[tgt].append(f.id)
+        labels: Dict[str, str] = {}          # 组键 → 可读标签（discourse_domains）
+        if self.orphan_cascade_rule == "target":
+            # 原口径：按目标域打包（保持默认行为逐位不变）
+            for f in orphans:
+                mem = edges_by_frame.get(f.id) or []
+                tgt = mem[0].target_domain if mem else "未标注"
+                groups[tgt].append(f.id)
+            tag = "ADHOC"                    # → id 前缀 C_ADHOC_（原样保持）
+        else:
+            # 替代规则：复用 cascade_rules 的确定性分组（不引入第二套实现）
+            from .cascade_rules import (group_by_ground, group_by_source,
+                                        group_by_source_type)
+            specs = []
+            for f in orphans:
+                mem = edges_by_frame.get(f.id) or []
+                specs.append(FrameSpec(
+                    id=f.id, name=f.name, mapping_type="",
+                    source_domain=mem[0].source_domain if mem else "",
+                    target_domain=mem[0].target_domain if mem else "",
+                    ground=list(mem[0].ground) if mem else [],
+                    triggers=[], source_type=mem[0].source_type if mem else "",
+                    support=0))
+            if self.orphan_cascade_rule == "source":
+                groups = defaultdict(list, group_by_source(specs))
+                labels = {k: k for k in groups}
+            elif self.orphan_cascade_rule == "source_type":
+                groups = defaultdict(list, group_by_source_type(specs))
+                labels = {k: k for k in groups}
+            elif self.orphan_cascade_rule == "ground":
+                groups = defaultdict(list, group_by_ground(specs))
+                # ground 组的键是 G<i>，标签取组内前 3 个源域（可读性用）
+                src_of = {s.id: s.source_domain for s in specs}
+                labels = {k: "／".join(sorted({src_of.get(fid, "")
+                                               for fid in fids} - {""})[:3])
+                          or "未标注" for k, fids in groups.items()}
+            else:
+                raise ValueError(
+                    f"未知 orphan_cascade_rule {self.orphan_cascade_rule!r}；"
+                    f"可选 target / source / ground / source_type")
+            tag = f"ADHOC_{self.orphan_cascade_rule.upper()}"
 
-        for tgt, fids in groups.items():
-            cid = "C_ADHOC_" + hashlib.md5(tgt.encode("utf-8")).hexdigest()[:8]
+        for key, fids in groups.items():
+            label = labels.get(key, key)
+            # id 前缀统一 C_（级联 id 的既有约定）；key 已含规则标签，
+            # 不同规则的同名分组不会互相覆盖。
+            cid = "C_" + tag + "_" + hashlib.md5(key.encode("utf-8")).hexdigest()[:8]
             # 已存在同 id 级联则合并，避免重复
             existing = next((c for c in cascade_objs if c.id == cid), None)
             if existing:
@@ -179,9 +236,9 @@ class MetaphorSHGBuilder:
             else:
                 cascade_objs.append(MetaphorCascade(
                     id=cid,
-                    name=f"AD_HOC::{tgt}",
+                    name=f"{tag}::{label}",
                     member_frame_ids=sorted(fids),
-                    discourse_domains=[tgt],
+                    discourse_domains=[label],
                     typical_triggers=[],
                 ))
 

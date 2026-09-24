@@ -1,0 +1,20 @@
+{
+ "audit": {
+  "l1_edges": 856,
+  "l1_with_ont_cascade": 668,
+  "l1_without_cascade": 188
+ },
+ "n_adhoc_ids_seen": 399,
+ "n_adhoc_member_frames": 187,
+ "adhoc_member_frames_in_ont": 0,
+ "health_cascade_coverage_min": 1.0,
+ "health_cascade_coverage_mean": 1.0,
+ "expand_gain_hist": {
+  "0": 827,
+  "1": 26,
+  "2": 3
+ },
+ "expand_gain_mean": 0.037383177570093455,
+ "expand_gain_gt0": 29,
+ "n_edges_total": 856
+}

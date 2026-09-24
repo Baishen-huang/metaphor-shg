@@ -66,12 +66,20 @@ DEFAULT_DISCOVER_CACHE = os.path.join(
 # ---------------------------------------------------------------------------
 # 复用本体清洗脚本里的重放后端与本体的组装逻辑（单一实现，避免漂移）
 # ---------------------------------------------------------------------------
-def build_replay_ontology(ontology_json: str = DEFAULT_ONTOLOGY_JSON):
+def build_replay_ontology(ontology_json: str = DEFAULT_ONTOLOGY_JSON,
+                          cascade_rule: str = "json"):
+    """组装重放本体。`cascade_rule` 见 `cascade_rules` 模块。
+
+    默认 "json" = 原样载入 ontology_default.json 的级联（改动前的行为）。
+    """
     from metaphor_graph.ontology_clean import _build_variant
     with open(ontology_json, "r", encoding="utf-8") as f:
         payload = json.load(f)
     ont, n_frames = _build_variant(payload["frames"], payload["cascades"],
                                    use_core_only=False)
+    if cascade_rule != "json":
+        from metaphor_graph.cascade_rules import apply_rule
+        apply_rule(ont, cascade_rule)
     return ont, n_frames
 
 
@@ -137,6 +145,15 @@ def main():
                     help="附加 A7-weak 对照：排序器改用 refine 缓存的 LLM 弱监督"
                          "标签训练（build_weak_refine_set），检验 clue 泄漏天花板"
                          "是否被打破（P3 路线图「排序器收口」）。")
+    ap.add_argument("--cascade-rule", default="json",
+                    choices=("json", "target", "source", "ground", "metanet",
+                             "source_type", "none"),
+                    help="L3 级联构造规则（默认 json = 原样载入本体级联，"
+                         "即改动前行为；见 cascade_rules 模块）")
+    ap.add_argument("--orphan-cascade-rule", default="target",
+                    choices=("target", "source", "ground", "source_type"),
+                    help="builder._ensure_cascades 给孤儿框架打包的规则"
+                         "（默认 target = 原口径）")
     args = ap.parse_args()
 
     from metaphor_graph import embeddings as _emb
@@ -149,12 +166,13 @@ def main():
     elif args.embedder == "ngram":
         _emb.set_embedder(_emb.NgramEmbedder(), propagate=False)
         print("向量器：NgramEmbedder")
-    ont, n_frames = build_replay_ontology(args.ontology)
+    ont, n_frames = build_replay_ontology(args.ontology, args.cascade_rule)
     backend = build_replay_backend(ont, args.discover_cache)
     samples = load_ccl2018()
     print("=" * 84)
     print(f"全量 CCL2018 建图 —— A7/A8/A9 更大基准复验（n={len(samples)} 句，"
-          f"伪文档 K={args.doc_size}，本体 {n_frames} 框架）")
+          f"伪文档 K={args.doc_size}，本体 {n_frames} 框架，"
+          f"级联规则 {args.cascade_rule}/{args.orphan_cascade_rule}）")
     print("=" * 84)
 
     k = args.doc_size
@@ -176,7 +194,9 @@ def main():
         did = f"fc{di}"
         ex = MetaphorExtractor(ontology=ont, use_semfield=True,
                                llm_backend=backend, llm_conf_threshold=args.llm_conf)
-        builder = MetaphorSHGBuilder(ontology=ont, extractor=ex, llm_backend=backend)
+        builder = MetaphorSHGBuilder(ontology=ont, extractor=ex,
+                                     llm_backend=backend,
+                                     orphan_cascade_rule=args.orphan_cascade_rule)
         shg = builder.build(chunk_texts, doc_id=did)
         l1 = [e for e in shg.edges if not e.is_extended]
         ext = [e for e in shg.edges if e.is_extended]

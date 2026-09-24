@@ -40,10 +40,32 @@ ROLE_IDX = [FEATURE_NAMES.index(n) for n in
             ("same_frame", "same_cascade", "ground_jaccard")]
 
 
+# ---------------------------------------------------------------------------
+# 级联构造规则开关（gen2 实验用）
+# ---------------------------------------------------------------------------
+# 默认 None = DEFAULT_ONTOLOGY + 原口径孤儿打包（已上报数字的口径）。
+# 注入后所有 measure_* 走同一入口，避免各函数各写一份 builder 调用而漂移。
+_ONT = None
+_ORPHAN_RULE = "target"
+
+
+def set_ontology(ont, orphan_rule: str = "target"):
+    """注入本体与孤儿打包规则（None → 恢复 DEFAULT_ONTOLOGY）。"""
+    global _ONT, _ORPHAN_RULE
+    _ONT, _ORPHAN_RULE = ont, orphan_rule
+
+
+def _build_shg(chunks, doc_id):
+    """统一的建图入口。"""
+    return MetaphorSHGBuilder(ontology=_ONT,
+                              orphan_cascade_rule=_ORPHAN_RULE).build(
+        chunks, doc_id=doc_id)
+
+
 # --------------------------------------------------------------------------- P3
 def measure_p3(doc_id, chunks):
     """返回 (precision, recall, f1, n_pred, n_gold, spurious)。"""
-    shg = MetaphorSHGBuilder().build(chunks, doc_id=doc_id)
+    shg = _build_shg(chunks, doc_id)
     ext = [e for e in shg.edges if e.is_extended]
     pred = [frozenset(int(s.chunk_id.split("_c")[-1]) for s in e.chunk_spans)
             for e in ext]
@@ -89,7 +111,7 @@ def measure_h3(doc_id: str, chunks: List[str],
     金标查询字面均不含答案词，纯字面通路「query in chunk」应几乎召回不到；
     隐喻通路 cross_domain_retrieve 沿级联/框架才能命中。两路对比量化隐喻通路增益。
     """
-    shg = MetaphorSHGBuilder().build(chunks, doc_id=doc_id)
+    shg = _build_shg(chunks, doc_id)
     eng = RetrievalEngine(shg, chunks, doc_id=doc_id)
 
     agg = dict(meta_rec=0.0, lit_rec=0.0, meta_h3=0, lit_h3=0,
@@ -144,7 +166,7 @@ def measure_a8(doc_id: str, chunks: List[str],
     对比 cross_domain_retrieve(adaptive=True) vs (adaptive=False)
     （阈值开关见 context_budget.AdaptiveThreshold）。
     """
-    shg = MetaphorSHGBuilder().build(chunks, doc_id=doc_id)
+    shg = _build_shg(chunks, doc_id)
     eng = RetrievalEngine(shg, chunks, doc_id=doc_id)
     agg = dict(on_rec=0.0, off_rec=0.0, on_h3=0, off_h3=0,
                on_h10=0, off_h10=0, n=0)
@@ -220,7 +242,21 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--embedder", choices=("default", "real"), default="default",
                     help="real=用 EMBED_API_KEY 注入真实句向量（检索层专用）")
+    ap.add_argument("--cascade-rule", default="seed",
+                    choices=("seed", "json", "source", "ground", "metanet",
+                             "source_type", "none"),
+                    help="L3 级联构造规则（默认 seed = 种子本体，已上报口径）")
+    ap.add_argument("--orphan-cascade-rule", default="target",
+                    choices=("target", "source", "ground", "source_type", "none"))
     args = ap.parse_args()
+    if args.cascade_rule != "seed":
+        from metaphor_graph.evaluate_fullcorpus import build_replay_ontology
+        ont, _nf = build_replay_ontology(cascade_rule=args.cascade_rule)
+        set_ontology(ont, args.orphan_cascade_rule)
+        print(f"级联规则 {args.cascade_rule} / 孤儿 {args.orphan_cascade_rule}"
+              f"（生产重放本体 {len(ont.frames)} 框架 / {len(ont.cascades)} 级联）")
+    elif args.orphan_cascade_rule != "target":
+        set_ontology(None, args.orphan_cascade_rule)
     if args.embedder == "real":
         from metaphor_graph import embeddings as _emb
         emb_real = _emb.embedder_from_env()
@@ -300,7 +336,7 @@ def main():
            for k in ("trained", "trained_no_role", "hand_weighted")}
     per_query = []
     for did, chunks in DOCS.items():
-        shg = MetaphorSHGBuilder().build(chunks, doc_id=did)
+        shg = _build_shg(chunks, did)
         chunk_order = {f"{did}_c{i}": i for i in range(len(chunks))}
         chunk_map = {f"{did}_c{i}": c for i, c in enumerate(chunks)}
         scorer, _ = train_from_shg(shg, chunk_order=chunk_order, chunks=chunk_map)

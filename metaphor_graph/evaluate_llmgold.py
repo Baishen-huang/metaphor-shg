@@ -391,6 +391,13 @@ def main():
     ap.add_argument("--ontology",
                     default=os.path.join(os.path.dirname(os.path.abspath(__file__)),
                                          "ontology_default.json"))
+    ap.add_argument("--cascade-rule", default="json",
+                    choices=("json", "target", "source", "ground", "metanet",
+                             "source_type", "none"),
+                    help="L3 级联构造规则（默认 json = 改动前行为，见 cascade_rules）")
+    ap.add_argument("--orphan-cascade-rule", default="target",
+                    choices=("target", "source", "ground", "source_type", "none"),
+                    help="孤儿框架打包规则（默认 target = 原口径）")
     ap.add_argument("--discover-cache",
                     default=os.path.join(ROOT, "data", "llm_cache_deepseek.json"))
     ap.add_argument("--max-docs", type=int, default=0,
@@ -424,7 +431,7 @@ def main():
         print(f"向量器：{emb_real.model} @ {emb_real.base_url}（真实句向量，"
               f"缓存 {len(emb_real._cache)} 条）")
 
-    ont, n_frames = build_replay_ontology(args.ontology)
+    ont, n_frames = build_replay_ontology(args.ontology, args.cascade_rule)
     replay = build_replay_backend(ont, args.discover_cache)
     samples = load_ccl2018()
     k = args.doc_size
@@ -446,8 +453,9 @@ def main():
         did = f"fc{di}"
         ex = MetaphorExtractor(ontology=ont, use_semfield=True,
                                llm_backend=replay, llm_conf_threshold=args.llm_conf)
-        shg = MetaphorSHGBuilder(ontology=ont, extractor=ex,
-                                 llm_backend=replay).build(chunk_texts, doc_id=did)
+        shg = MetaphorSHGBuilder(ontology=ont, extractor=ex, llm_backend=replay,
+                                 orphan_cascade_rule=args.orphan_cascade_rule
+                                 ).build(chunk_texts, doc_id=did)
         l1 = [e for e in shg.edges if not e.is_extended]
         if not l1:
             continue
