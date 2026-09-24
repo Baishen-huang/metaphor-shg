@@ -22,6 +22,7 @@ from collections import defaultdict
 from typing import Dict, List, Optional, Sequence, Tuple
 
 from . import embeddings
+from . import provenance
 from .context_budget import (AdaptiveThreshold, ContextBudget, ContextPack,
                              ThresholdDecision, graph_density)
 from .models import MetaphorHyperedge, MetaphorSHG, RetrieverResult
@@ -50,7 +51,8 @@ class RetrievalEngine:
     def __init__(self, shg: MetaphorSHG, chunks: List[str],
                  ontology: CascadeOntology = None, doc_id: str = "doc0",
                  scorer=None, budget: Optional[ContextBudget] = None,
-                 threshold: Optional[AdaptiveThreshold] = None):
+                 threshold: Optional[AdaptiveThreshold] = None,
+                 reliability_floor: float = provenance.RELIABILITY_FLOOR):
         self.shg = shg
         self.chunks = chunks
         self.ont = ontology or DEFAULT_ONTOLOGY
@@ -62,6 +64,9 @@ class RetrievalEngine:
         self.budget = budget or ContextBudget()
         self.threshold = threshold or AdaptiveThreshold()
         self.density = shg_density(shg)
+        # 溯源可靠性折扣的下界：1.0 = 关闭该通道（历史口径）
+        self.reliability_floor = reliability_floor
+        self._reliability_cache: Dict[str, float] = {}
         self._qe_cache: Dict[str, List[MetaphorHyperedge]] = {}
         self._cascade_vecs: Optional[Dict[str, tuple]] = None
 
@@ -73,6 +78,27 @@ class RetrievalEngine:
             c = 0.5 * len(e.ground) + (0.5 if e.cascade_id else 0.0)
             cen[e.id] = c
         return cen
+
+    def _reliability(self, edge: MetaphorHyperedge) -> float:
+        """超边的溯源可靠性（懒算一次，缓存到 `_reliability_cache`）。"""
+        cache = getattr(self, "_reliability_cache", None)
+        if cache is None:
+            cache = self._reliability_cache = {}
+        if edge.id not in cache:
+            cache[edge.id] = provenance.edge_reliability(edge, self.ont)
+        return cache[edge.id]
+
+    def reliability_factor(self, edge: MetaphorHyperedge) -> float:
+        """溯源可靠性的**封顶乘性折扣** ∈ [floor, 1]。
+
+        `reliability_floor` = 1.0 时恒为 1.0 —— 通道关闭，历史口径精确复原。
+        之所以是乘性且有下界：加性项不改变次序（对排序无效），
+        硬过滤会丢候选（召回归零）—— 只有「有下界的乘性折扣」能
+        在不丢任何候选的前提下改变排序。
+        """
+        floor = getattr(self, "reliability_floor",
+                        provenance.RELIABILITY_FLOOR)
+        return provenance.reliability_factor(self._reliability(edge), floor)
 
     def get_mappings(self, trigger: str) -> List[MetaphorHyperedge]:
         return [e for e in self.shg.edges if trigger in e.triggers]
@@ -141,7 +167,8 @@ class RetrievalEngine:
                 if e.target_domain in targets or e.source_domain in targets:
                     for s in e.chunk_spans:
                         if s.chunk_id in self._chunk_text:
-                            score = e.confidence + 0.3 * len(e.ground)
+                            score = (e.confidence + 0.3 * len(e.ground)) \
+                                * self.reliability_factor(e)
                             agg[s.chunk_id] += score
                             path_nodes.add(f"frame:{c.name}")
                             if cid:
@@ -160,7 +187,9 @@ class RetrievalEngine:
                 if e.cascade_id in top_cascades:
                     for s in e.chunk_spans:
                         if s.chunk_id in self._chunk_text:
-                            agg[s.chunk_id] += e.confidence + 0.3 * len(e.ground)
+                            agg[s.chunk_id] += (e.confidence
+                                                + 0.3 * len(e.ground)) \
+                                * self.reliability_factor(e)
                             path_nodes.add(f"cascade:{e.cascade_id}")
             if agg:
                 path_nodes.add("fallback:semantic_cascade")
@@ -237,10 +266,16 @@ class RetrievalEngine:
 
         传入训练好的 scorer 时，改走 7 维特征的学习式打分；否则回落到
         人工加权（保持向后兼容）。
+
+        两条路径都乘上**溯源可靠性折扣**（degraded-provenance 通道）：
+        退化框架来源的候选分数被按 [floor,1] 缩放，但永不为零 —— 候选不丢。
+        `reliability_floor=1.0` 时折扣恒为 1，历史口径逐位复原。
         """
+        factor = self.reliability_factor(mapping)
         if self.scorer is not None:
-            return round(float(self.scorer.score_features(
-                self._pair_features(query, mapping))), 4)
+            raw = float(self.scorer.score_features(
+                self._pair_features(query, mapping)))
+            return round(raw * factor, 4)
 
         q_emb = embeddings.embed(query)
         m_emb = embeddings.embed(mapping.describe())
@@ -252,7 +287,7 @@ class RetrievalEngine:
         type_score = 1.0 if self.ont.type_valid(mapping.source_type, mtype) else 0.0
         score = (0.35 * sem_score + 0.25 * min(struct_score, 1.0)
                  + 0.20 * clue_score + 0.20 * type_score)
-        return round(score, 4)
+        return round(score * factor, 4)
 
     def _clue_count(self, query: str, mapping: MetaphorHyperedge) -> float:
         hits = sum(1 for t in mapping.triggers if t in query)

@@ -44,6 +44,11 @@ from .training import (MetaphorScorer, TrainingSet, build_training_set,
                        trivial_separators, feature_auc, leakage_report,
                        FEATURE_NAMES)
 from .health import graph_health, GraphHealth
+# ---- 溯源可靠性通道（degraded-provenance，见 provenance.py）----
+from . import provenance
+from .provenance import (frame_reliability, frame_provenance, edge_reliability,
+                         reliability_factor, RELIABILITY_FALLBACK_CAP,
+                         RELIABILITY_ONTOLOGY, RELIABILITY_FLOOR)
 from . import baselines
 
 __all__ = [
@@ -65,4 +70,8 @@ __all__ = [
     "extract_text_features", "train_from_shg", "trivial_separators",
     "feature_auc", "leakage_report", "FEATURE_NAMES",
     "graph_health", "GraphHealth", "baselines",
+    # 溯源可靠性通道（degraded-provenance）
+    "provenance", "frame_reliability", "frame_provenance", "edge_reliability",
+    "reliability_factor", "RELIABILITY_FALLBACK_CAP", "RELIABILITY_ONTOLOGY",
+    "RELIABILITY_FLOOR",
 ]

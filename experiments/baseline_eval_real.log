@@ -1,0 +1,16 @@
+数据集 CCL2018(中文)  样本数=1100  （中性 76 句）
+本体 LLM自举本体(2217框架)
+LLM 后端 PrecomputedBackend(缓存重放 E:\02_AI项目\元图隐喻分析\.wt\degrade\data\llm_cache_deepseek.json，discover 1100 句 / refine 3189 条，0 次请求)
+
+[evaluate_real.eval_split 缓存重放]  n=1100
+  TP=713  FP=7  TN=69  FN=311
+  Precision=0.990  Recall=0.696  F1=0.818
+  字面误判率(P1) = 0.092   ✅ <0.15 达标
+  _type_rejects = 24
+
+  [对照] 关掉 LLM 开放发现，**但 refine 校验照查表**（A3 正确隔离口径）：
+    Precision=1.000  Recall=0.138  F1=0.242  P1=0.000
+    开放发现的召回边际贡献 = +0.559（+55.9%，对齐 README 的 +55.8pp）
+
+  [对照·错误口径，仅作警示] 直接 llm_backend=None：
+    Recall=0.388  P1=0.434  ← refine 被顺带关掉，P1 假性飙高，**不可用于结论**

@@ -99,6 +99,10 @@ def link_extended_metaphors(edges: List[MetaphorHyperedge],
             sentiment=chain[0].sentiment,
             confidence=round(max(e.confidence for e in chain), 3),
             source_type=chain[0].source_type,
+            # 溯源可靠性取链上**最弱**的一环：扩展边的可信度不会超过
+            # 它最不可信的组成边（否则退化边会借合并"洗白"）。
+            provenance_reliability=min(
+                getattr(e, "provenance_reliability", 1.0) for e in chain),
             is_extended=True,
             layer=1.5,
         )

@@ -1324,5 +1324,156 @@ class TestDeterministicIds(unittest.TestCase):
         self.assertEqual(st1, st2)
 
 
+class TestProvenanceReliability(unittest.TestCase):
+    """退化溯源可靠性通道（degraded-provenance，见 provenance.py）。
+
+    设计约束：候选**永不丢弃**，只把「这份框架溯源有多可信」记在边上，
+    由打分/排序层按**有下界的乘性折扣**消费。
+    """
+
+    def test_frame_reliability_by_ontology_registration(self):
+        from metaphor_graph import provenance as pv
+        ont = DEFAULT_ONTOLOGY
+        self.assertEqual(pv.frame_reliability(ont, "F_LIFE_MACHINE"),
+                         pv.RELIABILITY_ONTOLOGY)          # 本体登记 → 1.0
+        self.assertEqual(pv.frame_reliability(ont, "F_LLM_临时"),
+                         pv.RELIABILITY_FALLBACK_CAP)      # 无条目 → 封顶 0.5
+        self.assertEqual(pv.frame_provenance(ont, "F_LLM_临时"), pv.PROV_FALLBACK)
+
+    def test_judgement_is_registration_not_prefix(self):
+        """判据必须是「本体有无条目」，不能是 `F_LLM_` 前缀。
+
+        llm_ontology 把自举沉淀的**正式**框架也命名为 F_LLM_*，
+        按前缀判定会把整个生产本体误判为退化。
+        """
+        from metaphor_graph import provenance as pv
+        ont = CascadeOntology()
+        from metaphor_graph.ontology import FrameSpec
+        ont.frames["F_LLM_promoted"] = FrameSpec(
+            id="F_LLM_promoted", name="X", mapping_type="GENERIC_VEHICLE_MAP",
+            source_domain="a", target_domain="b", ground=[], triggers=[],
+            source_type="GENERIC_VEHICLE")
+        self.assertEqual(pv.frame_reliability(ont, "F_LLM_promoted"), 1.0)
+
+    def test_frame_reliability_no_ontology_is_neutral(self):
+        """信息不足时不降级：没本体可查 → 1.0。"""
+        from metaphor_graph import provenance as pv
+        self.assertEqual(pv.frame_reliability(None, "F_ANY"),
+                         pv.RELIABILITY_ONTOLOGY)
+        self.assertEqual(pv.frame_reliability(DEFAULT_ONTOLOGY, None),
+                         pv.RELIABILITY_ONTOLOGY)
+
+    def test_reliability_factor_is_capped_and_never_zero(self):
+        """乘性因子必须有下界 —— 下界为 0 就退化成过滤器（丢召回）。"""
+        from metaphor_graph import provenance as pv
+        self.assertEqual(pv.reliability_factor(1.0), 1.0)
+        # 封顶可靠性 0.5 的边落在 floor 与 1.0 的中点（默认 floor=0.5）
+        self.assertAlmostEqual(pv.reliability_factor(0.5),
+                               pv.RELIABILITY_FLOOR
+                               + (1 - pv.RELIABILITY_FLOOR) * 0.5)
+        self.assertLess(pv.reliability_factor(0.5), 1.0)
+        # 最差情形仍有下界，绝不归零
+        self.assertEqual(pv.reliability_factor(0.0), pv.RELIABILITY_FLOOR)
+        self.assertGreater(pv.reliability_factor(0.0), 0.0)
+        self.assertEqual(pv.reliability_factor(0.5, floor=1.0), 1.0)  # 关闭开关
+
+    def test_model_field_default_is_backward_compatible(self):
+        self.assertEqual(_edge().provenance_reliability, 1.0)
+
+    def test_extractor_marks_fallback_edges_degraded_but_keeps_them(self):
+        """回退框架的边被标降级，但**照样产出**（不丢弃候选）。"""
+        from metaphor_graph.llm_backend import MockBackend, LLMCandidate
+        cand = LLMCandidate(source_domain="量子隧穿", target_domain="职场晋升",
+                            ground=["跃迁"], triggers=["隧穿"], confidence=0.9)
+        ex = MetaphorExtractor(ontology=DEFAULT_ONTOLOGY,
+                               llm_backend=MockBackend([cand]),
+                               llm_conf_threshold=0.5)
+        edges = ex.extract("他靠一次隧穿完成了跃迁。", doc_id="d", chunk_id="d_c0")
+        self.assertTrue(edges, "候选不得被丢弃 —— 这正是与过滤方案的分界")
+        self.assertTrue(all(e.provenance_reliability == 0.5 for e in edges))
+        self.assertTrue(all(e.frame_id.startswith("F_LLM_") for e in edges))
+
+    def test_ontology_frames_keep_full_reliability(self):
+        ex = MetaphorExtractor(ontology=DEFAULT_ONTOLOGY)
+        edges = ex.extract("他每天像根发条一样拧紧自己。", doc_id="d",
+                           chunk_id="d_c0")
+        if not edges:
+            self.skipTest("默认本体未命中该句")
+        self.assertTrue(all(e.provenance_reliability == 1.0 for e in edges))
+
+    def test_extended_edge_inherits_weakest_link(self):
+        """扩展边取链上最弱一环 —— 退化边不得借合并洗白。"""
+        a = _edge(chunk_ids=("d_c0",))
+        b = _edge(chunk_ids=("d_c1",))
+        b.id = "L1_b"
+        a.provenance_reliability = 1.0
+        b.provenance_reliability = 0.5
+        ext = link_extended_metaphors([a, b], {"d_c0": 0, "d_c1": 1})
+        self.assertTrue(ext)
+        self.assertTrue(all(e.provenance_reliability == 0.5 for e in ext))
+
+    def test_reliability_scales_score_but_keeps_edge(self):
+        """打分被缩放（次序可变），但候选仍在 —— 软通道，不是过滤器。"""
+        shg = MetaphorSHGBuilder().build(CHUNKS, doc_id=DOC_ID)
+        on = RetrievalEngine(shg, CHUNKS, doc_id=DOC_ID)
+        off = RetrievalEngine(shg, CHUNKS, doc_id=DOC_ID, reliability_floor=1.0)
+        e = shg.edges[0]
+        e.provenance_reliability = 0.5
+        e.frame_id = "F_NOT_IN_ONTOLOGY"
+        s_on = on.metaphor_retriever_score("项目推进不动", e)
+        s_off = off.metaphor_retriever_score("项目推进不动", e)
+        self.assertGreater(s_off, s_on, "降级边应被打折")
+        self.assertGreater(s_on, 0.0, "打折不得归零")
+        self.assertEqual(len(on.live_edges()), len(off.live_edges()))
+
+    def test_reliability_floor_one_reproduces_history(self):
+        """floor=1.0 = 通道关闭，打分与未改动前的口径逐位一致。"""
+        from metaphor_graph import embeddings
+        shg = MetaphorSHGBuilder().build(CHUNKS, doc_id=DOC_ID)
+        eng = RetrievalEngine(shg, CHUNKS, doc_id=DOC_ID, reliability_floor=1.0)
+        e = shg.edges[0]
+        e.provenance_reliability = 0.5
+        e.frame_id = "F_NOT_IN_ONTOLOGY"
+        got = eng.metaphor_retriever_score("发条", e)
+        sem = embeddings.cosine(embeddings.embed("发条"),
+                                embeddings.embed(e.describe()))
+        struct = min(eng._centrality.get(e.id, 0.0), 1.0)
+        clue = min(1.0, 0.5 * sum(1 for t in e.triggers if t in "发条"))
+        want = round(0.35 * sem + 0.25 * struct + 0.20 * clue + 0.0, 4)
+        self.assertAlmostEqual(got, want, places=6)
+
+    def test_edge_reliability_prefers_conservative_stored_value(self):
+        """存储值只能更保守 —— 防「退化边被伪造成正式边」。"""
+        from metaphor_graph import provenance as pv
+        e = _edge(frame_id="F_LIFE_MACHINE")     # 本体登记 → 派生 1.0
+        e.provenance_reliability = 0.3
+        self.assertEqual(pv.edge_reliability(e, DEFAULT_ONTOLOGY), 0.3)
+        e.provenance_reliability = 1.0           # 想升回 1.0 不行
+        e.frame_id = "F_NOT_REGISTERED"
+        self.assertEqual(pv.edge_reliability(e, DEFAULT_ONTOLOGY), 0.5)
+
+    def test_health_reports_honest_coverage_only_with_ontology(self):
+        """不传 ontology 时字段为 None —— 历史口径逐位不变。"""
+        shg = MetaphorSHGBuilder().build(CHUNKS, doc_id=DOC_ID)
+        h_old = graph_health(shg)
+        self.assertIsNone(h_old.registered_frame_coverage)
+        self.assertNotIn("诚实覆盖率", h_old.report())
+        h_new = graph_health(shg, ontology=DEFAULT_ONTOLOGY)
+        self.assertIsNotNone(h_new.registered_frame_coverage)
+        self.assertIn("诚实覆盖率", h_new.report())
+        self.assertAlmostEqual(h_old.hierarchy_coverage,
+                               h_new.hierarchy_coverage)
+
+    def test_health_flags_adhoc_coverage_inflation(self):
+        """回退框架撑起的覆盖率必须被点名（不能拿它声称层级归属达标）。"""
+        e = _edge(frame_id="F_NOT_IN_ONTOLOGY")
+        e.provenance_reliability = 0.5
+        shg = MetaphorSHG(edges=[e], frames=[], cascades=[])
+        h = graph_health(shg, ontology=DEFAULT_ONTOLOGY)
+        self.assertAlmostEqual(h.registered_frame_coverage, 0.0)
+        self.assertTrue(any("诚实框架覆盖率" in w for w in h.warnings))
+        self.assertAlmostEqual(h.degraded_edge_rate, 1.0)
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

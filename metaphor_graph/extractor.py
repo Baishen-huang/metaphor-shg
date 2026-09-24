@@ -27,6 +27,7 @@ from .models import ChunkSpan, MetaphorHyperedge
 from .ontology import (CascadeOntology, DEFAULT_ONTOLOGY, FrameSpec,
                        infer_source_type)
 from . import embeddings
+from . import provenance
 from .llm_backend import LLMCandidate, LLMRefine, MetaphorLLMBackend
 
 # 字面干扰词表（用于演示「字面抗干扰」测试，§6.1 第四类）
@@ -221,6 +222,11 @@ class MetaphorExtractor:
                 sentiment=sentiment,
                 confidence=round(base, 3),
                 source_type=frame.source_type,
+                # 溯源可靠性：本体登记的框架 1.0；临时回退框架封顶 0.5。
+                # **不丢弃候选** —— 只把「这份框架溯源有多可信」记在边上，
+                # 由打分/排序层按封顶折扣消费（见 provenance.py）。
+                provenance_reliability=provenance.frame_reliability(
+                    self.ont, frame.id),
             )
 
         # 通道一：触发词匹配（现有，§4.1.4 阶段一）
