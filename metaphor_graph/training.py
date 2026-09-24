@@ -36,6 +36,7 @@ import numpy as np
 from . import embeddings
 from .extended import _min_span_gap
 from .models import MetaphorHyperedge, MetaphorSHG
+from .ontology import DEFAULT_ONTOLOGY
 
 FEATURE_NAMES = [
     "sem",        # 查询超边与候选超边描述的语义相似度
@@ -77,8 +78,13 @@ def extract_text_features(query_text: str,
 
     clue = min(1.0, 0.5 * sum(1 for t in cand.triggers if t in query_text))
 
-    # 类型护栏：有框架归属即视为通过（详细校验需 ontology.type_valid）
-    type_ok = 1.0 if cand.frame_id else 0.0
+    # 类型护栏：与 retrieval.metaphor_retriever_score 共用同一个封顶可靠性函数。
+    # 此前这里是 `1.0 if cand.frame_id else 0.0`，而检索路径查本体后 type_valid
+    # 会把未注册的 F_LLM_* 回退框架判 0.0 —— 同一候选在两条路径上得到不同的
+    # type 值（特征漂移）。现统一走 ontology.type_reliability：
+    # 注册框架 1.0 / 未注册回退框架 0.5 / 无归属或非法 0.0。
+    ont = ontology if ontology is not None else DEFAULT_ONTOLOGY
+    type_ok = ont.type_reliability_of(cand.frame_id, cand.source_type)
 
     same_frame = same_cas = 0.0
     if ontology is not None:
@@ -95,8 +101,13 @@ def extract_text_features(query_text: str,
 
 def extract_features(query_edge: MetaphorHyperedge,
                      cand: MetaphorHyperedge,
-                     centrality: Optional[Dict[str, float]] = None) -> List[float]:
-    """给定「查询超边」与「候选超边」，抽出 7 维特征。"""
+                     centrality: Optional[Dict[str, float]] = None,
+                     ontology=None) -> List[float]:
+    """给定「查询超边」与「候选超边」，抽出 7 维特征。
+
+    ontology 用于 type 护栏的注册查询，必须与推理期（RetrievalEngine）传
+    同一个本体实例，否则又回到特征漂移。省略时回落模块级默认本体。
+    """
     q_emb = embeddings.embed(query_edge.describe())
     c_emb = embeddings.embed(cand.describe())
     sem = max(0.0, embeddings.cosine(q_emb, c_emb))
@@ -109,8 +120,9 @@ def extract_features(query_edge: MetaphorHyperedge,
     hits = len(set(query_edge.triggers) & set(cand.triggers))
     clue = min(1.0, 0.5 * hits)
 
-    fspec_type = cand.frame_id or ""
-    type_ok = 1.0 if fspec_type else 0.0  # 有框架归属即视为通过类型护栏
+    # 与 extract_text_features / retrieval 人工加权路径共用同一函数（见 ontology）
+    ont = ontology if ontology is not None else DEFAULT_ONTOLOGY
+    type_ok = ont.type_reliability_of(cand.frame_id, cand.source_type)
 
     same_frame = 1.0 if (query_edge.frame_id and query_edge.frame_id == cand.frame_id) else 0.0
     same_cas = 1.0 if (query_edge.cascade_id and query_edge.cascade_id == cand.cascade_id) else 0.0
@@ -354,7 +366,7 @@ def build_training_set(shg: MetaphorSHG,
     meta: List[dict] = []
 
     def _add(a: MetaphorHyperedge, b: MetaphorHyperedge, label: int):
-        rows.append(extract_features(a, b, centrality))
+        rows.append(extract_features(a, b, centrality, ontology))
         labels.append(label)
         meta.append({"query": a.id, "cand": b.id, "label": label})
 
