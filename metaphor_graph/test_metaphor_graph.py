@@ -1295,6 +1295,226 @@ class TestNeo4jStore(unittest.TestCase):
             server.shutdown()
 
 
+class TestQueryObservability(unittest.TestCase):
+    """查询侧可观测性泛函 Ω（observability.py）。
+
+    最重要的护栏是 `test_omega_invariant_to_candidate_pool`：Ω 必须只读查询。
+    这不是「实验发现」而是「API 形状」——measure() 的签名里根本没有候选池，
+    该测试把这条不变式钉成回归护栏，防止后续有人为了刷指标把候选信号混进来。
+    """
+
+    def setUp(self):
+        from metaphor_graph.observability import ObservabilityMeter
+        self.meter = ObservabilityMeter()      # 种子本体（DEFAULT_ONTOLOGY）
+        self.ont = DEFAULT_ONTOLOGY
+
+    # ---------------------------------------------------- 只读查询的不变式
+    def test_omega_invariant_to_candidate_pool(self):
+        """打乱/截断/清空候选池，Ω 逐位不变（同一条查询）。"""
+        import copy
+        import random
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+
+        query = "泥潭，沼泽"          # 触发词重叠型
+        q2 = "她的眼睛像什么一样晶莹剔透？"   # 改写型
+        base = {q: self.meter.measure(q).to_dict() for q in (query, q2)}
+
+        chunks = DOCS["doc_project"]
+        shg = MetaphorSHGBuilder().build(chunks, doc_id="dp")
+        variants = []
+        for seed in (0, 1, 7):
+            edges = copy.deepcopy(shg.edges)
+            random.Random(seed).shuffle(edges)
+            variants.append(edges[: max(1, len(edges) // 2)])
+            variants.append(edges)
+        variants.append([])                      # 空候选池
+
+        for edges in variants:
+            shg2 = MetaphorSHG(edges=edges)
+            eng = RetrievalEngine(shg2, chunks, doc_id="dp")
+            eng.cross_domain_retrieve(query)      # 触碰候选侧（排序/检索）
+            eng.cross_domain_retrieve(q2)
+            for q in (query, q2):
+                # 候选池变了，Ω 必须逐位相同（浮点也完全相同：纯本体查表）
+                self.assertEqual(self.meter.measure(q).to_dict(), base[q])
+
+    def test_measure_signature_has_no_candidate_argument(self):
+        """签名里不得出现候选池相关形参（结构性地保证不变式）。"""
+        import inspect
+        from metaphor_graph.observability import measure
+        params = list(inspect.signature(measure).parameters)
+        for bad in ("shg", "edges", "candidates", "retriever", "chunks",
+                    "ranked", "result", "scorer"):
+            self.assertNotIn(bad, params)
+
+    # ------------------------------------------------------------ 分量语义
+    def test_no_trigger_query_is_collapsed_zero(self):
+        r = self.meter.measure("今天天气不错，心情也很好")
+        self.assertEqual(r.omega, 0.0)
+        self.assertEqual(r.omega_e, 0.0)
+        self.assertEqual(r.omega_n, 0.0)
+        self.assertEqual(r.omega_f, 0.0)
+        self.assertEqual(r.completeness, 0.0)
+        self.assertEqual(r.regime, "collapsed")
+        self.assertEqual(r.n_seed_triggers, 0)
+
+    def test_empty_query_is_collapsed_zero(self):
+        r = self.meter.measure("")
+        self.assertEqual(r.omega, 0.0)
+        self.assertEqual(r.regime, "collapsed")
+
+    def test_trigger_hit_activates_frames(self):
+        r = self.meter.measure("泥潭")
+        self.assertEqual(r.matched_triggers, ("泥潭",))
+        self.assertTrue(r.activated_frames)
+        self.assertGreater(r.omega, 0.0)
+        self.assertGreater(r.omega_e, 0.0)
+
+    def test_paraphrase_lower_than_trigger_overlap(self):
+        """构造性直觉：改写句的 Ω 应低于触发词重叠句（方向性冒烟测试）。"""
+        overlap = self.meter.measure("泥潭，沼泽，陷进")
+        para = self.meter.measure("她的眼睛像什么一样晶莹剔透？")
+        self.assertGreater(overlap.omega, para.omega)
+
+    def test_omega_components_in_range(self):
+        for q in ("泥潭", "推进，停滞", "项目陷在泥潭里，推进不动，时间也浪费了",
+                  "她的眼睛像什么一样晶莹剔透？", "今天天气不错"):
+            r = self.meter.measure(q)
+            for v in (r.omega, r.omega_e, r.omega_n, r.omega_f, r.completeness):
+                self.assertGreaterEqual(v, 0.0, q)
+                self.assertLessEqual(v, 1.0, q)
+            self.assertLessEqual(r.omega, r.omega_geo + 1e-12)
+
+    def test_omega_equals_geo_times_completeness(self):
+        r = self.meter.measure("项目陷在泥潭里，推进不动，时间也浪费了")
+        self.assertAlmostEqual(r.omega, r.omega_geo * r.completeness, places=12)
+
+    def test_emergence_excludes_direct_targets(self):
+        """Ω_N 的分子必须是「不在直接命中集里」的目标域（涌现而非回声）。"""
+        r = self.meter.measure("泥潭")
+        direct = set(r.direct_targets)
+        emergent = set(r.emergent_targets)
+        self.assertEqual(direct & emergent, set())
+        self.assertTrue(emergent)               # 级联带来了新目标域
+
+    def test_completeness_is_char_coverage(self):
+        from metaphor_graph.observability import completeness
+        comp, obs = completeness("泥潭", ["泥潭"])
+        self.assertAlmostEqual(comp, 1.0)
+        self.assertEqual(obs, 2)
+        comp2, _ = completeness("abcdef泥潭", ["泥潭"])
+        self.assertAlmostEqual(comp2, 2 / 8)
+        # 重复出现按次数计（clip 到 1）
+        comp3, _ = completeness("泥潭泥潭泥潭", ["泥潭"])
+        self.assertAlmostEqual(comp3, 1.0)
+
+    # ------------------------------------------------------------ 几何平均
+    def test_geometric_mean_epsilon_floor(self):
+        from metaphor_graph.observability import geometric_mean
+        self.assertAlmostEqual(geometric_mean((1.0, 1.0, 1.0)), 1.0)
+        # 零分量被 ε 托住：Ω 不为 0，但显著低于其它分量
+        v = geometric_mean((1.0, 0.0, 1.0), eps=1e-3)
+        self.assertGreater(v, 0.0)
+        self.assertAlmostEqual(v, 0.1, places=6)   # (1·1e-3·1)^(1/3) = 0.1
+        self.assertLess(v, 0.5)
+
+    def test_geometric_mean_order_preserved(self):
+        from metaphor_graph.observability import geometric_mean
+        self.assertLess(geometric_mean((0.9, 0.1, 0.9)),
+                        geometric_mean((0.9, 0.2, 0.9)))
+
+    # ------------------------------------------------------------ 流量熵
+    def test_entropy_degenerate_cases(self):
+        from metaphor_graph.observability import normalized_entropy
+        self.assertEqual(normalized_entropy([]), 0.0)
+        self.assertEqual(normalized_entropy([0.0, 0.0]), 0.0)
+        self.assertEqual(normalized_entropy([3.0]), 0.5)   # 单条正流量 → 有限值
+        self.assertAlmostEqual(normalized_entropy([1.0, 1.0]), 1.0)
+        self.assertAlmostEqual(normalized_entropy([1.0, 1.0, 1.0, 1.0]), 1.0)
+        # 坍缩分布熵低，均匀分布熵高
+        self.assertLess(normalized_entropy([9.0, 1.0]),
+                        normalized_entropy([5.0, 5.0]))
+
+    def test_entropy_penalizes_single_trigger_collapse(self):
+        """两个触发词命中同一框架（流量坍缩）应比命中两个框架的 Ω 更低。"""
+        collapsed = self.meter.measure("泥潭，沼泽")        # 同框架（地形）
+        spread = self.meter.measure("泥潭，推进")           # 跨框架
+        self.assertLess(collapsed.omega_f, spread.omega_f)
+
+    # -------------------------------------------------------------- regime
+    def test_regime_boundaries(self):
+        from metaphor_graph.observability import regime_of
+        self.assertEqual(regime_of(0.0, 3), "collapsed")
+        self.assertEqual(regime_of(0.9, 0), "collapsed")   # 无框架 → collapsed
+        self.assertEqual(regime_of(0.49, 2), "sparse")
+        self.assertEqual(regime_of(0.5, 2), "dense")
+        self.assertEqual(regime_of(0.99, 2), "dense")
+
+    def test_regime_matches_measured(self):
+        self.assertEqual(self.meter.measure("今天天气不错").regime, "collapsed")
+        self.assertEqual(self.meter.measure("泥潭").regime, "dense")
+
+    # ---------------------------------------------------------- 一致性口径
+    def test_trigger_matching_same_as_cascade_path(self):
+        """Ω 的触发词口径必须与 cross_domain_retrieve 逐字一致。
+
+        否则 Ω 说「激活了」而级联通路空手而归，门控判据就自相矛盾。
+        """
+        from metaphor_graph.observability import matched_triggers
+        q = "项目陷在泥潭里，推进不动，时间也浪费了"
+        a = set(matched_triggers(q, self.ont))
+        b = {t for t in self.ont._trigger_index if t in q}
+        self.assertEqual(a, b)
+
+    def test_deterministic(self):
+        q = "项目陷在泥潭里，推进不动"
+        self.assertEqual(self.meter.measure(q).to_dict(),
+                         self.meter.measure(q).to_dict())
+
+    def test_meter_cache_and_gate(self):
+        m = self.meter
+        self.assertFalse(m.gate("今天天气不错", theta=0.1))
+        self.assertTrue(m.gate("泥潭", theta=0.1))
+        self.assertFalse(m.gate("泥潭", theta=0.99))
+
+    # -------------------------------------------------- 已知局限（护栏）
+    def test_omega_zero_iff_cascade_path_would_be_empty(self):
+        """契约：Ω=0 ⟺ 无触发词命中 ⟹ 级联通路必然空手而归。
+
+        这是**定理**（无触发词 → match_by_triggers 空 → cross_domain_retrieve 的
+        agg 空），不是经验发现。实测 632 条改写查询里 Ω=0 的 518 条，
+        级联通路非空的恰好 0 条。测试把这条定理钉住：若未来有人给 Ω 加了
+        「没有触发词但语义相近也算激活」之类的启发式，这里会红。
+        """
+        for q in ("今天天气不错", "", "abcdef", "完全没有触发词的长句子在这里"):
+            r = self.meter.measure(q)
+            self.assertEqual(r.omega, 0.0, q)
+            self.assertEqual(r.n_seed_triggers, 0, q)
+
+    def test_omega_is_not_monotone_in_trigger_count(self):
+        """已知局限的显式化：Ω 与「触发词命中数」在**真实数据上**秩相关 ρ=0.995，
+        但这不是设计意图，而是 0 块（无命中）主导的假象。
+
+        在 Ω>0 区间内 Ω 对触发词数**非单调**：
+          - Ω_E = 点亮框架数 / 种子触发词数 —— 多个触发词坍缩到同一框架时分母涨、
+            分子不涨，Ω_E 反而下降；
+          - 完备度因子 = 覆盖字符 / 查询长度 —— 查询越长，同样命中下 Ω 越低。
+        "泥潭"（1 词）Ω=0.794 > "泥潭，沼泽，陷进，深坑"（4 词）Ω=0.289。
+
+        这个测试记录该性质，供后续设计决策参考（若要让 Ω 真正度量「激活了多少结构」
+        而非「查询有多短」，完备度因子与 Ω_E 的归一化都需要重做）。
+        """
+        one = self.meter.measure("泥潭")
+        four = self.meter.measure("泥潭，沼泽，陷进，深坑")
+        self.assertEqual(four.n_seed_triggers, 4)
+        self.assertEqual(one.n_seed_triggers, 1)
+        self.assertGreater(one.omega, four.omega)   # 非单调：词多反而 Ω 低
+        self.assertGreater(one.completeness, four.completeness)
+        # 但 Ω=0 与 Ω>0 的分界仍严格由「有无触发词命中」决定
+        self.assertEqual(self.meter.measure("今天天气不错").omega, 0.0)
+
+
 class TestDeterministicIds(unittest.TestCase):
     """边/扩展边 id 必须跨构建可复现 —— 金标缓存与本体重放都跨进程引用 id。
     曾经 uuid4 随机 id 导致 judge 缓存重放时边对不上号（全零金标，实测踩坑）。"""

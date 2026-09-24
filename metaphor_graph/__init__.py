@@ -45,6 +45,11 @@ from .training import (MetaphorScorer, TrainingSet, build_training_set,
                        FEATURE_NAMES)
 from .health import graph_health, GraphHealth
 from . import baselines
+# ---- 查询侧可观测性泛函 Ω（只读查询，不读候选）----
+from .observability import (QueryObservability, ObservabilityMeter, measure,
+                            matched_triggers, activated_structure,
+                            normalized_entropy, geometric_mean, regime_of,
+                            EPS, SINGLE_FLOW_ENTROPY, SPARSE_MAX)
 
 __all__ = [
     "ChunkSpan", "Evidence", "MetaphorHyperedge", "MetaphorFrame", "MetaphorCascade",
@@ -65,4 +70,8 @@ __all__ = [
     "extract_text_features", "train_from_shg", "trivial_separators",
     "feature_auc", "leakage_report", "FEATURE_NAMES",
     "graph_health", "GraphHealth", "baselines",
+    # 查询侧可观测性 Ω（只声称「能测 / 能门控」，不声称提升下游指标）
+    "QueryObservability", "ObservabilityMeter", "measure",
+    "matched_triggers", "activated_structure", "normalized_entropy",
+    "geometric_mean", "regime_of", "EPS", "SINGLE_FLOW_ENTROPY", "SPARSE_MAX",
 ]

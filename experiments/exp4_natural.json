@@ -1,0 +1,36 @@
+{
+ "N1 CCL2018 原句（真实标注句）": {
+  "n": 1100,
+  "regimes": {
+   "collapsed": 685,
+   "sparse": 415
+  },
+  "mean_omega": 0.009611340824663011,
+  "zero_frac": 0.6227272727272727
+ },
+ "N2 连贯文档 chunk 全文": {
+  "n": 1050,
+  "regimes": {
+   "sparse": 821,
+   "collapsed": 229
+  },
+  "mean_omega": 0.003104848227304828,
+  "zero_frac": 0.2180952380952381
+ },
+ "N3a 文档句·含触发词": {
+  "n": 847,
+  "regimes": {
+   "sparse": 847
+  },
+  "mean_omega": 0.014492311901855992,
+  "zero_frac": 0.0
+ },
+ "N3b 文档句·不含触发词": {
+  "n": 3000,
+  "regimes": {
+   "collapsed": 3000
+  },
+  "mean_omega": 0.0,
+  "zero_frac": 1.0
+ }
+}

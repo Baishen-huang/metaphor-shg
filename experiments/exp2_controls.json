@@ -1,0 +1,21 @@
+{
+ "invariance_mismatch": 0,
+ "auc_nonempty__Ω（本设计）": 0.9540346746575342,
+ "auc_hit__Ω（本设计）": 0.94092439546985,
+ "auc_nonempty__触发词命中数 n_seed（朴素）": 0.9435109874429224,
+ "auc_hit__触发词命中数 n_seed（朴素）": 0.9323844505662687,
+ "auc_nonempty__观测完备度 completeness": 0.9500570776255708,
+ "auc_hit__观测完备度 completeness": 0.9385062748699112,
+ "auc_nonempty__触发词密度 n_seed/len": 0.9500570776255708,
+ "auc_hit__触发词密度 n_seed/len": 0.9385062748699112,
+ "auc_nonempty__Ω_geo（去完备度因子）": 0.950824058219178,
+ "auc_hit__Ω_geo（去完备度因子）": 0.9370676461585552,
+ "omega0_count": 518,
+ "omega0_nonempty": 0,
+ "dropped_n": 226,
+ "dropped_mean_omega": 0.004552730330982839,
+ "kept_mean_omega": 0.0051091384070963445,
+ "auc_dropped_vs_kept": 0.5254949871177327,
+ "rho_omega_nseed": 0.9949081006698174,
+ "rho_omega_nseed_positive_only": 0.4717731463241347
+}
