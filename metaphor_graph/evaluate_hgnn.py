@@ -78,14 +78,14 @@ def _mrr_hits(ranked_chunks, gold_chunks, ks=(3, 10)):
     return res
 
 
-def measure_p4a():
+def measure_p4a(alpha: float = 1.0, leak: float = 0.0):
     """跨层检索增益：HGNN vs 原始嵌入。返回每配置聚合指标。"""
     agg = {c: {"mrr": 0.0, "hits@3": 0, "hits@10": 0, "n": 0}
            for c in ("hgnn", "raw")}
     detail = []
     for did, chunks in DOCS.items():
         shg = build_shg(chunks, did)
-        g = MetaphorHGNN(shg, layers=2)
+        g = MetaphorHGNN(shg, layers=2, alpha=alpha, leak=leak)
         g.forward()
         l1 = [e for e in shg.edges if not e.is_extended]
         for q_doc, query, gold in GOLD_RETRIEVAL:
@@ -110,13 +110,16 @@ def measure_p4a():
     return agg, detail
 
 
-def measure_p4b():
-    """检测器判别力：真 L1 边 vs 跨框架负样本对的隐喻连贯度分离度。"""
+def measure_p4b(alpha: float = 1.0, leak: float = 0.0):
+    """检测器判别力：真 L1 边 vs 跨框架负样本对的隐喻连贯度分离度。
+
+    alpha / leak 透传给 MetaphorHGNN（默认 1.0 / 0.0 = 原无源项口径）。
+    """
     pos, neg = [], []
     rng = np.random.default_rng(20260830)
     for did, chunks in DOCS.items():
         shg = build_shg(chunks, did)
-        g = MetaphorHGNN(shg, layers=2)
+        g = MetaphorHGNN(shg, layers=2, alpha=alpha, leak=leak)
         g.forward()
         # 真边：每条 L1 边的 (source_domain 实体, target_domain 实体)
         true_pairs = []
@@ -219,7 +222,9 @@ def _l1_comembers(shg) -> Dict[str, List[str]]:
     return {a: sorted(v) for a, v in mem.items()}
 
 
-def measure_h4():
+def measure_h4(alpha: float = 1.0, leak: float = 0.0,
+               methods: Tuple[str, ...] = ("hgnn", "flat", "raw", "flat_gru",
+                                           "hgnn_driven", "flat_driven")):
     """H4 改口径：判别信号到底来自哪里？——三种对照 vs 完整 HGNN。
 
     同一组配对样本（真 L1 边 vs 跨框架负样本，抽样逻辑与随机种子均与
@@ -230,16 +235,21 @@ def measure_h4():
       flat_gru  GRU 扫 L1 共成员序列（无层级、未训练）—— KEG 式顺序编码替身
     若 flat ≈ hgnn：信号来自 L1 n 元共现（喻底集合），跨层传播非必要；
     若 raw ≈ hgnn：连结构都不需要；只有 hgnn 高：信号依赖跨层层级。
+
+    加源项对照（alpha < 1 时才有意义，见 hgnn.MetaphorHGNN docstring）：
+      hgnn_driven  跨层 + 源项 ``X ← (1-α)X0 + αMX``
+      flat_driven  仅 L1 超边 + 源项
+    alpha=1.0 / leak=0.0 时 ``*_driven`` 与对应的无源项条目**逐位相同**，
+    作为「源项没有改变什么」的内部一致性校验。
     """
     gru = _NumpyGRU(EMB_DIM)
-    methods = ("hgnn", "flat", "raw", "flat_gru")
     scores = {m: {"pos": [], "neg": []} for m in methods}
     rng = np.random.default_rng(20260830)   # 与 measure_p4b 同种子，配对可比
     for did, chunks in DOCS.items():
         shg = build_shg(chunks, did)
-        g = MetaphorHGNN(shg, layers=2)
+        g = MetaphorHGNN(shg, layers=2, alpha=alpha, leak=leak)
         g.forward()
-        gf = MetaphorHGNN(shg, layers=2, cross_layer=False)
+        gf = MetaphorHGNN(shg, layers=2, cross_layer=False, alpha=alpha, leak=leak)
         gf.forward()
         comem = _l1_comembers(shg)
         flat_gru_vec: Dict[str, np.ndarray] = {}
@@ -248,9 +258,9 @@ def measure_h4():
             flat_gru_vec[ent] = gru.forward(seq)
 
         def coherence(method: str, a: str, b: str) -> float:
-            if method == "hgnn":
+            if method in ("hgnn", "hgnn_driven"):
                 return g.metaphor_coherence(a, b)
-            if method == "flat":
+            if method in ("flat", "flat_driven"):
                 return gf.metaphor_coherence(a, b)
             if method == "flat_gru":
                 va, vb = flat_gru_vec.get(a), flat_gru_vec.get(b)
@@ -351,11 +361,13 @@ def main():
 
     print("=" * 78)
     print("P4 —— HGNN 检测器 / 跨层语义信号测量（离线）")
+    print(f"     α={args.alpha}  ε={args.leak}"
+          f"{'（原无源项口径）' if args.alpha == 1.0 and args.leak == 0.0 else ''}")
     print("=" * 78)
 
     # ---- P4-A 跨层检索增益 ----
     print("\n【P4-A】跨层检索增益（HGNN 传播后余弦 vs 原始嵌入余弦）")
-    agg, detail = measure_p4a()
+    agg, detail = measure_p4a(alpha=args.alpha, leak=args.leak)
     n = agg["hgnn"]["n"]
     print(f"{'配置':16s} {'MRR@10':>9s} {'Hits@3':>8s} {'Hits@10':>9s}  (n={n})")
     for cfg, label in (("hgnn", "HGNN 跨层"), ("raw", "原始嵌入(对照)")):
@@ -370,7 +382,7 @@ def main():
 
     # ---- P4-B 检测器判别力 ----
     print("\n【P4-B】检测器判别力（metaphor_coherence：真边 vs 跨框架负样本）")
-    b = measure_p4b()
+    b = measure_p4b(alpha=args.alpha, leak=args.leak)
     print(f"  真 L1 边连贯度均值 : {b['pos_mean']:.3f}  (n={b['pos_n']})")
     print(f"  跨框架负样本均值   : {b['neg_mean']:.3f}  (n={b['neg_n']})")
     print(f"  配对判别准确率     : {b['acc']:.3f}  (配对 {b['n_pairs']})")
@@ -382,7 +394,8 @@ def main():
     print(f"{'表示':16s} {'真边连贯度':>10s} {'负样本':>8s} "
           f"{'配对判别':>8s} {'全量AUC':>9s}  (配对 n / 正×负)")
     for m, label in (("hgnn", "HGNN 完整跨层"), ("flat", "仅L1超边(flat)"),
-                     ("raw", "原始嵌入"), ("flat_gru", "GRU共成员序列")):
+                     ("raw", "原始嵌入"), ("flat_gru", "GRU共成员序列"),
+                     ("hgnn_driven", "HGNN+源项"), ("flat_driven", "flat+源项")):
         r = h4[m]
         print(f"{label:16s} {r['pos_mean']:>10.3f} {r['neg_mean']:>8.3f} "
               f"{r['acc']:>8.3f} {r['auc_full']:>9.3f}  "

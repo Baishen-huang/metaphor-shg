@@ -24,12 +24,48 @@ EMB_DIM = embeddings.DIM
 
 class MetaphorHGNN:
     def __init__(self, shg: MetaphorSHG, layers: int = 2,
-                 cross_layer: bool = True):
+                 cross_layer: bool = True,
+                 alpha: float = 1.0, leak: float = 0.0):
         """cross_layer=False 时只保留 L1 喻底超边，跳过框架/级联跨层边 ——
-        用于 H4 消融：检验「图结构校验信号」是来自 L1 n 元共现还是跨层传播。"""
+        用于 H4 消融：检验「图结构校验信号」是来自 L1 n 元共现还是跨层传播。
+
+        alpha（源项/驱动系数，默认 1.0 = 原无源项行为）
+        ------------------------------------------------
+        迭代式： ``X ← (1-α)·X0 + α·M·X``，其中 M 为 ``_conv`` 的传播算子。
+        - α = 1.0（默认）：退化为原实现 ``X ← M·X`` 迭代 layers 次，即
+          ``M^layers·X0`` —— **既有数字与既有测试完全不变**；
+        - α = 0.0：不做任何传播（H == X0）；
+        - 0 < α < 1：驱动/阻尼形式。**注意这不是无源项迭代的近似**：
+          S 行和恰为 1（行随机），无源项时 ``M^k X0`` 收敛到连通分量的
+          平稳分布，同分量节点最终向量相同 → ``metaphor_coherence`` 退化为
+          「是否同分量」的近似二值指示。加上 ``(1-α)X0`` 源项后，不动点
+          ``u* = (1-α)(I - αM)^{-1} X0`` 保留了各自的源身份，不再坍缩。
+
+        leak（严格次随机阻尼 ε，默认 0.0）
+        -----------------------------------
+        把 ``S`` 替换为 ``(1-ε)S``，于是 ``M_ε = 0.5(I + (1-ε)S)`` 行和
+        ``= 1 - ε/2 < 1`` 严格成立（谱半径 ``ρ(M_ε) ≤ 1 - ε/2``）。
+        RiverMemo 式算子的 resolvent ``(I - αT)^{-1}`` 要求 ``Σ_j P_ij < 1``
+        严格成立才能对**任意** α 收敛；ε=0 时 ρ(M)=1，α 必须 < 1。
+        代价：ε>0 时无源项迭代本身会几何衰减到 0（信息随层数流失），
+        因此 ε 只在**配合源项**时才有意义。
+
+        合法性：α ∈ [0, 1] 一律允许（α=1、ε=0 是非收缩边界，截断迭代仍有界）；
+        α > 1 需要 ``α·(1-ε/2) < 1`` 严格成立（否则 Neumann 级数发散）。
+        """
+        if not (0.0 <= leak < 1.0):
+            raise ValueError(f"leak 须在 [0, 1) 内，得到 {leak}")
+        if alpha < 0.0:
+            raise ValueError(f"alpha 须 >= 0，得到 {alpha}")
+        if alpha > 1.0 and alpha * (1.0 - leak / 2.0) >= 1.0:
+            raise ValueError(
+                f"alpha={alpha} 且 leak={leak} 时 α·(1-ε/2)={alpha*(1-leak/2.0):.4f} >= 1，"
+                "Neumann 级数 (I-αM)^{-1} 不收敛；请增大 leak 或减小 alpha")
         self.shg = shg
         self.layers = layers
         self.cross_layer = cross_layer
+        self.alpha = float(alpha)
+        self.leak = float(leak)
         # 节点集合：实体节点（源域/目标域/喻底）+ 框架节点 + 级联节点
         self.entities: List[str] = []
         self.frames: List[str] = []
@@ -85,7 +121,11 @@ class MetaphorHGNN:
             self.X[self.node_index[cid]] = np.array(embeddings.embed(cid))
 
     def _conv(self, X: np.ndarray) -> np.ndarray:
-        """两步空间域超图卷积：节点→超边聚合，超边→节点广播。"""
+        """两步空间域超图卷积：节点→超边聚合，超边→节点广播。
+
+        返回 ``M·X``，其中 ``M = 0.5(I + (1-ε)S)``，``ε = self.leak``。
+        源项在 ``forward`` 里加（``_conv`` 保持「纯传播算子」语义）。
+        """
         # 空超边图（全零边文档）直接返回，避免 np.stack 空列表崩溃
         if not self.he_members:
             return X
@@ -106,13 +146,37 @@ class MetaphorHGNN:
                 counts[i] += 1
         counts[counts == 0] = 1
         newX /= counts[:, None]
-        # 残差连接（HyperC2Net 风格）
-        return 0.5 * (X + newX)
+        # 残差连接（HyperC2Net 风格）+ 可选严格次随机阻尼 ε
+        return 0.5 * (X + (1.0 - self.leak) * newX)
+
+    def propagation_matrix(self) -> np.ndarray:
+        """稠密传播算子 M = 0.5(I + (1-ε)·Dv^{-1} H De^{-1} H^T)。
+
+        与 ``_conv`` 的循环实现逐元素等价，供谱分析 / 单元测试使用。
+        孤立节点（度 0）行全 0，与 ``_conv`` 的 ``counts[counts==0]=1`` 一致。
+        """
+        H = np.zeros((self.num_nodes, len(self.he_members)))
+        for j, members in enumerate(self.he_members):
+            for i in members:
+                H[i, j] = 1.0
+        dv = H.sum(axis=1)
+        de = H.sum(axis=0)
+        with np.errstate(divide="ignore", invalid="ignore"):
+            dv_inv = np.where(dv > 0, 1.0 / np.where(dv > 0, dv, 1.0), 0.0)
+            de_inv = np.where(de > 0, 1.0 / np.where(de > 0, de, 1.0), 0.0)
+        S = (dv_inv[:, None] * H) @ (de_inv[:, None] * H.T)
+        return 0.5 * (np.eye(self.num_nodes) + (1.0 - self.leak) * S)
 
     def forward(self) -> np.ndarray:
-        X = self.X.copy()
+        """驱动迭代：``X ← (1-α)·X0 + α·M·X``，迭代 ``layers`` 次。
+
+        α = 1.0（默认）时与历史实现逐位一致（``X ← M·X``）；α < 1 时
+        X0（各节点自身的嵌入）作为源项被持续注入，避免同分量坍缩。
+        """
+        X0 = self.X.copy()
+        X = X0.copy()
         for _ in range(self.layers):
-            X = self._conv(X)
+            X = (1.0 - self.alpha) * X0 + self.alpha * self._conv(X)
         self.H = X
         return X
 
