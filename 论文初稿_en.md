@@ -96,9 +96,52 @@ Two-step node→hyperedge→node propagation with residual connections injects f
 
 **Metrics**: Extraction — recall / literal misjudgment rate P1 (hard threshold <15%) / precision / F1; construction — L2/L3 hierarchical coverage rate and number of construction LLM calls; retrieval — MRR@10, Hits@3/10, Recall@10; extension chains — density (chains per hundred L1, proportion of documents containing chains) and strict-criterion precision (blind LLM judge evaluation).
 
-**Reproducibility**: All LLM calls (discover/refine/paraphrase/judgment/verification/common-sense association) are cached on disk, so all tables can be replayed at zero API cost; all random ids are made deterministic (md5), and unit-test guardrails ensure reproducibility across builds (116 unit tests).
+**Reproducibility**: All LLM calls (discover/refine/paraphrase/judgment/verification/common-sense association) are cached on disk, so all tables can be replayed at zero API cost; all random ids are made deterministic (md5), and unit-test guardrails ensure reproducibility across builds (124 unit tests).
 
 ---
+
+### 4.1 Benchmark Self-Audit and Repair (new)
+
+In response to the two defects above (overly small candidate pool, construction anchoring), we
+rebuilt the retrieval benchmark (`evaluate_repaired.py`) to separate **architectural ability** from
+**anchoring effects**.
+
+**Repair 1: global candidate pool.** The 110 pseudo-documents are merged into a **single global
+graph**, giving a candidate pool of **1,100 chunks** (previously median 7–8):
+
+| Metric | Original benchmark (pool=7) | Repaired (pool=1,100) |
+|---|---|---|
+| Random-ranking MRR expectation | **≈0.3704** | **0.0069** |
+| Random Hits@10 | **1.0000 (trivially saturated)** | 0.0091 |
+| Usable MRR range | 0.63 | **0.99** |
+
+**Repair 2: de-anchored setting.** The **producing chunk is removed from the candidate pool**, and
+the gold set becomes "other chunks under the same frame/cascade", physically severing the
+"reproduce the anchor" shortcut. De-anchored queries are constructible for **385/634** cases (the
+rest have no other same-frame chunk and are dropped); gold sizes range min=1 / median=3 / max=37
+(vs. a constant 1 under anchoring).
+
+**Self-audit fields**: random-ranking baseline, MRR range, and pool-external ratio—IR literature
+requires such fields to accompany the metrics (SIGIR 1998; 2007).
+
+**Results (offline, zero API cost; full 634 / 385 queries)**:
+
+| Setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Random |
+|---|---|---|---|---|---|
+| **anchored** (gold = producing chunk) | 634 | **0.8956** | 0.8390 | **0.9006** | 0.0069 |
+| **de-anchored** (producing chunk removed) | 385 | **0.2330** | 0.2307 | **0.2211** | 0.0069 |
+
+**Four conclusions**:
+
+1. **Anchoring inflates MRR by ≈ +0.66** (0.8956 vs 0.2330): about **74%** of the originally
+   reported numbers come from "ranking the known answer first".
+2. **The architecture does possess genuine cross-domain retrieval ability**: the de-anchored MRR of
+   **0.2330 is 34× the random baseline** of 0.0069, with Recall@10 = 0.3357 (random expectation
+   ≈0.009). Had the ability come entirely from anchoring, the de-anchored result would fall to
+   chance—**this rules out "the architecture is entirely ineffective".**
+3. **Weight recalibration only helps under anchoring** (anchored +0.0565 / de-anchored +0.0023).
+4. **The training gain reverses under de-anchoring** (anchored +0.005 → de-anchored −0.012): the
+   ranker learns to reproduce the construction anchor.
 
 ## 5 Extraction and Construction Results
 
@@ -208,6 +251,49 @@ The significance of the two-stage pipeline is symmetric to the extraction side: 
 
 ---
 
+### 6.7 Retrieval Conclusions After Benchmark Repair (new)
+
+The repaired benchmark of §4.1 (global pool of 1,100 chunks + de-anchored setting) yields the first
+set of retrieval numbers that **separate architectural ability from construction anchoring**
+(full 634 / 385 queries, offline zero cost):
+
+| Setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Random |
+|---|---|---|---|---|---|
+| anchored (gold = producing chunk) | 634 | **0.8956** | 0.8390 | **0.9006** | 0.0069 |
+| **de-anchored (producing chunk removed)** | 385 | **0.2330** | 0.2307 | 0.2211 | 0.0069 |
+
+**Four conclusions**: (1) anchoring inflates MRR by ≈ **+0.66**; (2) the architecture retains
+**genuine cross-domain retrieval ability**—the de-anchored MRR is **34× the random baseline**, so
+the core claim of §6.1 holds, but its supporting evidence should be replaced by this 34× figure
+rather than the trivially saturated 1.000; (3) weight recalibration only helps under anchoring
+(+0.0565 vs +0.0023); (4) the training gain reverses under de-anchoring (+0.005 → −0.012).
+
+**Correction to the three-pathway decomposition of §6.1**: the original "semantic hypergraph path
+recall 1.000" was **trivially saturated** (with a pool ≤10, Recall@10 is identically 1.0 for any
+ranker that returns all candidates). The literal path (0.000) and trigger-cascade path (0.042)
+remain **genuine failures** (those paths return nothing), but "1.000" must not be reported as a
+performance achievement. The repaired counterparts are anchored Hits@10 = 0.9748 and de-anchored
+Hits@10 = 0.4597.
+
+**Robustness under real sentence embeddings (new)**: re-measured with real sentence embeddings
+(embedding-3, 512-dim; `evaluate_repaired_real.py`), the **anchoring effect is orthogonal to the
+embedder**:
+
+| Embedder | anchored MRR | de-anchored MRR | Anchoring effect | de-anchored / random |
+|---|---|---|---|---|
+| Hash (full 634/385) | 0.8956 | 0.2330 | **+0.6626** | **33.8×** |
+| Real (subset 519/308) | 0.9066 | 0.2191 | **+0.6875** | **31.8×** |
+
+The anchoring effect is nearly identical across embedders (+0.66 vs +0.69), and the de-anchored
+result stays above 30× chance in both—**the core conclusions of §4.1/§6.7 do not depend on the
+embedder choice**. Under real embeddings, however, **the trained ranker's disadvantage widens**:
+de-anchored trained 0.0933 vs manual 0.2191 (**−0.126**), i.e. the ranker overfits the anchored
+path even more severely on real representations.
+
+> Limitation: the real-embedding re-measurement covers only the subset whose **query text is
+> cached** (hyperedge descriptions: 100% hit; query texts: 81.9% hit). A full re-run requires an
+> EMBED_API_KEY to re-fetch 115 query vectors.
+
 ## 7 Ablations and Negative Results
 
 | Ablation | Expected | Observed | Conclusion |
@@ -222,7 +308,18 @@ The significance of the two-stage pipeline is symmetric to the extraction side: 
 | A8 Turn off adaptive thresholds | — | No difference on either sparse or dense graphs | Neutral |
 | A9 Remove role features | MRR drops | Completely unchanged | **H7 falsified** |
 
-**Other honest conclusions**: ① Bootstrapped trigger words generalize poorly from train→test (recall rises 4.5×, false positives rise 4× in tandem); the value of bootstrapping lies in frame/cascade structure. ② Offline rules lack cheap features to distinguish metaphorical vs. literal identity judgments for novel vehicles. ③ The semantic-domain incongruity channel contributes only +0.6pp marginally when the LLM is present. ④ Textual continuity criteria (trigger-word recurrence / vehicle intersection ≥2) cannot filter lexicalized idioms; extension-chain quality must be semantically verified (§6.6). ⑤ LLM-as-judge conclusions are sensitive to the judge model (§6.5).
+**Additional negative results from the parallel experiments (new; each measured and independently
+verified on a dedicated branch)**:
+
+| Test | Expected | Observed | Conclusion |
+|---|---|---|---|
+| Query-side observability scalar Ω | Predicts cascade-path failure | ρ(Ω, trigger-hit count) = **0.9949**; after controlling set size all scalars' AUCs cover 0.5; 64 composition variants span AUC 0.50–0.93 | **Direction infeasible**: a read-only-query scalar degenerates into a 1-bit trigger indicator; trigger-hit count is the ceiling |
+| Capped reliability channel for degraded provenance | Lets type constraints affect P1 | P1 effect identically **0**; all **7/7** literal-misjudgment sentences are backed *exclusively* by ontology-registered frames (0/7 from fallback edges) | **Structurally impossible**: P1 is a sentence-level boolean existence metric; soft channels only affect ranking |
+| Adding a source term to HGNN | Breaks the flat/HGNN tie | Across 18 (α, ε) configs, \|ΔAUC\| ≤ 0.005 with 95% CI crossing 0 | **The tie is not due to operator degeneracy**; the source term only matters at layers ≥ 50 |
+| Replacing the cascade construction rule | Restores L3 organizing power | The all-singleton control yields **identical** MRR to production (0.5025); only full removal drops it to 0.4681 | **L3 contributes zero structure**: its only causal channel is the boolean `cascade_id` non-emptiness |
+| Dispositions of the 7 features (drop/replace) | Improve ranking | Dropping `type`, dropping `same_cascade`, and six replacement signals—**all CIs cover 0** | No significant effect; `type` is not dead but weak (paired AUC 0.525) |
+
+**Other honest conclusions**: ① Bootstrapped trigger words generalize poorly from train→test (recall rises 4.5×, false positives rise 4× in tandem); the value of bootstrapping lies in frame/cascade structure. ② Offline rules lack cheap features to distinguish metaphorical vs. literal identity judgments for novel vehicles. ③ The semantic-domain incongruity channel contributes only +0.6pp marginally when the LLM is present. ④ Textual continuity criteria (trigger-word recurrence / vehicle intersection ≥2) cannot filter lexicalized idioms; extension-chain quality must be semantically verified (§6.6). ⑤ LLM-as-judge conclusions are sensitive to the judge model (§6.5). ⑥ **The "non-constructive gold standard" label of the original retrieval benchmark does not hold** (100% of gold sets contain the producing chunk), and the overly small candidate pool makes Hits@10 trivially saturated—these two defects correspond respectively to **pooling bias** and **insufficient test-collection size** in the IR literature (§4.1).
 
 ---
 
@@ -255,7 +352,9 @@ This paper demonstrates that the n-ary nature of metaphor can be translated into
 | §6.5 | `python -m metaphor_graph.demo_rag`; `python -m metaphor_graph.evaluate_packing_ablation`; `python -m metaphor_graph.evaluate_llmasjudge` |
 | §6.6 | `python -m metaphor_graph.evaluate_document_corpus --stage all [--continuity ... --llm-verify]`; `python -m metaphor_graph.evaluate_chain_quality [--llm-verify]` |
 | §7 | `python -m metaphor_graph.ablation`, `python -m metaphor_graph.evaluate_retrieval` |
-| All unit tests | `python -m unittest metaphor_graph.test_metaphor_graph` (116 tests) |
+| **§4.1/§6.7 (repaired benchmark)** | `python -m metaphor_graph.evaluate_repaired` (global pool + anchored/de-anchored three-arm comparison) |
+| **§6.7 (real-embedding re-run)** | `python -m metaphor_graph.evaluate_repaired_real` (read-only embed cache, $0) |
+| All unit tests | `python -m unittest metaphor_graph.test_metaphor_graph` (124 tests) |
 
 > All stages requiring a real LLM (discover/refine/rewriting/judging/verification/linking/generation) have been cached on disk under
 > `data/`, enabling zero-request replay; cache keys are deterministic ids and are reproducible across processes (with unit-test safeguards).
