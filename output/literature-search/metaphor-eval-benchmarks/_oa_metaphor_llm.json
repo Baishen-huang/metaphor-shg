@@ -1,0 +1,267 @@
+{
+  "meta": {
+    "count": 23621,
+    "db_response_time_ms": 148,
+    "page": 1,
+    "per_page": 30,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (metaphor understanding interpretation benchmark large language model)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "metaphor understanding interpretation benchmark large language model",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:metaphor understanding interpretation benchmark large language model&per_page=30&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W4224308101",
+      "display_name": "PaLM: Scaling Language Modeling with Pathways",
+      "publication_year": 2022,
+      "cited_by_count": 2138,
+      "doi": "https://doi.org/10.48550/arxiv.2204.02311",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4283026156",
+      "display_name": "Emergent Abilities of Large Language Models",
+      "publication_year": 2022,
+      "cited_by_count": 1047,
+      "doi": "https://doi.org/10.48550/arxiv.2206.07682",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4389636360",
+      "display_name": "Can Large Language Models Transform Computational Social Science?",
+      "publication_year": 2023,
+      "cited_by_count": 515,
+      "doi": "https://doi.org/10.1162/coli_a_00502",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3034723486",
+      "display_name": "Climbing towards NLU: On Meaning, Form, and Understanding in the Age of Data",
+      "publication_year": 2020,
+      "cited_by_count": 1034,
+      "doi": "https://doi.org/10.18653/v1/2020.acl-main.463",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4205807230",
+      "display_name": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+      "publication_year": 2021,
+      "cited_by_count": 1687,
+      "doi": "https://doi.org/10.18653/v1/2021.emnlp-main",
+      "type": "paratext"
+    },
+    {
+      "id": "https://openalex.org/W4281690148",
+      "display_name": "Beyond the Imitation Game: Quantifying and extrapolating the capabilities of language models",
+      "publication_year": 2022,
+      "cited_by_count": 565,
+      "doi": "https://doi.org/10.48550/arxiv.2206.04615",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4320005767",
+      "display_name": "Galactica: A Large Language Model for Science",
+      "publication_year": 2022,
+      "cited_by_count": 267,
+      "doi": "https://doi.org/10.48550/arxiv.2211.09085",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4400118952",
+      "display_name": "When large language models meet personalization: perspectives of challenges and opportunities",
+      "publication_year": 2024,
+      "cited_by_count": 342,
+      "doi": "https://doi.org/10.1007/s11280-024-01276-1",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2099938389",
+      "display_name": "Wikipedia-based Semantic Interpretation for Natural Language Processing",
+      "publication_year": 2009,
+      "cited_by_count": 383,
+      "doi": "https://doi.org/10.1613/jair.2669",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4386794445",
+      "display_name": "The Rise and Potential of Large Language Model Based Agents: A Survey",
+      "publication_year": 2023,
+      "cited_by_count": 259,
+      "doi": "https://doi.org/10.48550/arxiv.2309.07864",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4402692877",
+      "display_name": "Large language models in medical and healthcare fields: applications, advances, and challenges",
+      "publication_year": 2024,
+      "cited_by_count": 239,
+      "doi": "https://doi.org/10.1007/s10462-024-10921-0",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4411203672",
+      "display_name": "Retrieval augmented generation for large language models in healthcare: A systematic review",
+      "publication_year": 2025,
+      "cited_by_count": 226,
+      "doi": "https://doi.org/10.1371/journal.pdig.0000877",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W3201622928",
+      "display_name": "Latent Hatred: A Benchmark for Understanding Implicit Hate Speech",
+      "publication_year": 2021,
+      "cited_by_count": 180,
+      "doi": "https://doi.org/10.18653/v1/2021.emnlp-main.29",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W162761190",
+      "display_name": "Implicit and Explicit Learning of Languages",
+      "publication_year": 2015,
+      "cited_by_count": 607,
+      "doi": "https://doi.org/10.1075/sibil.48",
+      "type": "book"
+    },
+    {
+      "id": "https://openalex.org/W2048824073",
+      "display_name": "Making creative metaphors: The importance of fluid intelligence for creative thought",
+      "publication_year": 2012,
+      "cited_by_count": 278,
+      "doi": "https://doi.org/10.1016/j.intell.2012.02.005",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4220747294",
+      "display_name": "CoAuthor: Designing a Human-AI Collaborative Writing Dataset for Exploring Language Model Capabilities",
+      "publication_year": 2022,
+      "cited_by_count": 341,
+      "doi": "https://doi.org/10.1145/3491102.3502030",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2116303355",
+      "display_name": "Cognitive processes, models and metaphors in decision research",
+      "publication_year": 2008,
+      "cited_by_count": 146,
+      "doi": "https://doi.org/10.1017/s1930297500002400",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4393111197",
+      "display_name": "Automatic Scoring of Metaphor Creativity with Large Language Models",
+      "publication_year": 2024,
+      "cited_by_count": 51,
+      "doi": "https://doi.org/10.1080/10400419.2024.2326343",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4391556516",
+      "display_name": "Homogenization Effects of Large Language Models on Human Creative Ideation",
+      "publication_year": 2024,
+      "cited_by_count": 164,
+      "doi": "https://doi.org/10.1145/3635636.3656204",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2604799547",
+      "display_name": "Survey of the State of the Art in Natural Language Generation: Core tasks, applications and evaluation",
+      "publication_year": 2018,
+      "cited_by_count": 772,
+      "doi": "https://doi.org/10.1613/jair.5477",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W1994999882",
+      "display_name": "Metaphorically speaking: cognitive abilities and the production of figurative language",
+      "publication_year": 2012,
+      "cited_by_count": 224,
+      "doi": "https://doi.org/10.3758/s13421-012-0258-5",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2028695285",
+      "display_name": "ForceAtlas2, a Continuous Graph Layout Algorithm for Handy Network Visualization Designed for the Gephi Software",
+      "publication_year": 2014,
+      "cited_by_count": 3037,
+      "doi": "https://doi.org/10.1371/journal.pone.0098679",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4389523980",
+      "display_name": "Towards Interpretable Mental Health Analysis with Large Language Models",
+      "publication_year": 2023,
+      "cited_by_count": 128,
+      "doi": "https://doi.org/10.18653/v1/2023.emnlp-main.370",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2963272610",
+      "display_name": "Neural Metaphor Detection in Context",
+      "publication_year": 2018,
+      "cited_by_count": 126,
+      "doi": "https://doi.org/10.18653/v1/d18-1060",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4386200967",
+      "display_name": "Personality Traits in Large Language Models",
+      "publication_year": 2023,
+      "cited_by_count": 109,
+      "doi": "https://doi.org/10.21203/rs.3.rs-3296728/v1",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W3124405280",
+      "display_name": "The Gravity Model",
+      "publication_year": 2010,
+      "cited_by_count": 549,
+      "doi": "https://doi.org/10.3386/w16576",
+      "type": "report"
+    },
+    {
+      "id": "https://openalex.org/W4360836968",
+      "display_name": "Sparks of Artificial General Intelligence: Early experiments with GPT-4",
+      "publication_year": 2023,
+      "cited_by_count": 1585,
+      "doi": "https://doi.org/10.48550/arxiv.2303.12712",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4392679398",
+      "display_name": "Gemini 1.5: Unlocking multimodal understanding across millions of tokens of context",
+      "publication_year": 2024,
+      "cited_by_count": 297,
+      "doi": "https://doi.org/10.48550/arxiv.2403.05530",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W1970624555",
+      "display_name": "Modeling working memory: An interference model of complex span",
+      "publication_year": 2012,
+      "cited_by_count": 402,
+      "doi": "https://doi.org/10.3758/s13423-012-0272-4",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3207166518",
+      "display_name": "Symbolic Knowledge Distillation: from General Language Models to Commonsense Models",
+      "publication_year": 2022,
+      "cited_by_count": 158,
+      "doi": "https://doi.org/10.18653/v1/2022.naacl-main.341",
+      "type": "conference-paper"
+    }
+  ],
+  "group_by": []
+}

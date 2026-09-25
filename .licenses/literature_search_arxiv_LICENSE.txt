@@ -1,0 +1,11 @@
+arXiv API Terms of Use notice
+=============================
+Recorded: 2026-09-25
+
+The user has been notified to check the terms at
+https://info.arxiv.org/help/api/index.html and to always check the license of
+the papers retrieved by this skill for any restrictions.
+
+Usage constraints observed by this skill:
+- Maximum 1 request every 3 seconds (handled by the provided scripts).
+- Results are metadata + links; paper licenses vary per paper.

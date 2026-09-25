@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "count": 14225,
+    "db_response_time_ms": 203,
+    "page": 1,
+    "per_page": 25,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (LLM as judge reliability validity evaluation bias)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "LLM as judge reliability validity evaluation bias",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:LLM as judge reliability validity evaluation bias&per_page=25&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W4384071683",
+      "display_name": "Large language models encode clinical knowledge",
+      "publication_year": 2023,
+      "cited_by_count": 3874,
+      "doi": "https://doi.org/10.1038/s41586-023-06291-2",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3011962481",
+      "display_name": "Methodological quality (risk of bias) assessment tools for primary and secondary medical studies: what are they and which is better?",
+      "publication_year": 2020,
+      "cited_by_count": 1691,
+      "doi": "https://doi.org/10.1186/s40779-020-00238-8",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4378509449",
+      "display_name": "QLoRA: Efficient Finetuning of Quantized LLMs",
+      "publication_year": 2023,
+      "cited_by_count": 510,
+      "doi": "https://doi.org/10.48550/arxiv.2305.14314",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4389519254",
+      "display_name": "G-Eval: NLG Evaluation using Gpt-4 with Better Human Alignment",
+      "publication_year": 2023,
+      "cited_by_count": 777,
+      "doi": "https://doi.org/10.18653/v1/2023.emnlp-main.153",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4404782878",
+      "display_name": "Humans or LLMs as the Judge? A Study on Judgement Bias",
+      "publication_year": 2024,
+      "cited_by_count": 63,
+      "doi": "https://doi.org/10.18653/v1/2024.emnlp-main.474",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4416037109",
+      "display_name": "From Generation to Judgment: Opportunities and Challenges of LLM-as-a-judge",
+      "publication_year": 2025,
+      "cited_by_count": 103,
+      "doi": "https://doi.org/10.18653/v1/2025.emnlp-main.138",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4387242094",
+      "display_name": "Accuracy and Reliability of Chatbot Responses to Physician Questions",
+      "publication_year": 2023,
+      "cited_by_count": 486,
+      "doi": "https://doi.org/10.1001/jamanetworkopen.2023.36483",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4404986534",
+      "display_name": "A Survey on LLM-as-a-Judge",
+      "publication_year": 2024,
+      "cited_by_count": 43,
+      "doi": "https://doi.org/10.48550/arxiv.2411.15594",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4327810158",
+      "display_name": "GPT-4 Technical Report",
+      "publication_year": 2023,
+      "cited_by_count": 2490,
+      "doi": "https://doi.org/10.4230/lipics.cosit.2024.11",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4362515116",
+      "display_name": "A Survey of Large Language Models",
+      "publication_year": 2026,
+      "cited_by_count": 1558,
+      "doi": "https://doi.org/10.1007/s11704-026-60308-3",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4402909345",
+      "display_name": "A framework for human evaluation of large language models in healthcare derived from literature review",
+      "publication_year": 2024,
+      "cited_by_count": 378,
+      "doi": "https://doi.org/10.1038/s41746-024-01258-7",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4405253355",
+      "display_name": "LLMs-as-Judges: A Comprehensive Survey on LLM-based Evaluation Methods",
+      "publication_year": 2024,
+      "cited_by_count": 38,
+      "doi": "https://doi.org/10.48550/arxiv.2412.05579",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4221045317",
+      "display_name": "Towards a standard for identifying and managing bias in artificial intelligence",
+      "publication_year": 2022,
+      "cited_by_count": 542,
+      "doi": "https://doi.org/10.6028/nist.sp.1270",
+      "type": "report"
+    },
+    {
+      "id": "https://openalex.org/W4392616695",
+      "display_name": "Chatbot Arena: An Open Platform for Evaluating LLMs by Human Preference",
+      "publication_year": 2024,
+      "cited_by_count": 102,
+      "doi": "https://doi.org/10.4230/lipics.cp.2024.25",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4412877164",
+      "display_name": "Evaluation and Benchmarking of LLM Agents: A Survey",
+      "publication_year": 2025,
+      "cited_by_count": 58,
+      "doi": "https://doi.org/10.1145/3711896.3736570",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4319793302",
+      "display_name": "A Multitask, Multilingual, Multimodal Evaluation of ChatGPT on Reasoning, Hallucination, and Interactivity",
+      "publication_year": 2023,
+      "cited_by_count": 360,
+      "doi": "https://doi.org/10.48550/arxiv.2302.04023",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4392669753",
+      "display_name": "A Multitask, Multilingual, Multimodal Evaluation of ChatGPT on Reasoning, Hallucination, and Interactivity",
+      "publication_year": 2023,
+      "cited_by_count": 663,
+      "doi": "https://doi.org/10.18653/v1/2023.ijcnlp-main.45",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4392193048",
+      "display_name": "Adapted large language models can outperform medical experts in clinical text summarization",
+      "publication_year": 2024,
+      "cited_by_count": 763,
+      "doi": "https://doi.org/10.1038/s41591-024-02855-5",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4401170130",
+      "display_name": "The political preferences of LLMs",
+      "publication_year": 2024,
+      "cited_by_count": 73,
+      "doi": "https://doi.org/10.1371/journal.pone.0306621",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4385774833",
+      "display_name": "Trustworthy LLMs: a Survey and Guideline for Evaluating Large Language Models' Alignment",
+      "publication_year": 2023,
+      "cited_by_count": 73,
+      "doi": "https://doi.org/10.48550/arxiv.2308.05374",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4400485493",
+      "display_name": "Harnessing LLMs for multi-dimensional writing assessment: Reliability and alignment with human judgments",
+      "publication_year": 2024,
+      "cited_by_count": 62,
+      "doi": "https://doi.org/10.1016/j.heliyon.2024.e34262",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W7138303952",
+      "display_name": "Judging the Judges: A Systematic Study of Position Bias in LLM-as-a-Judge",
+      "publication_year": 2025,
+      "cited_by_count": 19,
+      "doi": "https://doi.org/10.18653/v1/2025.ijcnlp-long.18",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4383605161",
+      "display_name": "A Survey on Evaluation of Large Language Models",
+      "publication_year": 2023,
+      "cited_by_count": 202,
+      "doi": "https://doi.org/10.48550/arxiv.2307.03109",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4360836968",
+      "display_name": "Sparks of Artificial General Intelligence: Early experiments with GPT-4",
+      "publication_year": 2023,
+      "cited_by_count": 1585,
+      "doi": "https://doi.org/10.48550/arxiv.2303.12712",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4399667811",
+      "display_name": "A Performance Study of LLM-Generated Code on Leetcode",
+      "publication_year": 2024,
+      "cited_by_count": 79,
+      "doi": "https://doi.org/10.1145/3661167.3661221",
+      "type": "conference-paper"
+    }
+  ],
+  "group_by": []
+}

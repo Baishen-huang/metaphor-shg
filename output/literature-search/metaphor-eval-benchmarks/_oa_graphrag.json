@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "count": 43,
+    "db_response_time_ms": 113,
+    "page": 1,
+    "per_page": 25,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (GraphRAG hypergraph retrieval evaluation benchmark n-ary)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "GraphRAG hypergraph retrieval evaluation benchmark n-ary",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:GraphRAG hypergraph retrieval evaluation benchmark n-ary&per_page=25&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W7129353021",
+      "display_name": "HyperRAG: Reasoning N-ary Facts over Hypergraphs for Retrieval Augmented Generation",
+      "publication_year": 2026,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.1145/3774904.3792710",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W7138181378",
+      "display_name": "Cross-Granularity Hypergraph Retrieval-Augmented Generation for Multi-hop Question Answering",
+      "publication_year": 2026,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.1609/aaai.v40i39.40623",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4416955380",
+      "display_name": "Evaluating Faithfulness in Agentic RAG Systems for e-Governance Applications Using LLM-Based Judging Frameworks",
+      "publication_year": 2025,
+      "cited_by_count": 12,
+      "doi": "https://doi.org/10.3390/bdcc9120309",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W7172090022",
+      "display_name": "Temporal-spatial reasoning over hypergraph knowledge structures for multimodal retrieval-augmented generation",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.1038/s41598-026-63525-9",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W7154539155",
+      "display_name": "Do We Still Need GraphRAG? Benchmarking RAG and GraphRAG for Agentic Search Systems",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7171268736",
+      "display_name": "Optimizing Hypergraph-Based RAG: Toward Better Fact Extraction and Chunk Retrieval",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7169474039",
+      "display_name": "EvoGraph-R1: Self-Evolving Multimodal Knowledge Hypergraphs for Agentic Retrieval",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7155247216",
+      "display_name": "GraphRAG-Router: Learning Cost-Efficient Routing over GraphRAGs and LLMs with Reinforcement Learning",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7166901095",
+      "display_name": "HyperSU: Corpus-Driven Semantic-Unit Hypergraph for Retrieval-Augmented Generation",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7170988854",
+      "display_name": "VizRAG: Enhancing Retrieval-Augmented Generation with Hypergraph Visualization",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7203662944",
+      "display_name": "Hypergraph-based Multimodal Retrieval-Augmented Generation with Incremental Refinement",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.48550/arxiv.2608.16628",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7127140981",
+      "display_name": "HyperTSRAG: Temporal-Spatial Reasoning over Hypergraph Knowledge Structures for Multimodal Retrieval-Augmented Generation",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.21203/rs.3.rs-8737158/v1",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4312047226",
+      "display_name": "Graph Learning and Its Advancements on Large Language Models: A Holistic Survey",
+      "publication_year": 2022,
+      "cited_by_count": 4,
+      "doi": "https://doi.org/10.48550/arxiv.2212.08966",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7169592698",
+      "display_name": "A Knowledge Hypergraph-Based Planning and Reasoning Framework for Retrieval-Augmented Generation",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.26190/unsworks/32507",
+      "type": "dissertation"
+    },
+    {
+      "id": "https://openalex.org/W4414992372",
+      "display_name": "EEG-MedRAG: Enhancing EEG-based Clinical Decision-Making via Hierarchical Hypergraph Retrieval-Augmented Generation",
+      "publication_year": 2025,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.48550/arxiv.2508.13735",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7125878134",
+      "display_name": "HyperGraphPro: Progress-Aware Reinforcement Learning for Structure-Guided Hypergraph RAG",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7171750266",
+      "display_name": "HyCE-RAG: Hypergraph Chain-of-Evidence Retrieval-Augmented Generation for Explainable Multi-hop Question Answering",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7161452968",
+      "display_name": "Hypergraph Enterprise Agentic Reasoner over Heterogeneous Business Systems",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7153670247",
+      "display_name": "HyperMem: Hypergraph Memory for Long-Term Conversations",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4415028266",
+      "display_name": "Representation Learning in Complex Logical Query Answering on Knowledge Graphs: A Survey",
+      "publication_year": 2025,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.1145/3771692",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W7214048571",
+      "display_name": "PRISM-RAG: Multimodal Hypergraph Retrieval-Augmented Generation for Tobacco Product and Legislative Policy Reasoning",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.48550/arxiv.2609.23769",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7117309112",
+      "display_name": "MOSES: combining automated ontology construction with a multi-agent system for explainable chemical knowledge reasoning",
+      "publication_year": 2025,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.1088/3050-287x/ae3127",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W7154656161",
+      "display_name": "Knowledge Is Not Static: Order-Aware Hypergraph RAG for Language Models",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W7166810324",
+      "display_name": "HyperMem: Hypergraph Memory for Long-Term Conversations",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": "https://doi.org/10.18653/v1/2026.acl-long.1627",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W7131318928",
+      "display_name": "Hyper-KGGen: A Skill-Driven Knowledge Extractor for High-Quality Knowledge Hypergraph Generation",
+      "publication_year": 2026,
+      "cited_by_count": 0,
+      "doi": null,
+      "type": "preprint"
+    }
+  ],
+  "group_by": []
+}

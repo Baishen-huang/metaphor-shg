@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "count": 95,
+    "db_response_time_ms": 169,
+    "page": 1,
+    "per_page": 25,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (Chinese metaphor identification corpus CCL)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "Chinese metaphor identification corpus CCL",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:Chinese metaphor identification corpus CCL&per_page=25&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W4283527720",
+      "display_name": "Corpus-based Studies of Metaphor: An Overview",
+      "publication_year": 2022,
+      "cited_by_count": 10,
+      "doi": "https://doi.org/10.24093/awej/vol13no2.36",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3110279060",
+      "display_name": "A Corpus-Based Contrastive Study of HEART Metaphor in Chinese and English",
+      "publication_year": 2020,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.30845/ijll.v7n3p9",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4389938874",
+      "display_name": "Exploring metaphorical conceptualizations of ENVY in English and Chinese: A multifactorial corpus analysis",
+      "publication_year": 2023,
+      "cited_by_count": 5,
+      "doi": "https://doi.org/10.1017/langcog.2023.56",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2904772060",
+      "display_name": "The N1\u2013N2\u2013LPC Pattern in Processing Advertising Pictorial Metaphors: An ERP Study",
+      "publication_year": 2018,
+      "cited_by_count": 14,
+      "doi": "https://doi.org/10.3389/fpsyg.2018.02566",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4389581652",
+      "display_name": "A Corpus-Based Cognitive Linguistic Analysis of Taste Words: The Case of English \u201cBitter\u201d and Chinese Ku",
+      "publication_year": 2023,
+      "cited_by_count": 4,
+      "doi": "https://doi.org/10.21315/kajh2023.30.s1.4",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3112487567",
+      "display_name": "Corpus-Based Research on Chinese Language and Linguistics",
+      "publication_year": 2020,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.30687/978-88-6969-406-6",
+      "type": "book"
+    },
+    {
+      "id": "https://openalex.org/W4409373396",
+      "display_name": "An Analysis of Semantic Generalization of Chinese Internet Buzzwords from the Perspective of Cognitive Metaphor",
+      "publication_year": 2025,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.4236/jss.2025.134005",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4411628670",
+      "display_name": "The interplay between cultural models and metaphor understanding: a cross-cultural cognitive perspective",
+      "publication_year": 2025,
+      "cited_by_count": 7,
+      "doi": "https://doi.org/10.3389/fpsyg.2025.1539784",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4391122479",
+      "display_name": "Plant Metaphor in Chinese: semasiological and cognitive aspects",
+      "publication_year": 2024,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.23951/1609-624x-2024-1-23-32",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4412503133",
+      "display_name": "\u201cEye\u201d Metaphors Across English, Chinese, and Japanese and Their Implications to Translation Practices",
+      "publication_year": 2025,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.26855/jhass.2025.01.020",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W1595339000",
+      "display_name": "The discourse of disease : the representation of SARS - the China daily and the South China Morning Post",
+      "publication_year": 2007,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.14793/eng_etd.5",
+      "type": "dissertation"
+    },
+    {
+      "id": "https://openalex.org/W4407863087",
+      "display_name": "Chinese perceptions and refutations of face-threatening impoliteness regarding diplomatic press conferences",
+      "publication_year": 2025,
+      "cited_by_count": 7,
+      "doi": "https://doi.org/10.1515/pr-2023-0045",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W7128731167",
+      "display_name": "Divergent reference frames in Chinese and Japanese spatiotemporal metaphors: a cross-cultural study of multidimensional mapping in Qian/Hou and Mae/Ato",
+      "publication_year": 2026,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.1057/s41599-026-06664-8",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4391484051",
+      "display_name": "Building a Parallel Corpus for Chinese Folk Songs Translation Studies: A Case Study of Northern Shaanxi and Hua\u2019er Folk Songs",
+      "publication_year": 2024,
+      "cited_by_count": 2,
+      "doi": "https://doi.org/10.17507/tpls.1402.17",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4404781274",
+      "display_name": "The Moral Foundations Weibo Corpus",
+      "publication_year": 2024,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.18653/v1/2024.nlp4science-1.13",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4412508434",
+      "display_name": "Reframing China in U.S. Trade policy discourse: a context-deictic space model for ideological positioning",
+      "publication_year": 2025,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.3389/fcomm.2025.1598041",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4388032238",
+      "display_name": "The landslide\u2019s conceptualizing economic decline and its framing effect: Mandarin evidence",
+      "publication_year": 2023,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.3389/fpsyg.2023.1271911",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2237245883",
+      "display_name": "Use of Formulaic Sequences in Task-basedOral Production of Chinese",
+      "publication_year": 2012,
+      "cited_by_count": 3,
+      "doi": null,
+      "type": "dissertation"
+    },
+    {
+      "id": "https://openalex.org/W2560643912",
+      "display_name": "Musica sanat corpus per animam : towards an understanding of the use of music in response to Plague, 1350-1600",
+      "publication_year": 2008,
+      "cited_by_count": 3,
+      "doi": null,
+      "type": "dissertation"
+    },
+    {
+      "id": "https://openalex.org/W4403135069",
+      "display_name": "Image restoration strategies in pandemic crisis communication: a comparative analysis of Chinese and American COVID-19 political speeches",
+      "publication_year": 2024,
+      "cited_by_count": 2,
+      "doi": "https://doi.org/10.1057/s41599-024-03825-5",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4385571750",
+      "display_name": "Fantastic Expressions and Where to Find Them: Chinese Simile Generation with Multiple Constraints",
+      "publication_year": 2023,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.18653/v1/2023.acl-long.28",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3104191315",
+      "display_name": "Applying Collocation Analysis to Chinese Discourse: A Case Study of Causal Connectives",
+      "publication_year": 2020,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.2478/linguasinica-2020-0004",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4405654597",
+      "display_name": "A survey on deep learning-based automated essay scoring and feedback generation",
+      "publication_year": 2024,
+      "cited_by_count": 42,
+      "doi": "https://doi.org/10.1007/s10462-024-11017-5",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2480553727",
+      "display_name": "Cultural Heritage in a Changing World",
+      "publication_year": 2016,
+      "cited_by_count": 83,
+      "doi": "https://doi.org/10.1007/978-3-319-29544-2",
+      "type": "book"
+    },
+    {
+      "id": "https://openalex.org/W7126233759",
+      "display_name": "A Comparative Cognitive Study of the Direction of Transfer in Ditransitive Constructions in Chinese and English",
+      "publication_year": 2024,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.30845/ijll.v11p3",
+      "type": "article"
+    }
+  ],
+  "group_by": []
+}

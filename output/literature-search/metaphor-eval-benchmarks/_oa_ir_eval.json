@@ -1,0 +1,267 @@
+{
+  "meta": {
+    "count": 61384,
+    "db_response_time_ms": 255,
+    "page": 1,
+    "per_page": 30,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (information retrieval evaluation pooling test collection bias)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "information retrieval evaluation pooling test collection bias",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:information retrieval evaluation pooling test collection bias&per_page=30&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W1532325895",
+      "display_name": "Introduction to information retrieval",
+      "publication_year": 2009,
+      "cited_by_count": 12569,
+      "doi": "https://doi.org/10.5860/choice.46-2715",
+      "type": "book-review"
+    },
+    {
+      "id": "https://openalex.org/W3022903699",
+      "display_name": "The PRISMA Statement for Reporting Systematic Reviews and Meta-Analyses of Studies That Evaluate Health Care Interventions: Explanation and Elaboration",
+      "publication_year": 2009,
+      "cited_by_count": 28074,
+      "doi": "https://doi.org/10.1371/journal.pmed.1000100",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W2092684779",
+      "display_name": "Word frequency effects in speech production: Retrieval of syntactic information and of phonological form.",
+      "publication_year": 1994,
+      "cited_by_count": 980,
+      "doi": "https://doi.org/10.1037/0278-7393.20.4.824",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2075893676",
+      "display_name": "How reliable are the results of large-scale information retrieval experiments?",
+      "publication_year": 1998,
+      "cited_by_count": 579,
+      "doi": "https://doi.org/10.1145/290941.291014",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2031489346",
+      "display_name": "The Pascal Visual Object Classes (VOC) Challenge",
+      "publication_year": 2009,
+      "cited_by_count": 20143,
+      "doi": "https://doi.org/10.1007/s11263-009-0275-4",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2062903088",
+      "display_name": "Evaluation campaigns and TRECVid",
+      "publication_year": 2006,
+      "cited_by_count": 1228,
+      "doi": "https://doi.org/10.1145/1178677.1178722",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2785704959",
+      "display_name": "Preferred Reporting Items for a Systematic Review and Meta-analysis of Diagnostic Test Accuracy Studies",
+      "publication_year": 2018,
+      "cited_by_count": 3243,
+      "doi": "https://doi.org/10.1001/jama.2017.19163",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W4389984066",
+      "display_name": "Retrieval-Augmented Generation for Large Language Models: A Survey",
+      "publication_year": 2023,
+      "cited_by_count": 749,
+      "doi": "https://doi.org/10.48550/arxiv.2312.10997",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W2804076223",
+      "display_name": "MODIS Collection 6 MAIAC algorithm",
+      "publication_year": 2018,
+      "cited_by_count": 930,
+      "doi": "https://doi.org/10.5194/amt-11-5741-2018",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4399625654",
+      "display_name": "The PRISMA statement for reporting systematic reviews and meta-analyses of studies that evaluate health care interventions: explanation and elaboration",
+      "publication_year": 2009,
+      "cited_by_count": 3485,
+      "doi": "https://doi.org/10.2427/5768",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W2740253077",
+      "display_name": "Statistical biases in Information Retrieval metrics for recommender systems",
+      "publication_year": 2017,
+      "cited_by_count": 169,
+      "doi": "https://doi.org/10.1007/s10791-017-9312-z",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2102698119",
+      "display_name": "Bias and the limits of pooling for large collections",
+      "publication_year": 2007,
+      "cited_by_count": 118,
+      "doi": "https://doi.org/10.1007/s10791-007-9032-x",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2078294512",
+      "display_name": "MAC/FAC: A Model of Similarity\u2010Based Retrieval",
+      "publication_year": 1995,
+      "cited_by_count": 745,
+      "doi": "https://doi.org/10.1207/s15516709cog1902_1",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3123893780",
+      "display_name": "PRISMA 2020 explanation and elaboration: updated guidance and exemplars for reporting systematic reviews",
+      "publication_year": 2021,
+      "cited_by_count": 11790,
+      "doi": "https://doi.org/10.1136/bmj.n160",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W2057495142",
+      "display_name": "Efficient construction of large test collections",
+      "publication_year": 1998,
+      "cited_by_count": 238,
+      "doi": "https://doi.org/10.1145/290941.291009",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W1490022694",
+      "display_name": "Cross-Language Information Retrieval and Evaluation",
+      "publication_year": 2001,
+      "cited_by_count": 151,
+      "doi": "https://doi.org/10.1007/3-540-44645-1",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2512173100",
+      "display_name": "Geographic information systems and science",
+      "publication_year": 2011,
+      "cited_by_count": 1696,
+      "doi": "https://doi.org/10.1080/17538947.2011.582276",
+      "type": "book-review"
+    },
+    {
+      "id": "https://openalex.org/W4389121120",
+      "display_name": "Common Method Bias: It's Bad, It's Complex, It's Widespread, and It's Not Easy to Fix",
+      "publication_year": 2023,
+      "cited_by_count": 1680,
+      "doi": "https://doi.org/10.1146/annurev-orgpsych-110721-040030",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W3141544461",
+      "display_name": "Evaluating patient-based outcome measures for use in clinical trials.",
+      "publication_year": 1998,
+      "cited_by_count": 1572,
+      "doi": "https://doi.org/10.3310/hta2140",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2004918107",
+      "display_name": "On information retrieval metrics designed for evaluation with incomplete relevance assessments",
+      "publication_year": 2008,
+      "cited_by_count": 130,
+      "doi": "https://doi.org/10.1007/s10791-008-9059-7",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2136930489",
+      "display_name": "Evaluating WordNet-based Measures of Lexical Semantic Relatedness",
+      "publication_year": 2006,
+      "cited_by_count": 1416,
+      "doi": "https://doi.org/10.1162/coli.2006.32.1.13",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W1986572161",
+      "display_name": "Score adjustment for correction of pooling bias",
+      "publication_year": 2009,
+      "cited_by_count": 53,
+      "doi": "https://doi.org/10.1145/1571941.1572018",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4394947904",
+      "display_name": "Bias and Unfairness in Information Retrieval Systems: New Challenges in the LLM Era",
+      "publication_year": 2024,
+      "cited_by_count": 128,
+      "doi": "https://doi.org/10.1145/3637528.3671458",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2507134384",
+      "display_name": "Unbiased Learning-to-Rank with Biased Feedback",
+      "publication_year": 2017,
+      "cited_by_count": 532,
+      "doi": "https://doi.org/10.1145/3018661.3018699",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2886512263",
+      "display_name": "Evaluating the replicability of social science experiments in Nature and Science between 2010 and 2015",
+      "publication_year": 2018,
+      "cited_by_count": 1620,
+      "doi": "https://doi.org/10.1038/s41562-018-0399-z",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W1787224781",
+      "display_name": "On Pixel-Wise Explanations for Non-Linear Classifier Decisions by Layer-Wise Relevance Propagation",
+      "publication_year": 2015,
+      "cited_by_count": 4704,
+      "doi": "https://doi.org/10.1371/journal.pone.0130140",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4384071683",
+      "display_name": "Large language models encode clinical knowledge",
+      "publication_year": 2023,
+      "cited_by_count": 3874,
+      "doi": "https://doi.org/10.1038/s41586-023-06291-2",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2121032725",
+      "display_name": "Pivotal Evaluation of the Accuracy of a Biomarker Used for Classification or Prediction: Standards for Study Design",
+      "publication_year": 2008,
+      "cited_by_count": 722,
+      "doi": "https://doi.org/10.1093/jnci/djn326",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4320288061",
+      "display_name": "Methods for evaluating area-wide and organisation-based interventions in health and health care: a systematic review.",
+      "publication_year": 1999,
+      "cited_by_count": 1182,
+      "doi": "https://doi.org/10.3310/hta3050",
+      "type": "review"
+    },
+    {
+      "id": "https://openalex.org/W2981180456",
+      "display_name": "Fixed-Cost Pooling Strategies",
+      "publication_year": 2019,
+      "cited_by_count": 36,
+      "doi": "https://doi.org/10.1109/tkde.2019.2947049",
+      "type": "article"
+    }
+  ],
+  "group_by": []
+}

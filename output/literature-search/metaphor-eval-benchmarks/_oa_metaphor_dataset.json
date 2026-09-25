@@ -1,0 +1,267 @@
+{
+  "meta": {
+    "count": 20460,
+    "db_response_time_ms": 114,
+    "page": 1,
+    "per_page": 30,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (metaphor detection dataset)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "metaphor detection dataset",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:metaphor detection dataset&per_page=30&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2034285706",
+      "display_name": "The SILVA ribosomal RNA gene database project: improved data processing and web-based tools",
+      "publication_year": 2012,
+      "cited_by_count": 35100,
+      "doi": "https://doi.org/10.1093/nar/gks1219",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3154719286",
+      "display_name": "RUN beyond the metaphor: An efficient optimization algorithm based on Runge Kutta method",
+      "publication_year": 2021,
+      "cited_by_count": 1115,
+      "doi": "https://doi.org/10.1016/j.eswa.2021.115079",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2963272610",
+      "display_name": "Neural Metaphor Detection in Context",
+      "publication_year": 2018,
+      "cited_by_count": 126,
+      "doi": "https://doi.org/10.18653/v1/d18-1060",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3046209160",
+      "display_name": "DeepMet: A Reading Comprehension Paradigm for Token-level Metaphor Detection",
+      "publication_year": 2020,
+      "cited_by_count": 65,
+      "doi": "https://doi.org/10.18653/v1/2020.figlang-1.4",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2969662548",
+      "display_name": "Hate speech detection: Challenges and solutions",
+      "publication_year": 2019,
+      "cited_by_count": 573,
+      "doi": "https://doi.org/10.1371/journal.pone.0221152",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4285302754",
+      "display_name": "Metaphors in Pre-Trained Language Models: Probing and Generalization Across Datasets and Languages",
+      "publication_year": 2022,
+      "cited_by_count": 30,
+      "doi": "https://doi.org/10.18653/v1/2022.acl-long.144",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2806273110",
+      "display_name": "A Report on the 2018 VUA Metaphor Detection Shared Task",
+      "publication_year": 2018,
+      "cited_by_count": 103,
+      "doi": "https://doi.org/10.18653/v1/w18-0907",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3028896047",
+      "display_name": "Improving Neural Metaphor Detection with Visual Datasets",
+      "publication_year": 2020,
+      "cited_by_count": 5,
+      "doi": null,
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2515860461",
+      "display_name": "Metaphor as a Medium for Emotion: An Empirical Study",
+      "publication_year": 2016,
+      "cited_by_count": 173,
+      "doi": "https://doi.org/10.18653/v1/s16-2003",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2470413457",
+      "display_name": "Black Holes and White Rabbits: Metaphor Identification with Visual Features",
+      "publication_year": 2016,
+      "cited_by_count": 224,
+      "doi": "https://doi.org/10.18653/v1/n16-1020",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W1996908104",
+      "display_name": "Statistical Metaphor Processing",
+      "publication_year": 2012,
+      "cited_by_count": 138,
+      "doi": "https://doi.org/10.1162/coli_a_00124",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2991568321",
+      "display_name": "A transformer-based approach to irony and sarcasm detection",
+      "publication_year": 2020,
+      "cited_by_count": 280,
+      "doi": "https://doi.org/10.1007/s00521-020-05102-3",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2153677638",
+      "display_name": "The challenge problem for automated detection of 101 semantic concepts in multimedia",
+      "publication_year": 2006,
+      "cited_by_count": 623,
+      "doi": "https://doi.org/10.1145/1180639.1180727",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2997245459",
+      "display_name": "Multi-Task Learning for Metaphor Detection with Graph Convolutional Neural Networks and Word Sense Disambiguation",
+      "publication_year": 2020,
+      "cited_by_count": 42,
+      "doi": "https://doi.org/10.1609/aaai.v34i05.6326",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2578317340",
+      "display_name": "Introducing the LCC Metaphor Datasets",
+      "publication_year": 2016,
+      "cited_by_count": 26,
+      "doi": "https://doi.org/10.63317/27ncp7cs2ruw",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2263859238",
+      "display_name": "Contextualized Sarcasm Detection on Twitter",
+      "publication_year": 2021,
+      "cited_by_count": 361,
+      "doi": "https://doi.org/10.1609/icwsm.v9i1.14655",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2951937667",
+      "display_name": "Multi-Modal Sarcasm Detection in Twitter with Hierarchical Fusion Model",
+      "publication_year": 2019,
+      "cited_by_count": 375,
+      "doi": "https://doi.org/10.18653/v1/p19-1239",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2510831875",
+      "display_name": "Token-Level Metaphor Detection using Neural Networks",
+      "publication_year": 2016,
+      "cited_by_count": 65,
+      "doi": "https://doi.org/10.18653/v1/w16-1104",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3173528751",
+      "display_name": "MultiMET: A Multimodal Dataset for Metaphor Understanding",
+      "publication_year": 2021,
+      "cited_by_count": 45,
+      "doi": "https://doi.org/10.18653/v1/2021.acl-long.249",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2511080464",
+      "display_name": "Metaphor Detection with Topic Transition, Emotion and Cognition in Context",
+      "publication_year": 2016,
+      "cited_by_count": 26,
+      "doi": "https://doi.org/10.18653/v1/p16-1021",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4317553041",
+      "display_name": "How Close is ChatGPT to Human Experts? Comparison Corpus, Evaluation, and Detection",
+      "publication_year": 2023,
+      "cited_by_count": 301,
+      "doi": "https://doi.org/10.48550/arxiv.2301.07597",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4283802865",
+      "display_name": "Explainable Metaphor Identification Inspired by Conceptual Metaphor Theory",
+      "publication_year": 2022,
+      "cited_by_count": 73,
+      "doi": "https://doi.org/10.1609/aaai.v36i10.21313",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W165525898",
+      "display_name": "Event Detection and Tracking in Social Streams",
+      "publication_year": 2009,
+      "cited_by_count": 290,
+      "doi": "https://doi.org/10.1609/icwsm.v3i1.13970",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2251436227",
+      "display_name": "Metaphor Detection in Discourse",
+      "publication_year": 2015,
+      "cited_by_count": 31,
+      "doi": "https://doi.org/10.18653/v1/w15-4650",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2798651446",
+      "display_name": "Word Embedding and WordNet Based Metaphor Identification and Interpretation",
+      "publication_year": 2018,
+      "cited_by_count": 119,
+      "doi": "https://doi.org/10.18653/v1/p18-1113",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2901236145",
+      "display_name": "Dataset Construction for the Detection of Anti-Social Behaviour in Online Communication in Arabic",
+      "publication_year": 2018,
+      "cited_by_count": 97,
+      "doi": "https://doi.org/10.1016/j.procs.2018.10.473",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3088728183",
+      "display_name": "From Arabic Sentiment Analysis to Sarcasm Detection: The ArSarcasm Dataset",
+      "publication_year": 2020,
+      "cited_by_count": 91,
+      "doi": null,
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2949442961",
+      "display_name": "End-to-End Sequential Metaphor Identification Inspired by Linguistic Theories",
+      "publication_year": 2019,
+      "cited_by_count": 95,
+      "doi": "https://doi.org/10.18653/v1/p19-1378",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2181830759",
+      "display_name": "Design and Evaluation of Metaphor Processing Systems",
+      "publication_year": 2015,
+      "cited_by_count": 91,
+      "doi": "https://doi.org/10.1162/coli_a_00233",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3176175001",
+      "display_name": "Enhancing Metaphor Detection by Gloss-based Interpretations",
+      "publication_year": 2021,
+      "cited_by_count": 12,
+      "doi": "https://doi.org/10.18653/v1/2021.findings-acl.173",
+      "type": "conference-paper"
+    }
+  ],
+  "group_by": []
+}

@@ -1,0 +1,227 @@
+{
+  "meta": {
+    "count": 63,
+    "db_response_time_ms": 92,
+    "page": 1,
+    "per_page": 25,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (VUA metaphor shared task MOH-X TroFi dataset)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "VUA metaphor shared task MOH-X TroFi dataset",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:VUA metaphor shared task MOH-X TroFi dataset&per_page=25&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2963272610",
+      "display_name": "Neural Metaphor Detection in Context",
+      "publication_year": 2018,
+      "cited_by_count": 126,
+      "doi": "https://doi.org/10.18653/v1/d18-1060",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2949442961",
+      "display_name": "End-to-End Sequential Metaphor Identification Inspired by Linguistic Theories",
+      "publication_year": 2019,
+      "cited_by_count": 95,
+      "doi": "https://doi.org/10.18653/v1/p19-1378",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3046209160",
+      "display_name": "DeepMet: A Reading Comprehension Paradigm for Token-level Metaphor Detection",
+      "publication_year": 2020,
+      "cited_by_count": 65,
+      "doi": "https://doi.org/10.18653/v1/2020.figlang-1.4",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2997245459",
+      "display_name": "Multi-Task Learning for Metaphor Detection with Graph Convolutional Neural Networks and Word Sense Disambiguation",
+      "publication_year": 2020,
+      "cited_by_count": 42,
+      "doi": "https://doi.org/10.1609/aaai.v34i05.6326",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3177283195",
+      "display_name": "Verb Metaphor Detection via Contextual Relation Learning",
+      "publication_year": 2021,
+      "cited_by_count": 32,
+      "doi": "https://doi.org/10.18653/v1/2021.acl-long.327",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4386576726",
+      "display_name": "FrameBERT: Conceptual Metaphor Detection with Frame Embedding Learning",
+      "publication_year": 2023,
+      "cited_by_count": 25,
+      "doi": "https://doi.org/10.18653/v1/2023.eacl-main.114",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4386566707",
+      "display_name": "Metaphor Detection with Effective Context Denoising",
+      "publication_year": 2023,
+      "cited_by_count": 16,
+      "doi": "https://doi.org/10.18653/v1/2023.eacl-main.102",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2988982968",
+      "display_name": "Linguistic Analysis Improves Neural Metaphor Detection",
+      "publication_year": 2019,
+      "cited_by_count": 15,
+      "doi": "https://doi.org/10.18653/v1/k19-1034",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3045709150",
+      "display_name": "Character aware models with similarity learning for metaphor detection",
+      "publication_year": 2020,
+      "cited_by_count": 9,
+      "doi": "https://doi.org/10.18653/v1/2020.figlang-1.18",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4385570988",
+      "display_name": "Adversarial Multi-task Learning for End-to-end Metaphor Detection",
+      "publication_year": 2023,
+      "cited_by_count": 7,
+      "doi": "https://doi.org/10.18653/v1/2023.findings-acl.96",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3214523360",
+      "display_name": "CATE: A Contrastive Pre-trained Model for Metaphor Detection with Semi-supervised Learning",
+      "publication_year": 2021,
+      "cited_by_count": 16,
+      "doi": "https://doi.org/10.18653/v1/2021.emnlp-main.316",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4213193789",
+      "display_name": "MIss RoBERTa WiLDe: Metaphor Identification Using Masked Language Model with Wiktionary Lexical Definitions",
+      "publication_year": 2022,
+      "cited_by_count": 11,
+      "doi": "https://doi.org/10.3390/app12042081",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3101236504",
+      "display_name": "Contextual Modulation for Relation-Level Metaphor Identification",
+      "publication_year": 2020,
+      "cited_by_count": 9,
+      "doi": "https://doi.org/10.18653/v1/2020.findings-emnlp.36",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2888999003",
+      "display_name": "Neural Metaphor Detection in Context",
+      "publication_year": 2018,
+      "cited_by_count": 7,
+      "doi": "https://doi.org/10.48550/arxiv.1808.09653",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W3146034405",
+      "display_name": "Combining Pre-trained Word Embeddings and Linguistic Features for Sequential Metaphor Identification",
+      "publication_year": 2021,
+      "cited_by_count": 9,
+      "doi": "https://doi.org/10.48550/arxiv.2104.03285",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4404781232",
+      "display_name": "Merely Judging Metaphor is Not Enough: Research on Reasonable Metaphor Detection",
+      "publication_year": 2024,
+      "cited_by_count": 2,
+      "doi": "https://doi.org/10.18653/v1/2024.findings-emnlp.336",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4378878859",
+      "display_name": "Methods of Annotating and Identifying Metaphors in the Field of Natural Language Processing",
+      "publication_year": 2023,
+      "cited_by_count": 8,
+      "doi": "https://doi.org/10.3390/fi15060201",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4401042678",
+      "display_name": "A Theory Guided Scaffolding Instruction Framework for LLM-Enabled Metaphor Reasoning",
+      "publication_year": 2024,
+      "cited_by_count": 12,
+      "doi": "https://doi.org/10.18653/v1/2024.naacl-long.428",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3214350763",
+      "display_name": "Label-Enhanced Hierarchical Contextualized Representation for Sequential Metaphor Identification",
+      "publication_year": 2021,
+      "cited_by_count": 6,
+      "doi": "https://doi.org/10.18653/v1/2021.emnlp-main.286",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4402667007",
+      "display_name": "Can ChatGPT\u2019s Performance be Improved on Verb Metaphor Detection Tasks? Bootstrapping and Combining Tacit Knowledge",
+      "publication_year": 2024,
+      "cited_by_count": 5,
+      "doi": "https://doi.org/10.18653/v1/2024.acl-long.57",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W3176764239",
+      "display_name": "Enhanced Metaphor Detection via Incorporation of External Knowledge Based on Linguistic Theories",
+      "publication_year": 2021,
+      "cited_by_count": 7,
+      "doi": "https://doi.org/10.18653/v1/2021.findings-acl.109",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4414626201",
+      "display_name": "Contrastive Retrieval Methodology for Turkish Metaphor Detection and Identification",
+      "publication_year": 2025,
+      "cited_by_count": 4,
+      "doi": "https://doi.org/10.1145/3770072",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4402671176",
+      "display_name": "Bridging Word-Pair and Token-Level Metaphor Detection with Explainable Domain Mining",
+      "publication_year": 2024,
+      "cited_by_count": 5,
+      "doi": "https://doi.org/10.18653/v1/2024.acl-long.719",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4287197501",
+      "display_name": "MelBERT: Metaphor Detection via Contextualized Late Interaction using\\n Metaphorical Identification Theories",
+      "publication_year": 2021,
+      "cited_by_count": 1,
+      "doi": "https://doi.org/10.48550/arxiv.2104.13615",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4308231853",
+      "display_name": "A Survey on Computational Metaphor Processing Techniques: From Identification, Interpretation, Generation to Application",
+      "publication_year": 2022,
+      "cited_by_count": 4,
+      "doi": "https://doi.org/10.21203/rs.3.rs-2220808/v1",
+      "type": "preprint"
+    }
+  ],
+  "group_by": []
+}

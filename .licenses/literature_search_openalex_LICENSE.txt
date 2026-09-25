@@ -1,0 +1,9 @@
+OpenAlex Terms of Use notice
+============================
+Recorded: 2026-09-25
+
+The user has been notified to check the terms at
+https://developers.openalex.org/ and to always check the license of the papers
+retrieved by the skill for any restrictions.
+
+Note: OpenAlex data is CC0, but individual paper licenses vary.

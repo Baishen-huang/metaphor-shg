@@ -1,0 +1,267 @@
+{
+  "meta": {
+    "count": 3069,
+    "db_response_time_ms": 688,
+    "page": 1,
+    "per_page": 30,
+    "groups_count": null,
+    "x_query": {
+      "oql": "works where full text has (metaphor retrieval augmented generation knowledge graph)",
+      "oqo": {
+        "get_rows": "works",
+        "filter_rows": [
+          {
+            "column_id": "fulltext.search",
+            "value": "metaphor retrieval augmented generation knowledge graph",
+            "operator": "has"
+          }
+        ]
+      },
+      "url": "/works?filter=fulltext.search:metaphor retrieval augmented generation knowledge graph&per_page=30&page=1"
+    },
+    "cost_usd": 0.001
+  },
+  "results": [
+    {
+      "id": "https://openalex.org/W2078294512",
+      "display_name": "MAC/FAC: A Model of Similarity\u2010Based Retrieval",
+      "publication_year": 1995,
+      "cited_by_count": 745,
+      "doi": "https://doi.org/10.1207/s15516709cog1902_1",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4386443326",
+      "display_name": "A Comprehensive Survey on Automatic Knowledge Graph Construction",
+      "publication_year": 2023,
+      "cited_by_count": 361,
+      "doi": "https://doi.org/10.1145/3618295",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2131133093",
+      "display_name": "Using Language Models for Information Retrieval",
+      "publication_year": 2001,
+      "cited_by_count": 451,
+      "doi": "https://doi.org/10.5281/zenodo.570441",
+      "type": "dissertation"
+    },
+    {
+      "id": "https://openalex.org/W2008423668",
+      "display_name": "Augmented Reality Learning Experiences: Survey of Prototype Design and Evaluation",
+      "publication_year": 2014,
+      "cited_by_count": 470,
+      "doi": "https://doi.org/10.1109/tlt.2013.37",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2604799547",
+      "display_name": "Survey of the State of the Art in Natural Language Generation: Core tasks, applications and evaluation",
+      "publication_year": 2018,
+      "cited_by_count": 772,
+      "doi": "https://doi.org/10.1613/jair.5477",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2933602294",
+      "display_name": "Knowledge Graphs: New Directions for Knowledge Representation on the Semantic Web (Dagstuhl Seminar 18371)",
+      "publication_year": 2019,
+      "cited_by_count": 114,
+      "doi": "https://doi.org/10.4230/dagrep.8.9.29",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4394678631",
+      "display_name": "A Survey of Multi-modal Knowledge Graphs: Technologies and Trends",
+      "publication_year": 2024,
+      "cited_by_count": 88,
+      "doi": "https://doi.org/10.1145/3656579",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2103099554",
+      "display_name": "Informing augmented memory system design through autobiographical memory theory",
+      "publication_year": 2007,
+      "cited_by_count": 120,
+      "doi": "https://doi.org/10.1007/s00779-007-0177-9",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W2156159857",
+      "display_name": "Analogical Mapping by Constraint Satisfaction",
+      "publication_year": 1989,
+      "cited_by_count": 1270,
+      "doi": "https://doi.org/10.1207/s15516709cog1303_1",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4385573027",
+      "display_name": "Retrieval-Augmented Generative Question Answering for Event Argument Extraction",
+      "publication_year": 2022,
+      "cited_by_count": 33,
+      "doi": "https://doi.org/10.18653/v1/2022.emnlp-main.307",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4404782115",
+      "display_name": "Towards Cross-Cultural Machine Translation with Retrieval-Augmented Generation from Multilingual Knowledge Graphs",
+      "publication_year": 2024,
+      "cited_by_count": 10,
+      "doi": "https://doi.org/10.18653/v1/2024.emnlp-main.914",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2611099133",
+      "display_name": "Neural Models for Information Retrieval",
+      "publication_year": 2017,
+      "cited_by_count": 86,
+      "doi": "https://doi.org/10.48550/arxiv.1705.01509",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4205807230",
+      "display_name": "Proceedings of the 2021 Conference on Empirical Methods in Natural Language Processing",
+      "publication_year": 2021,
+      "cited_by_count": 1687,
+      "doi": "https://doi.org/10.18653/v1/2021.emnlp-main",
+      "type": "paratext"
+    },
+    {
+      "id": "https://openalex.org/W3137009159",
+      "display_name": "Living Things Are Not (20th Century) Machines: Updating Mechanism Metaphors in Light of the Modern Science of Machine Behavior",
+      "publication_year": 2021,
+      "cited_by_count": 116,
+      "doi": "https://doi.org/10.3389/fevo.2021.650726",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3092157356",
+      "display_name": "Deep learning for procedural content generation",
+      "publication_year": 2020,
+      "cited_by_count": 143,
+      "doi": "https://doi.org/10.1007/s00521-020-05383-8",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4224308101",
+      "display_name": "PaLM: Scaling Language Modeling with Pathways",
+      "publication_year": 2022,
+      "cited_by_count": 2138,
+      "doi": "https://doi.org/10.48550/arxiv.2204.02311",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4412886655",
+      "display_name": "SafeRAG: Benchmarking Security in Retrieval-Augmented Generation of Large Language Model",
+      "publication_year": 2025,
+      "cited_by_count": 13,
+      "doi": "https://doi.org/10.18653/v1/2025.acl-long.230",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4387835442",
+      "display_name": "Generative Agents: Interactive Simulacra of Human Behavior",
+      "publication_year": 2023,
+      "cited_by_count": 1863,
+      "doi": "https://doi.org/10.1145/3586183.3606763",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4365799947",
+      "display_name": "Proceedings of the 28th International Conference on Computational Linguistics",
+      "publication_year": 2020,
+      "cited_by_count": 1422,
+      "doi": "https://doi.org/10.18653/v1/2020.coling-main",
+      "type": "paratext"
+    },
+    {
+      "id": "https://openalex.org/W2161808137",
+      "display_name": "The Spatial Semantic Hierarchy",
+      "publication_year": 2000,
+      "cited_by_count": 728,
+      "doi": "https://doi.org/10.1016/s0004-3702(00)00017-5",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4411149009",
+      "display_name": "In Situ Graph Reasoning and Knowledge Expansion Using Graph\u2010PRefLexOR",
+      "publication_year": 2025,
+      "cited_by_count": 20,
+      "doi": "https://doi.org/10.1002/aidi.202500006",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3207166518",
+      "display_name": "Symbolic Knowledge Distillation: from General Language Models to Commonsense Models",
+      "publication_year": 2022,
+      "cited_by_count": 158,
+      "doi": "https://doi.org/10.18653/v1/2022.naacl-main.341",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W2115215265",
+      "display_name": "Ubiquitous animated agents for augmented reality",
+      "publication_year": 2006,
+      "cited_by_count": 43,
+      "doi": "https://doi.org/10.1109/ismar.2006.297806",
+      "type": "conference-paper"
+    },
+    {
+      "id": "https://openalex.org/W4406643700",
+      "display_name": "Towards the next generation of Geospatial Artificial Intelligence",
+      "publication_year": 2025,
+      "cited_by_count": 86,
+      "doi": "https://doi.org/10.1016/j.jag.2025.104368",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4232369518",
+      "display_name": "Artificial Intelligence, Language, and the Study of Knowledge*,\u2020",
+      "publication_year": 1977,
+      "cited_by_count": 101,
+      "doi": "https://doi.org/10.1207/s15516709cog0101_5",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W4416075695",
+      "display_name": "Retrieval-Augmented Generation",
+      "publication_year": 2025,
+      "cited_by_count": 3,
+      "doi": "https://doi.org/10.31224/5781",
+      "type": "preprint"
+    },
+    {
+      "id": "https://openalex.org/W4406560394",
+      "display_name": "Logic Augmented Generation",
+      "publication_year": 2025,
+      "cited_by_count": 8,
+      "doi": "https://doi.org/10.1016/j.websem.2024.100859",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3127403223",
+      "display_name": "Information retrieval interfaces in virtual reality\u2014A scoping review focused on current generation technology",
+      "publication_year": 2021,
+      "cited_by_count": 21,
+      "doi": "https://doi.org/10.1371/journal.pone.0246398",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3083307665",
+      "display_name": "Semantic memory: A review of methods, models, and current challenges",
+      "publication_year": 2020,
+      "cited_by_count": 327,
+      "doi": "https://doi.org/10.3758/s13423-020-01792-x",
+      "type": "article"
+    },
+    {
+      "id": "https://openalex.org/W3105141169",
+      "display_name": "Augmented Reality Technology",
+      "publication_year": 2002,
+      "cited_by_count": 38,
+      "doi": null,
+      "type": "report"
+    }
+  ],
+  "group_by": []
+}
