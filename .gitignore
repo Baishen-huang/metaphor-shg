@@ -28,3 +28,7 @@ experiments/**/*.log.tmp
 
 # ---- 并行实验的 worktree（各自是独立检出，不嵌套入库）----
 .wt/
+
+# ---- gen3 重放缓存（二进制、可复算：cache_default ~5s / cache_real ~60s）----
+# 不入库：JSON/TXT 结果已提交，缓存可由 exp_g3_*.py 首次运行时自动重建
+experiments/gen3/*.pkl

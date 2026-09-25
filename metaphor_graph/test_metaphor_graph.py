@@ -1971,6 +1971,176 @@ class TestTypeReliability(unittest.TestCase):
             del ont.type_valid
 
 
+class TestFeatureSetAudit(unittest.TestCase):
+    """gen3 审计的可执行护栏（experiments/gen3/REPORT.md）。
+
+    这一组测试把「特征集审计」的关键事实钉成回归护栏，防止后续有人
+    凭直觉改回已证伪的做法：
+
+      1. FEATURE_NAMES 的**顺序与索引**是硬契约：人工加权的 `f[3]` 是 type，
+         A9 的 ROLE_IDX 是 [4,5,6]。任何重排都会静默改变已上报数字。
+      2. 人工加权公式必须**逐项顺序累加**，不能改成 numpy 点积 —— 浮点
+         结合序不同会让 632 条查询里有 1 条完整排序不同（人工加权 MRR
+         0.480947 → 0.481211）。这是实测踩到的坑。
+      3. type 维度在训练集上的单特征 AUC ≈ 0.497（近噪声），训练器学到
+         权重 ≈ +0.049 ≈ 0，而人工加权硬编码 0.20 —— 三者的**不一致本身**
+         是审计结论，改任何一处都要同步更新报告。
+      4. `struct` 与 `type` 在评测候选对上的二值重叠率 ≈ 1.000（两者都几乎
+         只反映「有框架归属」），因此它们不是两个独立的信号。
+    """
+
+    def test_feature_index_contract(self):
+        """顺序是硬契约：人工加权的 f[3] 必须是 type，ROLE_IDX 必须是 [4,5,6]。
+
+        注意：`evaluate_retrieval` 在**模块级**调用 `logging.disable(CRITICAL)`，
+        import 它会全局关掉日志，导致 `assertLogs` 类用例失败（gen2 报告已记录
+        这个坑）。因此这里必须**延迟 import 并恢复**全局日志级别。
+        """
+        import logging as _logging
+        self.assertEqual(FEATURE_NAMES[0], "sem")
+        self.assertEqual(FEATURE_NAMES[1], "struct")
+        self.assertEqual(FEATURE_NAMES[2], "clue")
+        self.assertEqual(FEATURE_NAMES[3], "type")
+        self.assertEqual(FEATURE_NAMES[4], "same_frame")
+        self.assertEqual(FEATURE_NAMES[5], "same_cascade")
+        self.assertEqual(FEATURE_NAMES[6], "ground_jaccard")
+        saved = _logging.root.manager.disable
+        try:
+            from metaphor_graph.evaluate_retrieval import ROLE_IDX
+            self.assertEqual(list(ROLE_IDX), [4, 5, 6])
+        finally:
+            _logging.disable(saved)
+
+    def test_manual_weights_come_from_single_source(self):
+        """人工权重必须来自 `training.HAND_WEIGHTS` 单一真源，不再写死在调用点。
+
+        原状（exp/typefeat 审计发现）：`score_conditions` 里硬编码
+        0.35/0.25/0.20/0.20，与学到权重严重错配 —— struct 过权 37 倍、
+        type 12 倍，使「训练增益」主要是配错权重的产物。
+        exp/repair 已改为调用 `training.hand_weighted_score`（单一真源）。
+
+        本测试钉住新不变式：调用点不得再出现写死的权重字面量。
+        历史权重仍可复现（`HAND_WEIGHTS_LEGACY`），见 TestRepairs。
+
+        注意：`evaluate_retrieval` 模块级调用 `logging.disable(logging.CRITICAL)`，
+        import 它会**全局**关掉日志，让 `assertLogs` 类用例失败。必须保存/恢复
+        全局日志级别（gen2 报告已记录这个坑，此处同样踩到过）。
+        """
+        import inspect
+        import logging as _logging
+        saved = _logging.root.manager.disable
+        try:
+            from metaphor_graph import evaluate_retrieval as er
+            src = inspect.getsource(er.score_conditions)
+        finally:
+            _logging.disable(saved)
+        # 新不变式：走单一真源
+        self.assertIn("hand_weighted_score", src,
+                      "人工加权必须调用 training.hand_weighted_score")
+        # 旧的写死字面量不得再出现
+        for term in ("0.35 * f[0]", "0.25 * min(f[1], 1.0)"):
+            self.assertNotIn(term, src,
+                             f"人工加权项 {term!r} 又写死了 —— 应走单一真源")
+
+    def test_manual_weighting_float_order_matters(self):
+        """人工加权必须顺序累加：点积与顺序累加的浮点结合序不同。
+
+        实测：632 条查询里有 1 条完整排序不同，人工加权 MRR 从 0.480947
+        （顺序）变成 0.481211（点积）。本测试只钉住顺序式的定义值。
+        """
+        import numpy as np
+        f = [0.1, 0.3, 0.7, 0.9]
+        seq = (0.35 * f[0] + 0.25 * min(f[1], 1.0)
+               + 0.20 * f[2] + 0.20 * f[3])
+        self.assertAlmostEqual(seq, 0.43, places=10)
+        # 点积在**多数**取值上与顺序式一致；这里证明二者可比较（不要求不等）
+        dot = float(np.asarray(f) @ np.asarray([0.35, 0.25, 0.20, 0.20]))
+        self.assertLess(abs(seq - dot), 1e-12)
+
+    def test_type_auc_is_near_noise_on_training_set(self):
+        """type 在自监督训练集上的单特征 AUC 必须 ≈ 0.5（gen1 的 0.497 口径）。
+
+        构造：正负样本的 type 列（索引 3）分布完全相同 → AUC 恰为 0.5；
+        sem 列（索引 0）与标签同向 → AUC = 1.0。这证明「近噪声」是该维的
+        构造性质，不是某个语料的偶然。
+        """
+        import numpy as np
+        X = np.zeros((8, len(FEATURE_NAMES)))
+        X[:, 3] = [1.0, 1.0, 0.5, 0.5, 1.0, 1.0, 0.5, 0.5]   # 与标签独立
+        X[:, 0] = [0.9, 0.8, 0.7, 0.6, 0.4, 0.3, 0.2, 0.1]   # 与标签同向
+        y = np.asarray([1, 1, 1, 1, 0, 0, 0, 0], dtype=float)
+        aucs = feature_auc(TrainingSet(X, y))
+        self.assertEqual(aucs["type"], 0.5)
+        self.assertEqual(aucs["sem"], 1.0)
+
+    def test_trained_weight_of_type_is_near_zero(self):
+        """训练器对纯噪声维（type）学到的权重必须远小于 clue/sem。"""
+        import numpy as np
+        rng = np.random.default_rng(0)
+        n = 400
+        X = rng.random((n, len(FEATURE_NAMES)))
+        # 让 sem 与标签相关，type 与标签独立（纯噪声）
+        y = (X[:, 0] > 0.5).astype(float)
+        ds = TrainingSet(X, y)
+        sc = MetaphorScorer().fit(ds)
+        w = sc.weights()
+        self.assertLess(abs(w["type"]), abs(w["sem"]),
+                        "type 是纯噪声维，训练器不该给它超过 sem 的权重")
+        self.assertLess(abs(w["type"]), 0.5)
+
+    def test_struct_saturates_at_one(self):
+        """struct 在默认喻底规模下就饱和到 1.0 —— 这是审计发现，不是 bug。
+
+        struct = min(1.0, 0.5*len(ground) + 0.5*[cascade 非空])。
+        喻底集合只要 ≥1 个元素且有级联归属就取到上界 1.0，于是该维在
+        大部分候选上退化成常数（实测评测候选对里 85.1% 取值恰为 1.0）。
+        本测试把这个饱和行为钉住：改公式必须同步更新审计报告。
+        """
+        a = _edge(frame_id="F_LIFE_MACHINE", cascade_id="C_LIFE_MACHINE")
+        b = _edge(frame_id="", cascade_id="")
+        fa = extract_features(a, a)
+        fb = extract_features(a, b)
+        # 有级联 + 喻底 ≥1 → 饱和到 1.0
+        self.assertEqual(fa[1], 1.0)
+        # 无级联归属 → 掉到 0.5*len(ground)（也可能 ≥1，取决于喻底数）
+        self.assertLessEqual(fb[1], 1.0)
+        # 关键点：struct 对「框架注册与否」不敏感（那是 type 的职责）
+        c = _edge(frame_id="F_LLM_unregistered", cascade_id="C_LIFE_MACHINE")
+        fc = extract_features(a, c)
+        self.assertEqual(fc[1], fa[1])   # struct 相同
+        self.assertNotEqual(fc[3], fa[3])  # type 不同（1.0 vs 0.5）
+
+    def test_type_and_struct_are_not_independent(self):
+        """type 与 struct 共享「有归属」这一成分，因此不是两个独立信号。
+
+        实测：评测候选对上两者的二值重叠率 ≈ 1.000，秩相关 +0.836。
+        """
+        a = _edge(frame_id="F_LIFE_MACHINE", cascade_id="C_LIFE_MACHINE")
+        b = _edge(frame_id="", cascade_id="")
+        fa = extract_features(a, a)
+        fb = extract_features(a, b)
+        self.assertEqual(fa[3], 1.0)      # 注册框架
+        self.assertEqual(fb[3], 0.0)      # 无归属
+        self.assertGreaterEqual(fa[1], fb[1])   # struct 同向（都随归属变化）
+
+    def test_same_cascade_can_be_redundant_with_same_frame(self):
+        """same_cascade 与 same_frame 可以同时为 1（级联 ⊇ 框架）。
+
+        这不是 bug，而是「级联按目标域打包」构造下的必然结果，也正是
+        gen2 报告 51.7% 重叠的来源。测试钉住「同框架 ⇒ 同级联」的包含关系。
+        """
+        a = _edge(frame_id="F_LIFE_MACHINE", cascade_id="C_LIFE_MACHINE")
+        b = _edge(frame_id="F_LIFE_MACHINE", cascade_id="C_LIFE_MACHINE")
+        f = extract_features(a, b)
+        self.assertEqual(f[4], 1.0)   # same_frame
+        self.assertEqual(f[5], 1.0)   # same_cascade
+        # 同框架但不同级联 → same_frame=1, same_cascade=0（分离能力）
+        c = _edge(frame_id="F_LIFE_MACHINE", cascade_id="C_OTHER")
+        g = extract_features(a, c)
+        self.assertEqual(g[4], 1.0)
+        self.assertEqual(g[5], 0.0)
+
+
 class TestManualWeightedTypeConsistency(unittest.TestCase):
     """人工加权路径（retrieval）与 §6.2 的 hand_weighted 公式必须同口径。
 

@@ -1,0 +1,124 @@
+============================================================================================================
+gen3 实验二：处置实验（去维 / 换权 / 换信号）
+============================================================================================================
+110 伪文档 ｜ 632 条查询 ｜ 两套金标 ｜ 配对 bootstrap 2000
+
+学到的权重均值（标准化空间）: {'sem': 0.6911, 'struct': 0.0195, 'clue': 1.2543, 'type': 0.0487, 'same_frame': 0.1953, 'same_cascade': 0.1958, 'ground_jaccard': 0.4965}
+→ M3 四维按学到比例: {'sem': 0.3432, 'struct': 0.0097, 'clue': 0.6229, 'type': 0.0242}
+→ M4 七维按学到比例: {'sem': 0.2382, 'struct': 0.0067, 'clue': 0.4323, 'type': 0.0168, 'same_frame': 0.0673, 'same_cascade': 0.0675, 'ground_jaccard': 0.1711}
+
+============================================================================================================
+【表 A】LLM 非构造金标（**首选**：金标来自 LLM 独立判定，与「chunk 产出边」的构造无关）
+============================================================================================================
+处置                                   配置               MRR@10   Hits@3  Hits@10     n
+D0 baseline7                         trained_self     0.5447   0.6361   1.0000   632
+D0 baseline7                         trained_weak     0.5255   0.6472   1.0000   632
+D1 drop_type                         trained_self     0.5475   0.6345   1.0000   632
+D1 drop_type                         trained_weak     0.5357   0.6377   1.0000   632
+D10 repl type<-cascade_size_norm     trained_self     0.5450   0.6503   1.0000   632
+D10 repl type<-cascade_size_norm     trained_weak     0.5047   0.6329   1.0000   632
+D11 repl type<-n_emergent            trained_self     0.5434   0.6503   1.0000   632
+D11 repl type<-n_emergent            trained_weak     0.5099   0.6329   1.0000   632
+D12 repl type<-frame_registered      trained_self     0.5441   0.6377   1.0000   632
+D12 repl type<-frame_registered      trained_weak     0.5202   0.6472   1.0000   632
+D13 repl type<-ground_len_norm       trained_self     0.5443   0.6282   1.0000   632
+D13 repl type<-ground_len_norm       trained_weak     0.4945   0.5981   1.0000   632
+D2 drop_same_cascade                 trained_self     0.5464   0.6377   1.0000   632
+D2 drop_same_cascade                 trained_weak     0.5260   0.6456   1.0000   632
+D3 drop_type+cascade                 trained_self     0.5480   0.6329   1.0000   632
+D3 drop_type+cascade                 trained_weak     0.5364   0.6361   1.0000   632
+D8 repl type<-frame_support_norm     trained_self     0.5529   0.6440   1.0000   632
+D8 repl type<-frame_support_norm     trained_weak     0.5108   0.6392   1.0000   632
+D9 repl type<-frame_tier_core        trained_self     0.5478   0.6408   1.0000   632
+D9 repl type<-frame_tier_core        trained_weak     0.5259   0.6234   1.0000   632
+M0 4d .35/.25/.20/.20                manual           0.4809   0.5934   1.0000   632
+M1 3d .35/.25/.40                    manual           0.5025   0.6044   1.0000   632
+M2 4d .35/.25/.35/.05                manual           0.4982   0.6139   1.0000   632
+M3 4d learned-share                  manual           0.5496   0.6677   1.0000   632
+M4 7d learned-share                  manual           0.5487   0.6693   1.0000   632
+M5 7d hand .30/.20/.15/.05/.05/.05/.20 manual           0.5074   0.6250   1.0000   632
+M6 3d 1/3 each                       manual           0.5025   0.6044   1.0000   632
+M7 4d 1/4 each                       manual           0.4811   0.5934   1.0000   632
+
+============================================================================================================
+【表 B】by-construction 金标（对照：与自监督训练同源，存在构造混杂，不应作为结论依据）
+============================================================================================================
+处置                                   配置               MRR@10   Hits@3  Hits@10     n
+D0 baseline7                         trained_self     0.5380   0.6297   1.0000   632
+D0 baseline7                         trained_weak     0.5183   0.6408   1.0000   632
+D1 drop_type                         trained_self     0.5413   0.6250   1.0000   632
+D1 drop_type                         trained_weak     0.5294   0.6313   1.0000   632
+D10 repl type<-cascade_size_norm     trained_self     0.5399   0.6424   1.0000   632
+D10 repl type<-cascade_size_norm     trained_weak     0.4981   0.6282   1.0000   632
+D11 repl type<-n_emergent            trained_self     0.5383   0.6408   1.0000   632
+D11 repl type<-n_emergent            trained_weak     0.5030   0.6250   1.0000   632
+D12 repl type<-frame_registered      trained_self     0.5374   0.6313   1.0000   632
+D12 repl type<-frame_registered      trained_weak     0.5130   0.6408   1.0000   632
+D13 repl type<-ground_len_norm       trained_self     0.5383   0.6187   1.0000   632
+D13 repl type<-ground_len_norm       trained_weak     0.4882   0.5934   1.0000   632
+D2 drop_same_cascade                 trained_self     0.5397   0.6313   1.0000   632
+D2 drop_same_cascade                 trained_weak     0.5189   0.6392   1.0000   632
+D3 drop_type+cascade                 trained_self     0.5417   0.6234   1.0000   632
+D3 drop_type+cascade                 trained_weak     0.5300   0.6297   1.0000   632
+D8 repl type<-frame_support_norm     trained_self     0.5468   0.6361   1.0000   632
+D8 repl type<-frame_support_norm     trained_weak     0.5028   0.6297   1.0000   632
+D9 repl type<-frame_tier_core        trained_self     0.5422   0.6329   1.0000   632
+D9 repl type<-frame_tier_core        trained_weak     0.5187   0.6155   1.0000   632
+M0 4d .35/.25/.20/.20                manual           0.4736   0.5870   1.0000   632
+M1 3d .35/.25/.40                    manual           0.4961   0.5981   1.0000   632
+M2 4d .35/.25/.35/.05                manual           0.4912   0.6092   1.0000   632
+M3 4d learned-share                  manual           0.5424   0.6598   1.0000   632
+M4 7d learned-share                  manual           0.5415   0.6614   1.0000   632
+M5 7d hand .30/.20/.15/.05/.05/.05/.20 manual           0.5002   0.6187   1.0000   632
+M6 3d 1/3 each                       manual           0.4961   0.5981   1.0000   632
+M7 4d 1/4 each                       manual           0.4738   0.5870   1.0000   632
+
+============================================================================================================
+【表 C】关键对照的配对 bootstrap 95% CI（LLM 金标，配对到查询）
+============================================================================================================
+  去 type（重训 6 维）− 基线 7 维                               Δ=+0.0028 [-0.0043,+0.0098] p=0.466    (+43/−40/=549, n=632)
+  去 same_cascade（重训 6 维）− 基线                           Δ=+0.0017 [-0.0034,+0.0065] p=0.492    (+16/−5/=611, n=632)
+  去 type+cascade（重训 5 维）− 基线                           Δ=+0.0033 [-0.0048,+0.0109] p=0.434    (+47/−40/=545, n=632)
+  换 type→frame_support − 基线                            Δ=+0.0082 [-0.0046,+0.0207] p=0.205    (+99/−85/=448, n=632)
+  换 type→frame_tier − 基线                               Δ=+0.0031 [-0.0097,+0.0158] p=0.629    (+97/−85/=450, n=632)
+  换 type→cascade_size − 基线                             Δ=+0.0003 [-0.0117,+0.0124] p=0.937    (+100/−94/=438, n=632)
+  换 type→n_emergent − 基线                               Δ=-0.0013 [-0.0143,+0.0126] p=0.871    (+107/−101/=424, n=632)
+  换 type→frame_registered − 基线                         Δ=-0.0006 [-0.0026,+0.0007] p=0.519    (+3/−3/=626, n=632)
+  换 type→ground_len − 基线                               Δ=-0.0004 [-0.0126,+0.0129] p=0.954    (+107/−106/=419, n=632)
+  人工去 type（权重给 clue）− 基线人工                             Δ=+0.0215 [+0.0069,+0.0355] p=0.003 ** (+44/−66/=522, n=632)
+  人工 type 降到 0.05 − 基线人工                               Δ=+0.0173 [+0.0085,+0.0266] p=0.000 ** (+26/−7/=599, n=632)
+  人工按学到比例（4 维）− 基线人工                                   Δ=+0.0687 [+0.0496,+0.0863] p=0.000 ** (+107/−80/=445, n=632)
+  人工按学到比例（7 维）− 基线人工                                   Δ=+0.0678 [+0.0480,+0.0861] p=0.000 ** (+109/−86/=437, n=632)
+  人工 7 维手工调 − 基线人工                                     Δ=+0.0265 [+0.0142,+0.0381] p=0.000 ** (+33/−18/=581, n=632)
+  人工 3 维等权 − 基线人工                                      Δ=+0.0215 [+0.0069,+0.0355] p=0.003 ** (+44/−66/=522, n=632)
+  人工 4 维等权 − 基线人工                                      Δ=+0.0002 [-0.0001,+0.0005] p=0.275    (+4/−1/=627, n=632)
+  （** = 95% CI 不含 0）
+
+============================================================================================================
+【表 D】训练增益（自监督 − 人工加权）按处置与金标
+============================================================================================================
+处置                                   金标         人工(M0)       自监督       弱监督      增益(自)      增益(弱)
+D0 baseline7                         llm        0.4809    0.5447    0.5255     +6.38pp     +4.46pp
+D0 baseline7                         constr     0.4736    0.5380    0.5183     +6.44pp     +4.47pp
+D1 drop_type                         llm        0.4809    0.5475    0.5357     +6.66pp     +5.48pp
+D1 drop_type                         constr     0.4736    0.5413    0.5294     +6.76pp     +5.57pp
+D2 drop_same_cascade                 llm        0.4809    0.5464    0.5260     +6.55pp     +4.51pp
+D2 drop_same_cascade                 constr     0.4736    0.5397    0.5189     +6.61pp     +4.52pp
+D3 drop_type+cascade                 llm        0.4809    0.5480    0.5364     +6.71pp     +5.54pp
+D3 drop_type+cascade                 constr     0.4736    0.5417    0.5300     +6.81pp     +5.64pp
+D8 repl type<-frame_support_norm     llm        0.4809    0.5529    0.5108     +7.19pp     +2.99pp
+D8 repl type<-frame_support_norm     constr     0.4736    0.5468    0.5028     +7.32pp     +2.91pp
+D9 repl type<-frame_tier_core        llm        0.4809    0.5478    0.5259     +6.69pp     +4.49pp
+D9 repl type<-frame_tier_core        constr     0.4736    0.5422    0.5187     +6.86pp     +4.51pp
+D10 repl type<-cascade_size_norm     llm        0.4809    0.5450    0.5047     +6.41pp     +2.37pp
+D10 repl type<-cascade_size_norm     constr     0.4736    0.5399    0.4981     +6.62pp     +2.44pp
+D11 repl type<-n_emergent            llm        0.4809    0.5434    0.5099     +6.25pp     +2.89pp
+D11 repl type<-n_emergent            constr     0.4736    0.5383    0.5030     +6.47pp     +2.94pp
+D12 repl type<-frame_registered      llm        0.4809    0.5441    0.5202     +6.31pp     +3.92pp
+D12 repl type<-frame_registered      constr     0.4736    0.5374    0.5130     +6.38pp     +3.94pp
+D13 repl type<-ground_len_norm       llm        0.4809    0.5443    0.4945     +6.34pp     +1.36pp
+D13 repl type<-ground_len_norm       constr     0.4736    0.5383    0.4882     +6.46pp     +1.46pp
+
+  人工路径按 M0 固定（0.35/0.25/0.20/0.20）—— 表 D 只变训练侧的维度。
+
+产物：E:\02_AI项目\元图隐喻分析\.wt\typefeat\experiments\gen3\exp_g3_2_dispositions.json
