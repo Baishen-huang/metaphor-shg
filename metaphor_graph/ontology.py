@@ -108,6 +108,31 @@ TYPE_CONSTRAINTS: Dict[str, List[str]] = {
 }
 
 
+# ----------------------------------------------------------------------------
+# 类型护栏的**可靠性**通道（单一实现，两条打分路径共用）
+# ----------------------------------------------------------------------------
+# 背景：此前两条打分路径对 type 特征各写一份表达式，且口径不同：
+#   training.extract_features  : `1.0 if cand.frame_id else 0.0`（有归属即通过）
+#   retrieval.metaphor_retriever_score : 查本体 mapping_type 后 type_valid，
+#                                        查不到就用 frame_id 原串去校验 → 恒 False
+# 于是同一个回退框架边（F_LLM_* 但未注册进本体）在两条路径上得到 1.0 与 0.0。
+# 这正是「特征漂移」：训练期与推理期的同一维语义不一致，任何跨路径比较
+# （如「训练后 vs 人工加权」）都混入了编码口径差。
+#
+# 修法（按 VCP/RiverMemo 对照的设计意图）：**不丢弃候选**——F_LLM_* 边正是
+# LLM 开放发现换来 +55.8pp 召回的载体，丢弃等于关掉开放发现。改为给
+# 「来源可靠性」一个独立且**封顶**的通道：
+#   1.0  框架已注册进本体（有据可查的映射类型，且 type_valid 通过）
+#   0.5  F_LLM_* 回退框架（开放发现临时造的框架，未注册 → 无法核验类型）
+#   0.0  既无框架归属，或框架在册但类型校验不通过（真·非法映射）
+# 关键点：回退框架拿 0.5 而不是 0.0，所以它仍然参与排序（召回不受损），
+# 但可靠性打折，与本体框架可区分。
+TYPE_RELIABILITY_REGISTERED = 1.0
+TYPE_RELIABILITY_FALLBACK = 0.5
+TYPE_RELIABILITY_INVALID = 0.0
+FALLBACK_FRAME_PREFIX = "F_LLM_"
+
+
 @dataclass
 class FrameSpec:
     """一个 L2 框架（一般隐喻）的本体条目。"""
@@ -383,6 +408,58 @@ class CascadeOntology:
     @staticmethod
     def type_valid(source_type: str, mapping_type: str) -> bool:
         return mapping_type in TYPE_CONSTRAINTS.get(source_type, [])
+
+    @staticmethod
+    def type_reliability(frame_id: Optional[str],
+                         source_type: str = "",
+                         frames: Optional[Dict[str, "FrameSpec"]] = None) -> float:
+        """type 护栏的**封顶可靠性**——两条打分路径唯一的 type 口径。
+
+        training.extract_features / extract_text_features 与
+        retrieval.RetrievalEngine.metaphor_retriever_score 都必须调它，
+        否则就是特征漂移（训练期与推理期同一维语义不一致）。
+
+        判定顺序：
+          1. 无 frame_id                → 0.0（没有任何类型归属信息）
+          2. frame_id 在本体中注册：
+               type_valid 通过          → 1.0
+               type_valid 不通过        → 0.0（真·非法映射，可核验的否定）
+          3. frame_id 未注册（F_LLM_* 回退框架，以及 F_NOVEL_* 等临时框架）
+                                        → 0.5（封顶：无法核验，但不丢弃——
+                开放发现换来的召回必须保住）
+
+        注意 2 与 3 的差别是「可核验的通过/否决」vs「无法核验」：前者是
+        约束真正起了作用，后者是信息缺失，二者不该混成同一个 0.0。
+        """
+        if not frame_id:
+            return TYPE_RELIABILITY_INVALID
+        spec = (frames or {}).get(frame_id)
+        if spec is None:
+            # 未注册：无法核验映射类型 → 给封顶可靠性（绝不丢弃候选）
+            return TYPE_RELIABILITY_FALLBACK
+        st = source_type or spec.source_type
+        if CascadeOntology.type_valid(st, spec.mapping_type):
+            return TYPE_RELIABILITY_REGISTERED
+        return TYPE_RELIABILITY_INVALID
+
+    def type_reliability_of(self, frame_id: Optional[str],
+                            source_type: str = "") -> float:
+        """实例方法包装：用本体自身的 frames 表做注册查询。
+
+        刻意调 ``self.type_valid``（而非类上的静态方法），这样：
+          - 消融脚本对 ``ont.type_valid`` 的实例级打补丁（A1 计数用）照常生效；
+          - 子类覆写 type_valid 时可靠性通道跟着走，不会两条口径分叉。
+        """
+        if not frame_id:
+            return TYPE_RELIABILITY_INVALID
+        spec = self.frames.get(frame_id)
+        if spec is None:
+            # 未注册：无法核验映射类型 → 给封顶可靠性（绝不丢弃候选）
+            return TYPE_RELIABILITY_FALLBACK
+        st = source_type or spec.source_type
+        if self.type_valid(st, spec.mapping_type):
+            return TYPE_RELIABILITY_REGISTERED
+        return TYPE_RELIABILITY_INVALID
 
     def stats(self) -> str:
         return (f"CascadeOntology: {len(self.cascades)} 级联 / "

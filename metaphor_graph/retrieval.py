@@ -228,7 +228,8 @@ class RetrievalEngine:
         qedges = self._query_edges(query)
         if not qedges:
             return self._text_features(query, mapping)
-        feats = [extract_features(qe, mapping, self._centrality) for qe in qedges]
+        feats = [extract_features(qe, mapping, self._centrality, self.ont)
+                 for qe in qedges]
         return [max(f[i] for f in feats) for i in range(len(feats[0]))]
 
     def metaphor_retriever_score(self, query: str,
@@ -237,6 +238,18 @@ class RetrievalEngine:
 
         传入训练好的 scorer 时，改走 7 维特征的学习式打分；否则回落到
         人工加权（保持向后兼容）。
+
+        type_score 走 ontology.type_reliability_of —— 与 training.extract_features
+        **同一个函数**。此前这里自己写了一份「查本体 mapping_type 再 type_valid」，
+        对未注册的 F_LLM_* 回退框架会退化到用 frame_id 原串去校验（恒 False），
+        于是同一候选在 training.extract_features 得 1.0、在此得 0.0（特征漂移）。
+        现两路统一：注册框架 1.0 / 未注册回退框架 0.5（封顶，不丢弃）/
+        无归属或非法 0.0。
+
+        波及范围注记：本方法只被 rank_mappings / demo / 单测调用；
+        §6.2 与 evaluate_fullcorpus 的排序指标走 evaluate_retrieval.score_conditions
+        的共享 7 维特征，**不经过**此处的旧表达式。真正受旧表达式影响的上报指标
+        是 A6（经 rank_mappings）——详见 experiments/REPORT.md §7。
         """
         if self.scorer is not None:
             return round(float(self.scorer.score_features(
@@ -255,6 +268,9 @@ class RetrievalEngine:
         feats = self._pair_features(query, mapping)
         from .training import hand_weighted_score  # 惰性导入避免循环依赖
         return round(float(hand_weighted_score(feats)), 4)
+        # 注：type 维的具体取值由 training.extract_features 走
+        # ontology.type_reliability_of 得到（exp/source 的封顶可靠性修复），
+        # 本函数不再单独计算，故两条路径口径一致。
 
     def _clue_count(self, query: str, mapping: MetaphorHyperedge) -> float:
         hits = sum(1 for t in mapping.triggers if t in query)

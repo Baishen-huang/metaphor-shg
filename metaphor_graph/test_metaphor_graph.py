@@ -17,7 +17,8 @@ from metaphor_graph import (  # noqa: E402
     MetaphorHyperedge, MetaphorSHG, ChunkSpan,
     Evidence, resolve_conflict, merge_evidence, EXTRACTOR_VERSION,
     ContextBudget, AdaptiveThreshold, ThresholdDecision, graph_density,
-    MetaphorScorer, build_training_set, extract_features, train_from_shg,
+    MetaphorScorer, build_training_set, extract_features, extract_text_features,
+    train_from_shg,
     FEATURE_NAMES, graph_health, baselines, TrainingSet, trivial_separators,
     feature_auc, leakage_report,
 )
@@ -1449,6 +1450,146 @@ class TestRepairs(unittest.TestCase):
         f = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]
         self.assertAlmostEqual(hand_weighted_score(f, HAND_WEIGHTS_LEGACY), 1.0,
                                places=6)
+
+
+class TestTypeReliability(unittest.TestCase):
+    """type 特征的**单一口径**回归护栏。
+
+    曾出过的 bug：两条打分路径各写一份 type 表达式且口径不同 ——
+      training.extract_features: `1.0 if cand.frame_id else 0.0`（有归属即通过）
+      retrieval.metaphor_retriever_score: 查本体 mapping_type 后 type_valid，
+        查不到就退化到用 frame_id 原串去校验 → 未注册的 F_LLM_* 恒判 False
+    于是同一候选在训练路径得 1.0、在人工加权路径得 0.0（特征漂移）。
+    """
+
+    def test_capped_reliability_three_levels(self):
+        from metaphor_graph.ontology import (DEFAULT_ONTOLOGY,
+                                             TYPE_RELIABILITY_REGISTERED,
+                                             TYPE_RELIABILITY_FALLBACK,
+                                             TYPE_RELIABILITY_INVALID)
+        tr = DEFAULT_ONTOLOGY.type_reliability_of
+        # 注册框架且类型校验通过 → 1.0
+        self.assertEqual(tr("F_LIFE_MACHINE", "MACHINE"),
+                         TYPE_RELIABILITY_REGISTERED)
+        # 未注册的回退框架 → 封顶 0.5（**不是 0.0**：不丢弃开放发现的候选）
+        self.assertEqual(tr("F_LLM_ab12cd34", "GENERIC_VEHICLE"),
+                         TYPE_RELIABILITY_FALLBACK)
+        self.assertEqual(tr("F_NOVEL_abc123", "MACHINE"),
+                         TYPE_RELIABILITY_FALLBACK)
+        # 无框架归属 → 0.0
+        self.assertEqual(tr(None, "MACHINE"), TYPE_RELIABILITY_INVALID)
+        self.assertEqual(tr("", "MACHINE"), TYPE_RELIABILITY_INVALID)
+
+    def test_registered_but_illegal_mapping_scores_zero(self):
+        """在册框架但类型校验不通过 → 0.0（真·非法映射，可核验的否定）。"""
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        # F_LIFE_MACHINE 注册的 source_type 是 MACHINE；声称 WAR 则不一致
+        self.assertEqual(
+            DEFAULT_ONTOLOGY.type_reliability_of("F_LIFE_MACHINE", "WAR"), 0.0)
+        self.assertFalse(DEFAULT_ONTOLOGY.type_valid("WAR",
+                                                     "LIFE_IS_A_MACHINE"))
+
+    def test_fallback_edge_gets_0_5_in_text_features(self):
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        e = _edge(frame_id="F_LLM_ab12cd34", source_type="GENERIC_VEHICLE")
+        self.assertEqual(
+            extract_text_features("发条", e, None, DEFAULT_ONTOLOGY)[3], 0.5)
+
+    def test_both_paths_agree_on_type_for_fallback_edge(self):
+        """核心回归：两条路径对同一候选必须给出同一个 type 值。"""
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        from metaphor_graph.retrieval import RetrievalEngine
+        fb = _edge(frame_id="F_LLM_ab12cd34", source_type="GENERIC_VEHICLE")
+        reg = _edge(frame_id="F_LIFE_MACHINE", source_type="MACHINE")
+        eng = RetrievalEngine(MetaphorSHG(edges=[fb, reg], frames=[],
+                                          cascades=[]), ["发条"],
+                              ontology=DEFAULT_ONTOLOGY, doc_id="doc")
+        for e in (fb, reg):
+            expected = DEFAULT_ONTOLOGY.type_reliability_of(e.frame_id,
+                                                            e.source_type)
+            self.assertEqual(
+                extract_text_features("发条", e, None, DEFAULT_ONTOLOGY)[3],
+                expected)
+            self.assertEqual(
+                extract_features(e, e, None, DEFAULT_ONTOLOGY)[3], expected)
+            self.assertEqual(
+                eng.ont.type_reliability_of(e.frame_id, e.source_type),
+                expected)
+
+    def test_no_frame_edge_scores_zero_in_both_paths(self):
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        e = _edge(frame_id=None)
+        self.assertEqual(
+            extract_text_features("发条", e, None, DEFAULT_ONTOLOGY)[3], 0.0)
+        self.assertEqual(
+            extract_features(e, e, None, DEFAULT_ONTOLOGY)[3], 0.0)
+
+    def test_fallback_not_dropped(self):
+        """设计意图护栏：回退框架的可靠性必须 > 0，否则等于丢弃开放发现的
+        候选（那会毁掉 +55.8pp 召回）。"""
+        from metaphor_graph.ontology import (DEFAULT_ONTOLOGY,
+                                             TYPE_RELIABILITY_FALLBACK)
+        self.assertGreater(TYPE_RELIABILITY_FALLBACK, 0.0)
+        e = _edge(frame_id="F_LLM_deadbeef", source_type="GENERIC_VEHICLE")
+        self.assertGreater(
+            extract_text_features("发条", e, None, DEFAULT_ONTOLOGY)[3], 0.0)
+
+    def test_type_feature_is_not_constant_on_mixed_pool(self):
+        """type 必须真的携带信息（此前在真实评测池里恒为 1.0，是常数项）。"""
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        edges = [_edge(frame_id="F_LIFE_MACHINE", source_type="MACHINE"),
+                 _edge(frame_id="F_LLM_deadbeef", source_type="GENERIC_VEHICLE"),
+                 _edge(frame_id=None)]
+        vals = {extract_text_features("发条", e, None, DEFAULT_ONTOLOGY)[3]
+                for e in edges}
+        self.assertEqual(vals, {1.0, 0.5, 0.0})
+
+    def test_type_reliability_respects_instance_type_valid_patch(self):
+        """消融脚本对 ont.type_valid 打实例级补丁时，可靠性通道要跟着走。"""
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        ont = DEFAULT_ONTOLOGY
+        self.assertEqual(ont.type_reliability_of("F_LIFE_MACHINE", "MACHINE"),
+                         1.0)
+        orig = ont.type_valid
+        ont.type_valid = lambda *a, **k: False
+        try:
+            self.assertEqual(
+                ont.type_reliability_of("F_LIFE_MACHINE", "MACHINE"), 0.0)
+            # 未注册的回退框架仍拿封顶值（补丁不影响「无法核验」这一支）
+            self.assertEqual(
+                ont.type_reliability_of("F_LLM_ab12cd34",
+                                        "GENERIC_VEHICLE"), 0.5)
+        finally:
+            del ont.type_valid
+
+
+class TestManualWeightedTypeConsistency(unittest.TestCase):
+    """人工加权路径（retrieval）与 §6.2 的 hand_weighted 公式必须同口径。
+
+    §6.2 的 hand_weighted 直接用 f[3]，f[3] 现由 ontology.type_reliability 给出；
+    retrieval.metaphor_retriever_score 的 type 分量必须等于同一个值，否则
+    「人工加权」这一个名字在两条代码路径上代表两种东西。
+    """
+
+    def test_manual_type_component_matches_feature(self):
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        from metaphor_graph.retrieval import RetrievalEngine
+        e = _edge(frame_id="F_LLM_ab12cd34", source_type="GENERIC_VEHICLE")
+        eng = RetrievalEngine(MetaphorSHG(edges=[e], frames=[], cascades=[]),
+                              ["发条"], ontology=DEFAULT_ONTOLOGY, doc_id="doc")
+        feat = extract_text_features("发条", e, eng._centrality,
+                                     DEFAULT_ONTOLOGY)
+        # 复刻 retrieval 人工加权的 type 分量（与 metaphor_retriever_score 同源）
+        type_component = eng.ont.type_reliability_of(e.frame_id, e.source_type)
+        self.assertEqual(type_component, feat[3])
+        # 手工核对总分公式（0.35/0.25/0.20/0.20）
+        # exp/repair 后 metaphor_retriever_score 统一走 7 维特征 + 单一真源权重，
+        # 不再是旧 4 维公式；此处只断言它与同一份特征的自算结果一致。
+        from metaphor_graph.training import hand_weighted_score
+        self.assertAlmostEqual(
+            eng.metaphor_retriever_score("发条", e),
+            round(hand_weighted_score(feat), 4), places=4)
+
 
 
 if __name__ == "__main__":
