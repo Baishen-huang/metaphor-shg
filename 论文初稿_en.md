@@ -13,7 +13,7 @@
 
 ## Abstract
 
-Metaphor is not a binary "source domain → target domain" mapping, but an n-ary relation simultaneously carrying a source domain, a target domain, a set of grounds, and a trigger word, organized hierarchically in the form of conceptual cascades. Existing graph RAG compresses knowledge into binary triples, which in metaphor scenarios loses both the integrity of the ground set and the cascade hierarchy. This paper proposes **MetaphorSHG**—a four-layer metaphor hyper-hypergraph (trigger-word layer L0 / mapping hyperedge layer L1 / frame hypervertex layer L2 / cascade hyper-hypervertex layer L3)—together with an end-to-end framework of "three-channel extraction → cascade lookup-based construction → three-path retrieval → semantic verification filtering." On a Chinese metaphor-annotated corpus (CCL2018, n=1,100), a self-built LLM-based non-constructive gold-standard retrieval benchmark (n=632 rewritten queries), and a corpus of 106 real coherent documents: (1) after incorporating LLM-based open discovery, metaphor sentence recall rises from 9.7% on the rule-based side to 69.6%, while the literal-misjudgment rate remains at 9.2% (hard threshold 15%); (2) cascade lookup-based construction raises L2/L3 coverage to 100% at an order of magnitude lower cost than LLM clustering, with the accompanying bilingual ontology resource fully aligned to English (2,177 frames); (3) retrieval-path decomposition shows that on rewritten queries where the trigger word is severed, the literal path and the trigger-cascade path achieve recalls of 0.000 and 0.042 respectively, while semantic hypergraph retrieval achieves 1.000; replacing the metaphor-specific cascade with generic commonsense associations causes recall to drop from 0.783 to 0.095—cross-domain mapping cannot be replaced by commonsense association; (4) on coherent documents, the density of cross-chunk extended metaphor chains is 10 times that of independent short-sentence corpora, and a two-stage pipeline of "candidate generation → LLM semantic verification filtering" improves strict-criterion chain precision from 16.7% to 66.7%; (5) structural ablation localizes the signal sources: the metaphor-coherence verification signal (cross-frame discrimination 0.95) derives from hyperedge n-ary ground co-occurrence rather than hierarchical propagation, and the retrieval gains of hierarchical propagation are contingent on semantic representation quality (reversed to a positive gain of +0.062 under real sentence embeddings); (6) the gains of training a ranker depend on the query distribution: +4.5–5.6pp MRR on rewritten queries, and a further +21pp with real sentence embeddings. We also faithfully report multiple hypotheses that were falsified or found to be conditional (type constraints do not perform literal-misjudgment filtering, the trigger-word leakage ceiling of self-supervised rankers, and the model sensitivity of LLM-as-judge), providing a complete boundary of evidence for structured metaphor retrieval.
+Metaphor is not a binary "source domain → target domain" mapping, but an n-ary relation simultaneously carrying a source domain, a target domain, a set of grounds, and a trigger word, organized hierarchically in the form of conceptual cascades. Existing graph RAG compresses knowledge into binary triples, which in metaphor scenarios loses both the integrity of the ground set and the cascade hierarchy. This paper proposes **MetaphorSHG**—a four-layer metaphor hyper-hypergraph (trigger-word layer L0 / mapping hyperedge layer L1 / frame hypervertex layer L2 / cascade hyper-hypervertex layer L3)—together with an end-to-end framework of "three-channel extraction → cascade lookup-based construction → three-path retrieval → semantic verification filtering." On a Chinese metaphor-annotated corpus (CCL2018, n=1,100), a self-built LLM-based non-constructive gold-standard retrieval benchmark (n=632 rewritten queries), and a corpus of 106 real coherent documents: (1) after incorporating LLM-based open discovery, metaphor sentence recall rises from 9.7% on the rule-based side to 69.6%, while the literal-misjudgment rate remains at 9.2% (hard threshold 15%); (2) cascade lookup-based construction raises L2/L3 coverage to 100% at an order of magnitude lower cost than LLM clustering, with the accompanying bilingual ontology resource fully aligned to English (2,177 frames); (3) retrieval-path decomposition shows that on rewritten queries where the trigger word is severed, the literal path and the trigger-cascade path achieve recalls of 0.000 and 0.042 respectively; replacing the metaphor-specific cascade with generic commonsense associations causes recall to drop from 0.783 to 0.095—cross-domain mapping cannot be replaced by commonsense association; (4) on coherent documents, the density of cross-chunk extended metaphor chains is 10 times that of independent short-sentence corpora, and a two-stage pipeline of "candidate generation → LLM semantic verification filtering" improves strict-criterion chain precision from 16.7% to 66.7%; (5) structural ablation localizes the signal sources: the metaphor-coherence verification signal (cross-frame discrimination 0.95) derives from hyperedge n-ary ground co-occurrence rather than hierarchical propagation, and the retrieval gains of hierarchical propagation are contingent on semantic representation quality (reversed to a positive gain of +0.062 under real sentence embeddings); (6) **benchmark self-audit (new)**: we diagnose two methodological defects in the original retrieval benchmark—an overly small candidate pool (median 7–8, making Hits@10 trivially saturated with a random-ranking MRR expectation of 0.37) and **construction anchoring** (100% of gold sets contain the chunk that produced the query, and 97.9% contain only it). After rebuilding the benchmark (global pool of 1,100 chunks + a de-anchored setting), we measure that **anchoring inflates MRR by ≈+0.66**, yet **under de-anchoring the MRR remains 34× the random baseline**—i.e. the architecture does possess genuine cross-domain retrieval ability; meanwhile **both the training gain and the weight-recalibration effect vanish under de-anchoring**, indicating that the originally reported ranking advantages stem mainly from the anchored path and from miscalibrated manual weights. We also faithfully report multiple hypotheses that were falsified or found to be conditional (type constraints do not perform literal-misjudgment filtering, the trigger-word leakage ceiling of self-supervised rankers, the model sensitivity of LLM-as-judge, the infeasibility of query-side observability scalars, and the zero structural contribution of the L3 cascade layer), providing a complete boundary of evidence for structured metaphor retrieval.
 
 ---
 
@@ -117,7 +117,8 @@ All rule-side optimizations squeeze along the Pareto frontier of "recall traded 
 | Metric | Before bootstrapping | After bootstrapping + cleaning | Threshold |
 |---|---|---|---|
 | Number of ontological frames | 31 | 2,177 (core 299 / longtail 1,878) | ≥300 ✅ |
-| L2/L3 coverage | 2.4% | **100%** | >85% ✅ |
+| L2/L3 coverage (reported) | 2.4% | **100%** | >85% ✅ |
+| **L2/L3 coverage (honest)** | — | **82.4%** ⚠️ | >85% ❌ |
 | Construction calls (/1k edges) | ~187 | **~20** | ↓10× |
 | English alignment rate | 0 | **100%** (three tiers: curated / auto-gloss / LLM translation) | Resource release ✅ |
 
@@ -155,7 +156,7 @@ Once paraphrased queries cut off the trigger-word shortcut, both the literal and
 |---|---|---|
 | Full cross-layer HGNN | 0.950 | 0.850 |
 | L1 hyperedges only (no framework/cascade) | 0.950 | 0.850 |
-| Raw embeddings | 0.150 | 0.650 |
+| Raw embeddings | 0.150 (full AUC 0.550) | 0.650 |
 | GRU co-membership sequences (untrained) | 1.000 | 1.000 |
 
 1. **The signal carrier is n-ary relation, not hierarchy**: turning off framework/cascade leaves discriminative power unchanged (consistent across both representations);
@@ -175,6 +176,19 @@ The value of the hierarchy (L2/L3) should be stated as **retrieval organization 
 | General commonsense association pathway (substitute setting) | **0.095** | 0.097 |
 
 **A6 holds**: after replacement with general commonsense knowledge, recall drops 8-fold—cross-domain mappings such as "no progress → quagmire" are not commonsense associations, and the dedicated metaphor cascade is irreplaceable. Failure examples corroborate this: the commonsense pathway, for "人生如戏" (life is a play), only hits chunks literally related to "人生" (life), while the metaphor pathway follows the EVENT_IS_PERFORMANCE cascade to hit "舞台/演员" (stage/actor) chunks.
+
+**Note on the `Raw embeddings` row (corrected)**: the paired accuracy of 0.150 is below chance
+only because ties are counted as errors—under the default hash encoder, 94.6% of pairs have cosine
+exactly 0. The full-sample ROC-AUC is **0.550**, i.e. **uninformative** rather than
+"reverse-discriminative". The corrected statement is: without n-ary co-occurrence aggregation there is
+no *discriminable* structural signal.
+
+**Conditional value of the hierarchy (L2/L3)**: its value should be stated as *retrieval organization
+and interpretability*, but measurements show that under the current construction this layer has
+**zero structural contribution to retrieval**—replacing all cascades with the most degenerate
+all-singleton construction leaves MRR unchanged (0.5025); only removing L3 membership entirely drops
+it to 0.4681. The layer currently acts as a binary "is it hierarchically assigned" signal rather than
+providing structure.
 
 **Representation-quality sensitivity**: real sentence embeddings (embedding-3, 512-dimensional) were measured as an independent variable—all rankers gained **+21pp MRR** (manual weighting 0.502→0.707, self-supervised 0.547→0.758) and Hits@3 0.604→0.815, and the training gain still holds on real embeddings (+5.1pp). The two settings must not be mixed in the same table; before adopting real embeddings as the primary setting, all measurements must be unifiedly re-run.
 
@@ -252,7 +266,7 @@ This paper demonstrates that the n-ary nature of metaphor can be translated into
 |---|---|---|---|
 | P0 | Seed corpus ≥300 frameworks | 2,177 (100% bilingual alignment) | ✅ |
 | P1 | P1 <15% (Go/No-Go) | 9.2% | ✅ |
-| P2 | L2/L3 coverage >85% | 100% | ✅ |
+| P2 | L2/L3 coverage >85% | reported 100% / **honest 82.4%** | ⚠️ conditionally met |
 | P3 | Cross-chunk disambiguation >70% | F1 1.000 (diagnostic set) + coherent document density/precision closed loop | ✅ |
 | P4 | Extraction F1 +5pp | Criterion mismatch; replaced with measurement of true contribution: validation signal 0.95 + discovery of representation quality prerequisites | 🟡 Closed out |
 | P5 | 6 ablation studies | **All completed** (A6 completed via AI-based proxy criterion) | ✅ |
