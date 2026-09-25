@@ -175,24 +175,30 @@ def _chunk_of(mapping):
     return None
 
 
-def score_conditions(eng, scorer, query):
-    """返回三种打分配置下，候选映射→chunk 的排序得分表。"""
+def score_conditions(eng, scorer, query, legacy_arm: bool = False):
+    """返回打分配置下，候选映射→chunk 的排序得分表。
+
+    legacy_arm=True 时额外返回 `hand_weighted_legacy`（原 0.35/0.25/0.20/0.20
+    权重），用于量化权重错配的影响。**默认关闭** —— 调用方（如
+    evaluate_fullcorpus）按固定键列表聚合，多出的键会导致 KeyError。
+    """
     cands = eng.live_edges()
     # 预计算 7 维特征
     feats = {m.id: eng._pair_features(query, m) for m in cands}
     out = {}
-    for name, fn in (
+    arms = [
         ("trained", lambda f: scorer.score_features(f)),
         ("trained_no_role", lambda f: scorer.score_features(
             [0.0 if i in ROLE_IDX else v for i, v in enumerate(f)])),
         # 人工加权改为调用单一真源（training.hand_weighted_score）。
         # 原实现硬编码 0.35/0.25/0.20/0.20，与学到权重严重错配
-        # （struct 过权 49 倍、type 19 倍），使"训练增益"成为配错权重的产物。
-        # 如需复现历史数字，传 weights=HAND_WEIGHTS_LEGACY。
+        # （struct 过权 37 倍、type 12 倍），使"训练增益"成为配错权重的产物。
         ("hand_weighted", lambda f: hand_weighted_score(f)),
-        ("hand_weighted_legacy", lambda f: hand_weighted_score(
-            f, weights=HAND_WEIGHTS_LEGACY)),
-    ):
+    ]
+    if legacy_arm:
+        arms.append(("hand_weighted_legacy",
+                     lambda f: hand_weighted_score(f, weights=HAND_WEIGHTS_LEGACY)))
+    for name, fn in arms:
         # 映射→chunk 取最高分
         chunk_score = {}
         for m in cands:

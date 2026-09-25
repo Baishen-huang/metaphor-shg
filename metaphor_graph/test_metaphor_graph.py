@@ -1429,6 +1429,27 @@ class TestRepairs(unittest.TestCase):
         self.assertLess(big["hits@10"], 0.05)                    # 全局池不饱和
         self.assertLess(big["mrr"], small["mrr"])
 
+    def test_score_conditions_default_arms_stable(self):
+        """score_conditions 默认只返回 3 个臂。
+
+        回归护栏：曾把 `hand_weighted_legacy` 无条件加入返回字典，
+        导致 evaluate_fullcorpus 按固定键列表聚合时 KeyError。
+        legacy 臂必须显式 opt-in。
+        """
+        import inspect
+        from metaphor_graph.evaluate_retrieval import score_conditions
+        sig = inspect.signature(score_conditions)
+        self.assertIn("legacy_arm", sig.parameters)
+        self.assertIs(sig.parameters["legacy_arm"].default, False)
+
+    def test_legacy_weights_reproducible(self):
+        """历史权重（0.35/0.25/0.20/0.20）仍可复现，保证旧数字可重放。"""
+        from metaphor_graph.training import (hand_weighted_score,
+                                             HAND_WEIGHTS_LEGACY)
+        f = [1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0]
+        self.assertAlmostEqual(hand_weighted_score(f, HAND_WEIGHTS_LEGACY), 1.0,
+                               places=6)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
