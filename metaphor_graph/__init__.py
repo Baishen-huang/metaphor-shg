@@ -55,6 +55,13 @@ from .observability import (QueryObservability, ObservabilityMeter, measure,
                             matched_triggers, activated_structure,
                             normalized_entropy, geometric_mean, regime_of,
                             EPS, SINGLE_FLOW_ENTROPY, SPARSE_MAX)
+# ---- gen3 查询侧结构信号（只读查询；原始计数 + 可组合标量）----
+from .query_signal import (QuerySignal, measure_signal, reachable_structure,
+                           compose, StratifiedNormalizer, gate_by,
+                           SIGNAL_NAMES, SIG_N_SEED, SIG_N_FRAMES,
+                           SIG_N_CASCADES, SIG_N_EMERGENT, SIG_N_NEW_DOMAINS,
+                           SIG_N_REACH, SIG_S_LOG, SIG_S_STRUCT, SIG_OMEGA,
+                           SIG_S_QUERY)
 
 __all__ = [
     "ChunkSpan", "Evidence", "MetaphorHyperedge", "MetaphorFrame", "MetaphorCascade",
@@ -82,4 +89,11 @@ __all__ = [
     # 溯源可靠性通道（degraded-provenance）
     "provenance", "frame_reliability", "frame_provenance", "edge_reliability",
     "reliability_factor", "RELIABILITY_FALLBACK_CAP", "RELIABILITY_ONTOLOGY",
-    "RELIABILITY_FLOOR",]
+    "RELIABILITY_FLOOR",
+    # gen3 查询侧结构信号（原始计数 + 可组合标量；同样只读查询）
+    "QuerySignal", "measure_signal", "reachable_structure", "compose",
+    "StratifiedNormalizer", "gate_by", "SIGNAL_NAMES",
+    "SIG_N_SEED", "SIG_N_FRAMES", "SIG_N_CASCADES", "SIG_N_EMERGENT",
+    "SIG_N_NEW_DOMAINS", "SIG_N_REACH", "SIG_S_LOG", "SIG_S_STRUCT",
+    "SIG_OMEGA", "SIG_S_QUERY",
+]

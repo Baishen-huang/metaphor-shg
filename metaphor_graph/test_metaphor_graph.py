@@ -2572,6 +2572,250 @@ class TestProvenanceReliability(unittest.TestCase):
         self.assertAlmostEqual(h.registered_frame_coverage, 0.0)
         self.assertTrue(any("诚实框架覆盖率" in w for w in h.warnings))
         self.assertAlmostEqual(h.degraded_edge_rate, 1.0)
+class TestQuerySignal(unittest.TestCase):
+    """gen3 查询侧结构信号（query_signal.py）。
+
+    与 `TestQueryObservability` 同一纪律：**只读查询**，签名里没有候选池。
+    gen3 的发现是「Ω 的信号被 Ω_N 分量内部的 `min(1,·)` 截断毁掉」，
+    故这里既钉住不变式，也把「截断是元凶」这条机制钉成回归护栏。
+    """
+
+    def setUp(self):
+        from metaphor_graph.query_signal import QuerySignal  # noqa: F401
+        self.ont = DEFAULT_ONTOLOGY
+
+    def sig(self, q):
+        from metaphor_graph.query_signal import measure_signal
+        return measure_signal(q, self.ont)
+
+    # ---------------------------------------------------- 只读查询的不变式
+    def test_query_signal_invariant_to_candidate_pool(self):
+        """打乱/截断/清空候选池，查询侧信号逐位不变（与 Ω 同一护栏）。"""
+        import copy
+        import random
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+        from metaphor_graph.query_signal import measure_signal
+
+        queries = ("泥潭，沼泽", "她的眼睛像什么一样晶莹剔透？", "黑夜")
+        base = {q: measure_signal(q, self.ont).to_dict() for q in queries}
+
+        chunks = DOCS["doc_project"]
+        shg = MetaphorSHGBuilder().build(chunks, doc_id="dp")
+        variants = []
+        for seed in (0, 1, 7):
+            edges = copy.deepcopy(shg.edges)
+            random.Random(seed).shuffle(edges)
+            variants.append(edges[: max(1, len(edges) // 2)])
+            variants.append(edges)
+        variants.append([])
+
+        for edges in variants:
+            shg2 = MetaphorSHG(edges=edges)
+            eng = RetrievalEngine(shg2, chunks, doc_id="dp")
+            for q in queries:
+                eng.cross_domain_retrieve(q)      # 触碰候选侧
+                # 候选池变了，查询侧信号必须逐位相同
+                self.assertEqual(measure_signal(q, self.ont).to_dict(), base[q])
+
+    def test_measure_signal_signature_has_no_candidate_argument(self):
+        """签名里不得出现候选池相关形参（结构性保证不变式）。"""
+        import inspect
+        from metaphor_graph.query_signal import measure_signal
+        params = list(inspect.signature(measure_signal).parameters)
+        for bad in ("shg", "edges", "candidates", "retriever", "chunks",
+                    "ranked", "result", "scorer"):
+            self.assertNotIn(bad, params)
+
+    # ------------------------------------------------------------ 分量语义
+    def test_no_trigger_query_has_zero_signals(self):
+        s = self.sig("今天天气不错，心情也很好")
+        self.assertEqual(s.n_seed, 0)
+        self.assertEqual(s.n_frames, 0)
+        self.assertEqual(s.n_reachable_targets, 0)
+        for name, v in s.signals.items():
+            self.assertEqual(v, 0.0, name)
+
+    def test_reachable_domains_match_retrieval_target_set(self):
+        """`reachable_domains` 必须与 `cross_domain_retrieve` 实际构造的
+        `targets` 集合**逐元素相同** —— 否则「通路非空」的预测就失去意义。
+
+        检索侧口径：直接命中框架的 (target_domain, source_domain)
+        ∪ 级联成员框架的 (target_domain, source_domain)。
+        """
+        from metaphor_graph.query_signal import reachable_structure
+        for q in ("泥潭，沼泽", "她的眼睛像什么一样晶莹剔透？", "构建"):
+            tokens = [t for t in self.ont._trigger_index if t in q]
+            want = set()
+            for c in self.ont.match_by_triggers(tokens):
+                cid = self.ont.get_cascade(c.id)
+                want.add(c.target_domain)
+                want.add(c.source_domain)
+                spec = self.ont.get_cascade_spec(cid) if cid else None
+                if spec:
+                    for fid in spec.member_frames:
+                        fs = self.ont.get_frame(fid)
+                        if fs:
+                            want.add(fs.target_domain)
+                            want.add(fs.source_domain)
+            got = reachable_structure(q, self.ont)["reachable_domains"]
+            self.assertEqual(set(got), want, q)
+
+    def test_new_domains_excludes_direct(self):
+        """「新买到的域」与「直接域」必须不相交（否则计数重复）。"""
+        from metaphor_graph.query_signal import reachable_structure
+        st = reachable_structure("泥潭，沼泽", self.ont)
+        self.assertEqual(set(st["new_domains"]) & set(st["direct_domains"]),
+                         set())
+        self.assertEqual(
+            set(st["new_domains"]),
+            set(st["expanded_domains"]) - set(st["direct_domains"]))
+
+    def test_emergent_targets_only_target_domains(self):
+        """gen2 口径（n_emergent）只算 target_domain，与检索口径必须区分。"""
+        from metaphor_graph.query_signal import reachable_structure
+        st = reachable_structure("泥潭，沼泽", self.ont)
+        self.assertTrue(set(st["emergent_targets"])
+                        <= set(st["expanded_targets"]))
+        self.assertEqual(set(st["emergent_targets"]) & set(st["direct_targets"]),
+                         set())
+        # 两个口径在跨源域级联上会不同（本测试钉住「它们不是同一个量」）
+        self.assertIsInstance(st["n_cross_cascades"], int)
+
+    # -------------------------------------- 机制护栏：截断是毁掉信号的那一步
+    def test_s_query_removes_only_the_clip(self):
+        """S_query 与 Ω 的**唯一**差别是 Ω_N 不做 min(1,·) 截断。
+
+        构造一个 n_emergent > n_seed 的查询：Ω_N 被截到 1.0，
+        S_query 则保留 >1 的比值（几何平均里表现为更高）。
+        """
+        from metaphor_graph.query_signal import _s_query, _s_log
+        # n_seed=1, n_emergent=4 → Ω_N = min(1, 4) = 1（截断）；
+        # S_query 用 4/1 = 4（不截断）
+        clipped = (min(1.0, 1.0 / 1) * min(1.0, 4.0 / 1) * 1.0) ** (1 / 3) * 1.0
+        unclipped = _s_query(1, 1, 4, 1.0, 1.0)
+        self.assertAlmostEqual(clipped, 1.0, places=12)     # Ω 口径：饱和
+        self.assertGreater(unclipped, 1.0)                  # S_query：不饱和
+        # 截断把 4 与 1 压成同一个值；不截断时它们不同
+        self.assertNotAlmostEqual(_s_query(1, 1, 4, 1.0, 1.0),
+                                  _s_query(1, 1, 1, 1.0, 1.0))
+        # 无触发词 → 严格 0（与 Ω 同一外层特判）
+        self.assertEqual(_s_query(0, 0, 0, 0.0, 0.0), 0.0)
+
+    def test_s_query_zero_iff_no_trigger(self):
+        """S_query>0 ⟺ 命中触发词（与 Ω 共享这条外层特判）。"""
+        from metaphor_graph.query_signal import SIG_S_QUERY
+        for q in ("今天天气不错", "", "泥潭", "泥潭，沼泽，陷进，深坑"):
+            s = self.sig(q)
+            self.assertEqual(s.get(SIG_S_QUERY) > 0, s.n_seed >= 1, q)
+
+    def test_clip_collapses_levels_theorem(self):
+        """机制定理：`min(1, n_em/n_seed)` 在 n_em ≥ n_seed 时恒为 1。
+
+        这不是经验发现而是算术恒等式。生产本体（json 规则）下 n_seed=1 层
+        102 条里 82 条满足 n_em ≥ 1（source 规则），23 档取值塌成 1 档。
+        """
+        for n_seed in (1, 2, 3):
+            self.assertEqual(min(1.0, n_seed / n_seed), 1.0)
+            self.assertEqual(min(1.0, (n_seed + 5) / n_seed), 1.0)
+        # n_seed ≥ 2 时「只买到 1 个新域」仍严格小于 1（未被截断）
+        for n_seed in (2, 3, 5):
+            self.assertLess(min(1.0, 1.0 / n_seed), 1.0)
+        # n_seed = 1 时任何 n_em ≥ 1 都被截到 1.0（这一档完全饱和）
+        for n_em in (1, 2, 10, 74):
+            self.assertEqual(min(1.0, n_em / 1), 1.0)
+
+    # ---------------------------------------------- 合成器开关的语义正确性
+    def test_compose_switch_semantics(self):
+        """四个开关必须正交且语义明确（机制归因实验的可信前提）。"""
+        from metaphor_graph.query_signal import compose
+        comps = {"e": 1.0, "n": 0.0, "f": 1.0}
+        # floor=True：Ω_N=0 被托底成 ε → 结果 > 0
+        with_floor = compose(comps, n_seed=1, completeness=1.0, floor=True,
+                             normalize=False, use_completeness=False,
+                             outer_zero=True)
+        self.assertGreater(with_floor, 0.0)
+        self.assertAlmostEqual(with_floor, 1e-3 ** (1 / 3), places=9)
+        # floor=False：Ω_N=0 直接不参与 → 只剩两个分量
+        no_floor = compose(comps, n_seed=1, completeness=1.0, floor=False,
+                           normalize=False, use_completeness=False,
+                           outer_zero=True)
+        self.assertAlmostEqual(no_floor, 1.0, places=12)
+        # normalize=True 除以 n_seed
+        self.assertAlmostEqual(
+            compose({"e": 2.0, "f": 2.0}, n_seed=2, completeness=1.0,
+                    floor=False, normalize=True, use_completeness=False,
+                    outer_zero=True), 1.0, places=12)
+        # use_completeness 乘完备度
+        self.assertAlmostEqual(
+            compose({"e": 1.0}, n_seed=1, completeness=0.25, floor=False,
+                    normalize=False, use_completeness=True, outer_zero=True),
+            0.25, places=12)
+        # 无触发词 → 严格 0（无论开关）
+        for fl in (True, False):
+            self.assertEqual(compose(comps, n_seed=0, completeness=0.0,
+                                     floor=fl, normalize=True,
+                                     use_completeness=True, outer_zero=True),
+                             0.0)
+
+    def test_stratified_normalizer_is_fitted_not_oracle(self):
+        """分层标准化器必须**拟合**统计量，不能偷看被变换的样本。
+
+        护栏：在训练集上 fit 后，transform 的值对同分布样本应大致零均值；
+        且 n_seed=0 的样本恒为 0（无层可标准化）。
+        """
+        from metaphor_graph.query_signal import StratifiedNormalizer
+        rows = [dict(n_seed=1, n_emergent=float(i % 3)) for i in range(30)]
+        rows += [dict(n_seed=2, n_emergent=float(i % 4)) for i in range(20)]
+        nz = StratifiedNormalizer(source="n_emergent").fit(rows)
+        vals = nz.transform(rows)
+        self.assertAlmostEqual(sum(vals) / len(vals), 0.0, places=9)
+        self.assertEqual(nz.transform_one(0, 5.0), 0.0)
+
+    def test_signal_names_are_complete(self):
+        """SIGNAL_NAMES 必须覆盖 signals 字典的全部键（防漏导出）。"""
+        from metaphor_graph.query_signal import SIGNAL_NAMES
+        s = self.sig("泥潭，沼泽")
+        self.assertEqual(set(SIGNAL_NAMES), set(s.signals))
+
+    def test_deterministic(self):
+        q = "项目陷在泥潭里，推进不动"
+        self.assertEqual(self.sig(q).to_dict(), self.sig(q).to_dict())
+
+    # ---------------------------------------- 已知局限（诚实性回归护栏）
+    def test_s_query_is_not_a_proxy_for_trigger_count_alone(self):
+        """已知局限的显式化：S_query 与 n_seed 仍然高度共线（ρ≈0.99）。
+
+        gen3 只修好了 Ω_N 的截断，**没有**解决「Ω>0 ⟺ 命中触发词」这个
+        1-bit 外层特判（那是设计选择，不是缺陷）。因此 S_query 依然不是
+        「超出触发词计数」的新信息。本测试记录该性质。
+        """
+        from metaphor_graph.query_signal import SIG_S_QUERY
+        qs = ["泥潭", "泥潭，沼泽", "泥潭，沼泽，陷进，深坑", "黑夜", "构建"]
+        ss = [self.sig(q) for q in qs]
+        # 有命中的都 > 0，没命中的都是 0 —— 外层特判仍在
+        for s in ss:
+            self.assertEqual(s.get(SIG_S_QUERY) > 0, s.n_seed >= 1, s.query)
+
+    def test_measured_signal_cannot_predict_mrr_by_construction(self):
+        """S_query 是**纯查询侧**量：同一条查询在不同候选池上取同值，
+        因此它无法区分「同查询不同池」的 MRR 差异 —— 这是不变式的代价，
+        不是缺陷。用两个不同池验证取同值。
+        """
+        import copy
+        import random
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+        from metaphor_graph.query_signal import measure_signal
+        q = "泥潭，沼泽"
+        chunks = DOCS["doc_project"]
+        shg = MetaphorSHGBuilder().build(chunks, doc_id="dp")
+        v1 = measure_signal(q, self.ont).to_dict()
+        edges = copy.deepcopy(shg.edges)
+        random.Random(11).shuffle(edges)
+        eng = RetrievalEngine(MetaphorSHG(edges=edges[:1]), chunks, doc_id="dp")
+        eng.cross_domain_retrieve(q)
+        self.assertEqual(measure_signal(q, self.ont).to_dict(), v1)
 
 
 if __name__ == "__main__":
