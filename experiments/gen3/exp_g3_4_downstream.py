@@ -87,7 +87,12 @@ def perm_rho(rows, getter, ykey, n_perm=2000, seed=SEED):
 
 
 def size_matched_control(rows, meta, vocab, n_rep=200, seed=SEED):
-    """大小匹配的随机集合控制：身份随机、大小相同。"""
+    """大小匹配的随机集合控制：身份随机、大小相同。
+
+    返回逐档命中率，外加**决定性对照**：用「可达集合大小」分别预测
+    「真实非空」与「随机非空」的 AUC（各 n_rep 次重采样取区间）。
+    若两者同级 ⇒ 判别力全部来自「集合更大 ⇒ 更可能与任何东西相交」。
+    """
     rng = random.Random(seed)
     live = {k: set(v) for k, v in meta.get("live_domains", {}).items()}
     if not vocab or not live:
@@ -97,24 +102,58 @@ def size_matched_control(rows, meta, vocab, n_rep=200, seed=SEED):
         k = len(r["reachable_domains"])
         byk[k][0] += 1
         byk[k][1] += r["cascade_nonempty"]
+    rand_aucs = []
+    sub = [r for r in rows if r["n_seed"] >= 1]
+    rand_aucs_sub = []
     for _ in range(n_rep):
+        rr = []
         for r in rows:
             k = len(r["reachable_domains"])
+            hit = 0
             if k > 0:
                 samp = set(rng.sample(vocab, min(k, len(vocab))))
-                if samp & live.get(r["doc_id"], set()):
-                    byk[k][2] += 1
+                hit = 1 if (samp & live.get(r["doc_id"], set())) else 0
+            rr.append(hit)
+            byk[k][2] += hit
+        pa = [float(len(r["reachable_domains"])) for r, h in zip(rows, rr) if h]
+        na = [float(len(r["reachable_domains"]))
+              for r, h in zip(rows, rr) if not h]
+        if pa and na:
+            rand_aucs.append(S.auc(pa, na))
+        ps = [float(len(r["reachable_domains"]))
+              for r, h in zip(sub, rr) if r["n_seed"] >= 1 and h]
+        ns = [float(len(r["reachable_domains"]))
+              for r, h in zip(sub, rr) if r["n_seed"] >= 1 and not h]
+        if ps and ns:
+            rand_aucs_sub.append(S.auc(ps, ns))
     per_k = {}
     for k in sorted(byk):
-        n, rh, rr = byk[k]
+        n, rh, rr2 = byk[k]
         if n < 3:
             continue
-        per_k[str(k)] = dict(n=n, real=rh / n, rand=(rr / n_rep) / n,
-                             ratio=(rh / n) / max(1e-9, (rr / n_rep) / n))
+        per_k[str(k)] = dict(n=n, real=rh / n, rand=(rr2 / n_rep) / n,
+                             ratio=(rh / n) / max(1e-9, (rr2 / n_rep) / n))
     tot_real = sum(v[1] for v in byk.values()) / len(rows)
     tot_rand = (sum(v[2] for v in byk.values()) / n_rep) / len(rows)
-    return dict(per_k=per_k, real_rate=tot_real, rand_rate=tot_rand,
-                n_rep=n_rep)
+    real_auc = S.auc([float(r["n_reach"]) for r in rows
+                      if r["cascade_nonempty"]],
+                     [float(r["n_reach"]) for r in rows
+                      if not r["cascade_nonempty"]])
+    real_auc_sub = S.auc([float(r["n_reach"]) for r in sub
+                          if r["cascade_nonempty"]],
+                         [float(r["n_reach"]) for r in sub
+                          if not r["cascade_nonempty"]])
+    return dict(
+        per_k=per_k, real_rate=tot_real, rand_rate=tot_rand, n_rep=n_rep,
+        # 决定性对照：同一个「大小」标量，预测真实 vs 预测随机
+        auc_size_predicts_real=real_auc,
+        auc_size_predicts_rand_mean=S.mean(rand_aucs),
+        auc_size_predicts_rand_range=[min(rand_aucs), max(rand_aucs)],
+        auc_size_predicts_real_sub=real_auc_sub,
+        auc_size_predicts_rand_mean_sub=S.mean(rand_aucs_sub),
+        auc_size_predicts_rand_range_sub=[min(rand_aucs_sub),
+                                          max(rand_aucs_sub)],
+    )
 
 
 def within_size_auc(rows, getter, size_key="n_reach",
@@ -253,6 +292,21 @@ def main():
             print(f"     大小匹配随机集合：真实非空率 {sm['real_rate']:.4f}"
                   f"  vs 随机 {sm['rand_rate']:.4f}"
                   f"  （{sm['n_rep']} 次重采样）")
+            print(f"     [决定性对照] 同一个「可达集合大小」标量：")
+            print(f"       预测真实非空（全样本）AUC={sm['auc_size_predicts_real']:.4f}")
+            print(f"       预测随机非空（全样本）AUC="
+                  f"{sm['auc_size_predicts_rand_mean']:.4f}"
+                  f" [{sm['auc_size_predicts_rand_range'][0]:.4f},"
+                  f"{sm['auc_size_predicts_rand_range'][1]:.4f}]")
+            print(f"       预测真实非空（n_seed≥1）AUC="
+                  f"{sm['auc_size_predicts_real_sub']:.4f}")
+            print(f"       预测随机非空（n_seed≥1）AUC="
+                  f"{sm['auc_size_predicts_rand_mean_sub']:.4f}"
+                  f" [{sm['auc_size_predicts_rand_range_sub'][0]:.4f},"
+                  f"{sm['auc_size_predicts_rand_range_sub'][1]:.4f}]")
+            print(f"       → 全样本上两者同级 ⇒ 判别力主要来自「集合更大」这个机械效应")
+            print(f"       （子集上随机对照更低，说明子集内还有一点真实 targeting ——"
+                  f" 见 exp_g3_5 的 targeting excess：比值 1.7×）")
             print(f"     {'|reach|':>8s} {'n':>5s} {'real':>8s} {'rand':>8s}"
                   f" {'ratio':>7s}")
             for k, v in sm["per_k"].items():

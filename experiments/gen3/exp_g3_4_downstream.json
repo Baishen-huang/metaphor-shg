@@ -92,7 +92,19 @@
    },
    "real_rate": 0.07559055118110236,
    "rand_rate": 0.04340157480314961,
-   "n_rep": 200
+   "n_rep": 200,
+   "auc_size_predicts_real": 0.9640119250425895,
+   "auc_size_predicts_rand_mean": 0.9738693838227606,
+   "auc_size_predicts_rand_range": [
+    0.9558860679550335,
+    0.9879373500063156
+   ],
+   "auc_size_predicts_real_sub": 0.6799242424242424,
+   "auc_size_predicts_rand_mean_sub": 0.5855900746794884,
+   "auc_size_predicts_rand_range_sub": [
+    0.23573573573573572,
+    0.8716814159292036
+   ]
   },
   "Q1_size_only": {
    "auc_all": 0.9640119250425895,
@@ -1255,7 +1267,19 @@
    },
    "real_rate": 0.10708661417322834,
    "rand_rate": 0.06058267716535433,
-   "n_rep": 200
+   "n_rep": 200,
+   "auc_size_predicts_real": 0.9871096586782862,
+   "auc_size_predicts_rand_mean": 0.9797590711176205,
+   "auc_size_predicts_rand_range": [
+    0.9651541173280304,
+    0.9903959143089578
+   ],
+   "auc_size_predicts_real_sub": 0.8411125319693095,
+   "auc_size_predicts_rand_mean_sub": 0.5003840277724085,
+   "auc_size_predicts_rand_range_sub": [
+    0.27236315086782376,
+    0.6577981651376147
+   ]
   },
   "Q1_size_only": {
    "auc_all": 0.9871096586782862,
@@ -2327,7 +2351,19 @@
    },
    "real_rate": 0.09448818897637795,
    "rand_rate": 0.05290551181102362,
-   "n_rep": 200
+   "n_rep": 200,
+   "auc_size_predicts_real": 0.9803478260869565,
+   "auc_size_predicts_rand_mean": 0.9805573328726954,
+   "auc_size_predicts_rand_range": [
+    0.967823235783498,
+    0.9950630344705986
+   ],
+   "auc_size_predicts_real_sub": 0.7907407407407407,
+   "auc_size_predicts_rand_mean_sub": 0.5204562005269401,
+   "auc_size_predicts_rand_range_sub": [
+    0.34204545454545454,
+    0.6964285714285714
+   ]
   },
   "Q1_size_only": {
    "auc_all": 0.9803478260869565,
@@ -3359,7 +3395,19 @@
    },
    "real_rate": 0.1700787401574803,
    "rand_rate": 0.1621259842519685,
-   "n_rep": 200
+   "n_rep": 200,
+   "auc_size_predicts_real": 0.9987964719938155,
+   "auc_size_predicts_rand_mean": 0.9977708106691904,
+   "auc_size_predicts_rand_range": [
+    0.9939906542056075,
+    0.9998787878787879
+   ],
+   "auc_size_predicts_real_sub": 0.8942901234567902,
+   "auc_size_predicts_rand_mean_sub": 0.5034742910198652,
+   "auc_size_predicts_rand_range_sub": [
+    0.4219345011424219,
+    0.5635714285714286
+   ]
   },
   "Q1_size_only": {
    "auc_all": 0.9987964719938155,
