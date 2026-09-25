@@ -1859,6 +1859,44 @@ class TestRepairs(unittest.TestCase):
         self.assertAlmostEqual(hand_weighted_score(f, HAND_WEIGHTS_LEGACY), 1.0,
                                places=6)
 
+    # ---- CLI 入口参数完整性（合并多分支时的真实回归）----
+    def test_eval_cli_args_present(self):
+        """所有评测脚本的 CLI 参数必须齐备。
+
+        回归护栏：合并 exp/dynamics 时冲突解决遗漏了 argparse 定义，
+        导致 evaluate_hgnn 运行到打印段才 AttributeError —— 单测未覆盖 CLI，
+        故未拦截。这里直接解析各脚本的 `main()` 源码，钉住关键参数存在。
+        """
+        import inspect
+        import logging as _logging
+        saved = _logging.root.manager.disable
+        try:
+            from metaphor_graph import evaluate_hgnn as eh
+            src = inspect.getsource(eh.main)
+        finally:
+            _logging.disable(saved)
+        for flag in ("--alpha", "--leak", "--embedder", "--cascade-rule"):
+            self.assertIn(f'"{flag}"', src,
+                          f"evaluate_hgnn 缺少 CLI 参数 {flag} —— 合并时可能丢失")
+        # 参数必须在 parse_args() **之前**注册
+        self.assertLess(src.index('"--alpha"'), src.index("parse_args()"),
+                        "--alpha 必须在 parse_args() 之前注册")
+
+    def test_all_eval_modules_importable(self):
+        """全部评测模块必须可导入（合并冲突常在此处暴露为语法错误）。"""
+        import importlib
+        import logging as _logging
+        saved = _logging.root.manager.disable
+        mods = ("evaluate_hgnn", "evaluate_retrieval", "evaluate_repaired",
+                "evaluate_fullcorpus", "ablation", "evaluate_real",
+                "evaluate_llmgold", "evaluate_a6", "evaluate_document_corpus",
+                "evaluate_chain_quality")
+        try:
+            for m in mods:
+                importlib.import_module(f"metaphor_graph.{m}")
+        finally:
+            _logging.disable(saved)
+
 
 class TestTypeReliability(unittest.TestCase):
     """type 特征的**单一口径**回归护栏。
