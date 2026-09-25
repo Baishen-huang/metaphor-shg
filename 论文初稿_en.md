@@ -308,6 +308,13 @@ path even more severely on real representations.
 | A8 Turn off adaptive thresholds | — | No difference on either sparse or dense graphs | Neutral |
 | A9 Remove role features | MRR drops | Completely unchanged | **H7 falsified** |
 
+> **Provenance warning for A7/A9 (measured)**: on `evaluate_fullcorpus` the three arms of
+> A7/A9 are **identical** (all 0.998), but this is due to **candidate-pool saturation**—that
+> benchmark has per-query pools of min=5 / median=8 / max=10 (**100% ≤10**), leaving the
+> metrics with no discriminative power (see §4.1). The A7/A9 conclusions on that table
+> therefore **cannot be used to judge the value of training or of individual features**;
+> valid numbers come from the repaired benchmark of §4.1/§6.7 (global pool of 1,100).
+
 **Additional negative results from the parallel experiments (new; each measured and independently
 verified on a dedicated branch)**:
 
