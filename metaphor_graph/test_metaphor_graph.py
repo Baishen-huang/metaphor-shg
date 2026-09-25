@@ -1324,5 +1324,111 @@ class TestDeterministicIds(unittest.TestCase):
         self.assertEqual(st1, st2)
 
 
+class TestRepairs(unittest.TestCase):
+    """exp/repair 引入的修复的回归护栏。
+
+    每项对应一个由三代并行实验实测确认的缺陷，防止回退。
+    """
+
+    # ---- 人工权重单一真源（exp/typefeat：struct 过权 49x、type 19x）----
+    def test_hand_weights_single_source(self):
+        from metaphor_graph.training import (HAND_WEIGHTS,
+                                             HAND_WEIGHTS_LEGACY,
+                                             FEATURE_NAMES)
+        self.assertEqual(set(HAND_WEIGHTS), set(FEATURE_NAMES))
+        self.assertAlmostEqual(sum(HAND_WEIGHTS.values()), 1.0, places=6)
+        self.assertEqual(set(HAND_WEIGHTS_LEGACY), set(FEATURE_NAMES[:4]))
+        # struct 的过权倍数应 > 10（实测确认的错配，不可悄悄改回）
+        ratio = HAND_WEIGHTS_LEGACY["struct"] / HAND_WEIGHTS["struct"]
+        self.assertGreater(ratio, 10.0,
+                           "struct 过权倍数骤降 —— 是否把权重改回了拍脑袋的值？")
+
+    def test_hand_weighted_score_respects_weights(self):
+        from metaphor_graph.training import (hand_weighted_score,
+                                             HAND_WEIGHTS_LEGACY)
+        f = [0.5, 0.5, 0.5, 0.5, 0.0, 0.0, 0.0]
+        self.assertAlmostEqual(hand_weighted_score(f, HAND_WEIGHTS_LEGACY), 0.5,
+                               places=6)
+        # struct/clue 截断到 1
+        f2 = [0.0, 5.0, 5.0, 0.0, 0.0, 0.0, 0.0]
+        self.assertAlmostEqual(hand_weighted_score(f2, HAND_WEIGHTS_LEGACY),
+                               0.25 + 0.20, places=6)
+
+    def test_two_scoring_paths_share_feature_schema(self):
+        """两条打分路径必须用同一套 7 维特征。
+
+        原缺陷：retrieval.metaphor_retriever_score 走 4 维手写公式且 type 由
+        type_valid 现算，与 training 路径对未注册的 F_LLM_* 边给出不同值。
+        """
+        from metaphor_graph.retrieval import RetrievalEngine
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+        from metaphor_graph.training import FEATURE_NAMES
+        chunks = DOCS["doc_project"]
+        shg = MetaphorSHGBuilder().build(chunks, doc_id="dp")
+        eng = RetrievalEngine(shg, chunks, doc_id="dp")
+        if not eng.live_edges():
+            self.skipTest("无超边")
+        feats = eng._pair_features("项目推进不动", eng.live_edges()[0])
+        self.assertEqual(len(feats), len(FEATURE_NAMES))
+
+    # ---- 诚实覆盖率（exp/degrade：报出 100% 含 22.4pp 注水）----
+    def test_honest_coverage_backward_compatible(self):
+        """不传 ontology 时历史口径逐位不变（registered_* 保持 None）。"""
+        from metaphor_graph.health import graph_health
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+        shg = MetaphorSHGBuilder().build(DOCS["doc_project"], doc_id="dp")
+        h = graph_health(shg)
+        self.assertIsNone(h.registered_hierarchy_coverage)
+        self.assertNotIn("诚实覆盖率", h.report())
+
+    def test_honest_coverage_not_above_reported(self):
+        from metaphor_graph.health import graph_health
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+        from metaphor_graph.ontology import DEFAULT_ONTOLOGY
+        shg = MetaphorSHGBuilder().build(DOCS["doc_project"], doc_id="dp")
+        h = graph_health(shg, ontology=DEFAULT_ONTOLOGY)
+        self.assertIsNotNone(h.registered_hierarchy_coverage)
+        self.assertLessEqual(h.registered_hierarchy_coverage,
+                             h.hierarchy_coverage + 1e-9)
+        self.assertIn("诚实覆盖率", h.report())
+
+    def test_coverage_judgement_is_registration_not_prefix(self):
+        """判据必须是「本体有无条目」，不是 F_LLM_ 前缀。
+
+        生产本体 98.6% 的框架以 F_LLM_ 开头（自举沉淀的正式框架），
+        按前缀判定会把整个本体误判为退化。
+        """
+        from metaphor_graph.ontology import CascadeOntology
+        from metaphor_graph.ontology_clean import _stable_id
+        ont = CascadeOntology()
+        fid = _stable_id("F_LLM", "发条", "生活状态")
+        self.assertTrue(fid.startswith("F_LLM_"))
+        self.assertIsNone(ont.get_frame(fid))  # 未注册才是"退化"的判据
+
+    # ---- H4 高功效主指标（exp/dynamics：n=20 功效不足）----
+    def test_h4_auc_full_handles_ties(self):
+        import numpy as np
+        from metaphor_graph.evaluate_hgnn import _auc_full
+        auc, _, _ = _auc_full(np.array([1.0, 2.0]), np.array([0.0, 0.5]))
+        self.assertAlmostEqual(auc, 1.0, places=6)
+        # 完全并列 → 0.5（不是 0；这正是原 acc 口径把 raw 报成 0.150 的原因）
+        auc2, _, _ = _auc_full(np.array([0.0, 0.0]), np.array([0.0, 0.0]))
+        self.assertAlmostEqual(auc2, 0.5, places=6)
+        auc3, _, _ = _auc_full(np.array([0.0]), np.array([1.0]))
+        self.assertAlmostEqual(auc3, 0.0, places=6)
+
+    # ---- 修复版基准的池规模（exp/typefeat：池 ≤10 使 Hits@10 平凡饱和）----
+    def test_random_baseline_improves_with_pool(self):
+        from metaphor_graph.evaluate_repaired import random_baseline
+        small = random_baseline(7, 1)
+        big = random_baseline(1100, 1)
+        self.assertAlmostEqual(small["hits@10"], 1.0, places=6)  # 原基准饱和
+        self.assertLess(big["hits@10"], 0.05)                    # 全局池不饱和
+        self.assertLess(big["mrr"], small["mrr"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

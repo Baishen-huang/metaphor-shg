@@ -213,8 +213,14 @@ def build_query_sets(gshg, max_q: int = 0) -> Dict[str, List[Tuple[str, Set[str]
 
 # --------------------------------------------------------------------- 指标
 def rank_all(eng: RetrievalEngine, scorer, query: str,
-             exclude: Set[str]) -> List[Tuple[str, float]]:
-    """对全部候选 chunk 打分排序（排除 exclude 中的 chunk）。"""
+             exclude: Set[str], weights: Optional[Dict[str, float]] = None
+             ) -> List[Tuple[str, float]]:
+    """对全部候选 chunk 打分排序（排除 exclude 中的 chunk）。
+
+    weights=None 时用 training.HAND_WEIGHTS（重标定后）；传
+    HAND_WEIGHTS_LEGACY 可复现历史口径，用于量化权重错配的影响。
+    """
+    from metaphor_graph.training import hand_weighted_score
     cands = eng.live_edges()
     feats = {m.id: eng._pair_features(query, m) for m in cands}
     chunk_score: Dict[str, float] = {}
@@ -224,8 +230,7 @@ def rank_all(eng: RetrievalEngine, scorer, query: str,
         if cid is None or cid in exclude:
             continue
         s = (scorer.score_features(feats[m.id]) if scorer is not None
-             else 0.35 * feats[m.id][0] + 0.25 * min(feats[m.id][1], 1.0)
-             + 0.20 * feats[m.id][2] + 0.20 * feats[m.id][3])
+             else hand_weighted_score(feats[m.id], weights=weights))
         chunk_score[cid] = max(chunk_score.get(cid, -1e9), s)
     return sorted(chunk_score.items(), key=lambda x: -x[1])
 
@@ -340,25 +345,31 @@ def _run(qset, eng, scorer, chunk_texts, exclude_own: bool, n_chunks: int):
     exclude_own=True 时把**产出 chunk** 从池中移除。deanchor 口径的金标本身
     已排除产出 chunk，故该标志必须为 False（否则金标被一起排除 → 指标恒 0）。
     """
+    from metaphor_graph.training import HAND_WEIGHTS_LEGACY
     if not qset:
         print("  （无查询）")
         return
-    cfgs = [("hand_weighted", None)]
+    # 三臂：重标定人工权重 / 历史人工权重（对照，量化权重错配）/ 训练后
+    cfgs = [("hand_recalibrated", None, None),
+            ("hand_legacy", None, HAND_WEIGHTS_LEGACY)]
     if scorer is not None:
-        cfgs.append(("trained", scorer))
-    agg = {name: defaultdict(float) for name, _ in cfgs}
+        cfgs.append(("trained", scorer, None))
+    agg = {name: defaultdict(float) for name, _, _ in cfgs}
     for q, gold in qset:
-        for name, sc in cfgs:
-            ranked = rank_all(eng, sc, q, set())
+        for name, sc, w in cfgs:
+            ranked = rank_all(eng, sc, q, set(), weights=w)
             m = metrics(ranked, gold)
             for k, v in m.items():
                 agg[name][k] += v
     n = len(qset)
     print(f"  查询数 {n}")
-    for name, _ in cfgs:
+    for name, _, _ in cfgs:
         a = agg[name]
-        print(f"    {name:<14} MRR={a['mrr']/n:.4f}  Hits@3={a['hits@3']/n:.4f}  "
+        print(f"    {name:<18} MRR={a['mrr']/n:.4f}  Hits@3={a['hits@3']/n:.4f}  "
               f"Hits@10={a['hits@10']/n:.4f}  Recall@10={a['recall@10']/n:.4f}")
+    if "hand_recalibrated" in agg and "hand_legacy" in agg:
+        d = (agg["hand_recalibrated"]["mrr"] - agg["hand_legacy"]["mrr"]) / n
+        print(f"  权重重标定效应 Δ MRR = {d:+.4f}")
     gold_sizes = [len(g) for _, g in qset]
     print(f"  金标规模：min={min(gold_sizes)} median="
           f"{sorted(gold_sizes)[len(gold_sizes)//2]} max={max(gold_sizes)}")

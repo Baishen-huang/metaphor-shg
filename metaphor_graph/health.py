@@ -39,6 +39,12 @@ class GraphHealth:
     hierarchy_coverage: float = 0.0
     frame_coverage: float = 0.0
     cascade_coverage: float = 0.0
+    # 诚实覆盖率（仅当传入 ontology 时计算，否则为 None —— 历史口径逐位不变）
+    registered_frame_coverage: Optional[float] = None
+    registered_cascade_coverage: Optional[float] = None
+    registered_hierarchy_coverage: Optional[float] = None
+    n_fallback_edges: int = 0
+    adhoc_cascades: int = 0
     deprecated_rate: float = 0.0
     evidence_coverage: float = 0.0
     avg_confidence: float = 0.0
@@ -70,6 +76,14 @@ class GraphHealth:
             f"图密度 Δ：{self.density:.2f}",
             f"未匹配累积池：{self.unmatched_pool} / 脏摘要：{self.dirty_summaries}",
         ]
+        # 诚实覆盖率只在传了 ontology 时输出（否则历史口径逐位不变）
+        if self.registered_hierarchy_coverage is not None:
+            lines.append(
+                f"诚实覆盖率（仅本体登记）：框架 "
+                f"{pct(self.registered_frame_coverage)} / 级联 "
+                f"{pct(self.registered_cascade_coverage)} / 综合 "
+                f"{pct(self.registered_hierarchy_coverage)}"
+                f"（回退边 {self.n_fallback_edges} / ADHOC 级联 {self.adhoc_cascades}）")
         if self.warnings:
             lines.append("告警：")
             lines += [f"  - {w}" for w in self.warnings]
@@ -83,10 +97,15 @@ def graph_health(shg: MetaphorSHG,
                  dirty_summaries: int = 0,
                  arity_floor: float = 2.2,
                  orphan_ceiling: float = 0.8,
-                 coverage_floor: float = 0.85) -> GraphHealth:
+                 coverage_floor: float = 0.85,
+                 ontology=None) -> GraphHealth:
     """计算图健康度。
 
     coverage_floor=0.85 对齐方案 §7 的 P2 验收标准（L2/L3 覆盖率 >85%）。
+
+    ontology：传入时额外计算**诚实覆盖率**（只计本体正式登记的框架/级联），
+    用于暴露报出口径中的注水（见下方注释）。**不传时所有 registered_* 字段
+    保持 None、报告文本不含该行 —— 历史口径逐位不变。**
     """
     h = GraphHealth()
     edges = [e for e in shg.edges]
@@ -128,6 +147,38 @@ def graph_health(shg: MetaphorSHG,
     else:
         h.cascade_coverage = 0.0
     h.hierarchy_coverage = min(h.frame_coverage, h.cascade_coverage)
+
+    # ---- 诚实覆盖率（exp/degrade + exp/cascade 的发现）----
+    # 报出的 100% 覆盖率含"注水"：抽取器为未知喻体临时建的回退框架
+    # （未在本体登记）靠 builder._ensure_cascades 按目标域事后补的
+    # C_ADHOC_* 级联才够到 100%。实测在 1100 句评测集上：超边 883 条，
+    # 报出覆盖率 1.000，但**本体正式登记**的只有 685/883 = 0.776，
+    # **低于 P2 的 85% 门槛**。两个口径都应报告。
+    #
+    # 判据必须是"本体有无条目"，不是 `F_LLM_` 前缀 —— 生产本体 98.6% 的
+    # 框架以 F_LLM_ 开头（自举沉淀的正式框架），按前缀判定会把整个本体
+    # 误判为退化。
+    if ontology is not None:
+        reg = [e for e in edges
+               if e.frame_id and ontology.get_frame(e.frame_id) is not None]
+        h.registered_frame_coverage = len(reg) / len(edges)
+        n_cas = 0
+        for e in reg:
+            cid = ontology.get_cascade(e.frame_id)
+            if cid and cid in ontology.cascades:
+                n_cas += 1
+        h.registered_cascade_coverage = n_cas / len(edges)
+        h.registered_hierarchy_coverage = min(h.registered_frame_coverage,
+                                              h.registered_cascade_coverage)
+        h.n_fallback_edges = len(edges) - len(reg)
+        h.adhoc_cascades = sum(1 for c in shg.cascades
+                               if str(getattr(c, "id", "")).startswith("C_ADHOC_"))
+        if h.registered_hierarchy_coverage < coverage_floor:
+            h.warnings.append(
+                f"诚实覆盖率 {h.registered_hierarchy_coverage:.1%} 低于门槛 "
+                f"{coverage_floor:.0%}（报出口径 {h.hierarchy_coverage:.1%}）—— "
+                f"{h.n_fallback_edges}/{len(edges)} 条边挂在未登记的回退框架上，"
+                f"其中 {h.adhoc_cascades}/{h.n_cascades} 个级联为事后补建。")
 
     # ---- 演化与溯源 ----
     h.deprecated_rate = sum(1 for e in edges if e.deprecated) / len(edges)

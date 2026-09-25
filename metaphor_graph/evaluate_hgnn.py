@@ -271,11 +271,32 @@ def measure_h4():
         pos = np.array(scores[m]["pos"], float)
         neg = np.array(scores[m]["neg"], float)
         n = min(len(pos), len(neg))
+        # 配对准确率：并列计为错误。**n=20 时分辨率仅 0.05、功效不足**，
+        # 且结论字符串会随无关参数抖动翻转（exp/dynamics 实测 α=0.5 时打印
+        # "依赖跨层传播 ✅"）。保留以兼容历史，但主指标应看 auc_full。
         acc = float(np.sum(pos[:n] > neg[:n])) / n if n else 0.0
+        # 全量负样本 ROC-AUC（正确处理并列）：高功效主指标
+        auc_full, n_pos, n_neg = _auc_full(pos, neg)
         out[m] = {"pos_mean": float(pos.mean()) if len(pos) else 0.0,
                   "neg_mean": float(neg.mean()) if len(neg) else 0.0,
-                  "acc": acc, "n_pairs": n}
+                  "acc": acc, "n_pairs": n,
+                  "auc_full": auc_full, "n_pos": n_pos, "n_neg": n_neg}
     return out
+
+
+def _auc_full(pos: np.ndarray, neg: np.ndarray) -> Tuple[float, int, int]:
+    """ROC-AUC = P(pos > neg) + 0.5·P(pos == neg)，用全量正负对。
+
+    这是 exp/dynamics 建议的 H4 主指标：n=20 的配对准确率功效不足
+    （分辨率 0.05，18 个配置下 |Δacc| ≤ 0.05 全部落在噪声内），
+    而全量负样本 AUC 在同样配置下稳定（|ΔAUC| ≤ 0.005）。
+    """
+    if len(pos) == 0 or len(neg) == 0:
+        return float("nan"), len(pos), len(neg)
+    p = pos[:, None]
+    q = neg[None, :]
+    auc = float((p > q).mean() + 0.5 * (p == q).mean())
+    return auc, len(pos), len(neg)
 
 
 def main():
@@ -323,15 +344,22 @@ def main():
     # ---- H4 改口径：判别信号来源分解 ----
     print("\n【H4·改口径】判别信号来源分解（同一组配对样本：真 L1 边 vs 跨框架负样本）")
     h4 = measure_h4()
-    print(f"{'表示':16s} {'真边连贯度':>10s} {'负样本':>8s} {'配对判别':>8s}  (配对 n)")
+    print(f"{'表示':16s} {'真边连贯度':>10s} {'负样本':>8s} "
+          f"{'配对判别':>8s} {'全量AUC':>9s}  (配对 n / 正×负)")
     for m, label in (("hgnn", "HGNN 完整跨层"), ("flat", "仅L1超边(flat)"),
                      ("raw", "原始嵌入"), ("flat_gru", "GRU共成员序列")):
         r = h4[m]
         print(f"{label:16s} {r['pos_mean']:>10.3f} {r['neg_mean']:>8.3f} "
-              f"{r['acc']:>8.3f}  ({r['n_pairs']})")
-    if h4["flat"]["acc"] >= h4["hgnn"]["acc"] - 0.02:
+              f"{r['acc']:>8.3f} {r['auc_full']:>9.3f}  "
+              f"({r['n_pairs']} / {r['n_pos']}×{r['n_neg']})")
+    print("  注：主指标为**全量AUC**（正确处理并列）。配对判别 n=20 时分辨率仅 0.05，")
+    print("      结论字符串会随无关参数抖动翻转（exp/dynamics 实测），仅作历史兼容。")
+    # 判定改用全量 AUC（高功效）；配对准确率仅作参考
+    a_flat, a_hgnn = h4["flat"]["auc_full"], h4["hgnn"]["auc_full"]
+    a_raw = h4["raw"]["auc_full"]
+    if a_flat >= a_hgnn - 0.02:
         print("  → flat(仅 L1 超边)即可复现：信号来自喻底 n 元共现，跨层层级非必要（诚实负面）")
-    elif h4["raw"]["acc"] >= h4["hgnn"]["acc"] - 0.02:
+    elif a_raw >= a_hgnn - 0.02:
         print("  → 原始嵌入即可复现：结构完全非必要（诚实负面）")
     else:
         print("  → 简单对照均无法复现：图结构校验信号依赖超图（跨层）传播 ✅")
