@@ -342,28 +342,53 @@ def main():
 def _run(qset, eng, scorer, chunk_texts, exclude_own: bool, n_chunks: int):
     """跑一个口径。
 
-    exclude_own=True 时把**产出 chunk** 从池中移除。deanchor 口径的金标本身
-    已排除产出 chunk，故该标志必须为 False（否则金标被一起排除 → 指标恒 0）。
+    三臂共享同一份 7 维特征（每查询只算一次 `_pair_features`）。
+    原实现每臂各算一次，3 臂 = 3 倍开销，全量 634 查询下不可接受。
     """
-    from metaphor_graph.training import HAND_WEIGHTS_LEGACY
+    from metaphor_graph.training import HAND_WEIGHTS_LEGACY, hand_weighted_score
     if not qset:
         print("  （无查询）")
         return
-    # 三臂：重标定人工权重 / 历史人工权重（对照，量化权重错配）/ 训练后
-    cfgs = [("hand_recalibrated", None, None),
-            ("hand_legacy", None, HAND_WEIGHTS_LEGACY)]
+    arm_names = ["hand_recalibrated", "hand_legacy"]
     if scorer is not None:
-        cfgs.append(("trained", scorer, None))
-    agg = {name: defaultdict(float) for name, _, _ in cfgs}
+        arm_names.append("trained")
+    agg = {name: defaultdict(float) for name in arm_names}
+
     for q, gold in qset:
-        for name, sc, w in cfgs:
-            ranked = rank_all(eng, sc, q, set(), weights=w)
-            m = metrics(ranked, gold)
+        cands = eng.live_edges()
+        feats = {m.id: eng._pair_features(q, m) for m in cands}
+        # 每个候选 chunk 取"最强支持"的超边分（与 score_conditions 口径一致）
+        chunk_feats: Dict[str, List[float]] = {}
+        for m in cands:
+            cid = next((s.chunk_id for s in m.chunk_spans
+                        if s.chunk_id in eng._chunk_text), None)
+            if cid is None:
+                continue
+            prev = chunk_feats.get(cid)
+            f = feats[m.id]
+            if prev is None:
+                chunk_feats[cid] = list(f)
+            else:
+                # 用 sem 维作为"支持强度"比较，保留更强的那条边
+                if f[0] > prev[0]:
+                    chunk_feats[cid] = list(f)
+
+        for name in arm_names:
+            if name == "hand_recalibrated":
+                sc = lambda f: hand_weighted_score(f)
+            elif name == "hand_legacy":
+                sc = lambda f, _w=HAND_WEIGHTS_LEGACY: hand_weighted_score(f, weights=_w)
+            else:
+                sc = lambda f, _s=scorer: _s.score_features(f)
+            scored = sorted(((cid, sc(f)) for cid, f in chunk_feats.items()),
+                            key=lambda x: -x[1])
+            m = metrics(scored, gold)
             for k, v in m.items():
                 agg[name][k] += v
+
     n = len(qset)
     print(f"  查询数 {n}")
-    for name, _, _ in cfgs:
+    for name in arm_names:
         a = agg[name]
         print(f"    {name:<18} MRR={a['mrr']/n:.4f}  Hits@3={a['hits@3']/n:.4f}  "
               f"Hits@10={a['hits@10']/n:.4f}  Recall@10={a['recall@10']/n:.4f}")
