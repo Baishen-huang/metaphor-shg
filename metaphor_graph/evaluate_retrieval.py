@@ -197,16 +197,27 @@ def _chunk_of(mapping):
     return None
 
 
-def score_conditions(eng, scorer, query, legacy_arm: bool = False):
+def score_conditions(eng, scorer, query, legacy_arm: bool = False,
+                     reliability: bool = False, floor=None):
     """返回打分配置下，候选映射→chunk 的排序得分表。
 
     legacy_arm=True 时额外返回 `hand_weighted_legacy`（原 0.35/0.25/0.20/0.20
     权重），用于量化权重错配的影响。**默认关闭** —— 调用方（如
     evaluate_fullcorpus）按固定键列表聚合，多出的键会导致 KeyError。
+
+    reliability=True 时额外返回叠加**溯源可靠性折扣**的配置（`*_reliab`）：
+    分数乘上 [floor,1] 的因子，退化框架来源的候选被降权但**不消失**
+    （floor 见 provenance.RELIABILITY_FLOOR，默认 0.5）。
+    原三组配置逐位不变 —— 保证 before/after 可比。
     """
+    from metaphor_graph import provenance
     cands = eng.live_edges()
     # 预计算 7 维特征
     feats = {m.id: eng._pair_features(query, m) for m in cands}
+    fl = provenance.RELIABILITY_FLOOR if floor is None else floor
+    rel = ({m.id: provenance.reliability_factor(
+        provenance.edge_reliability(m, eng.ont), fl) for m in cands}
+        if reliability else {})
     out = {}
     arms = [
         ("trained", lambda f: scorer.score_features(f)),
@@ -220,8 +231,7 @@ def score_conditions(eng, scorer, query, legacy_arm: bool = False):
     if legacy_arm:
         arms.append(("hand_weighted_legacy",
                      lambda f: hand_weighted_score(f, weights=HAND_WEIGHTS_LEGACY)))
-    for name, fn in arms:
-        # 映射→chunk 取最高分
+    for name, fn in arms:        # 映射→chunk 取最高分
         chunk_score = {}
         for m in cands:
             cid = _chunk_of(m)
@@ -229,8 +239,18 @@ def score_conditions(eng, scorer, query, legacy_arm: bool = False):
                 continue
             s = fn(feats[m.id])
             chunk_score[cid] = max(chunk_score.get(cid, -1e9), s)
-        ranked = sorted(chunk_score.items(), key=lambda x: -x[1])
-        out[name] = ranked
+        out[name] = sorted(chunk_score.items(), key=lambda x: -x[1])
+        if not reliability:
+            continue
+        chunk_score_r = {}
+        for m in cands:
+            cid = _chunk_of(m)
+            if cid is None:
+                continue
+            s = fn(feats[m.id]) * rel[m.id]
+            chunk_score_r[cid] = max(chunk_score_r.get(cid, -1e9), s)
+        out[name + "_reliab"] = sorted(chunk_score_r.items(),
+                                       key=lambda x: -x[1])
     return out
 
 

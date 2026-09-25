@@ -44,6 +44,11 @@ from .training import (MetaphorScorer, TrainingSet, build_training_set,
                        trivial_separators, feature_auc, leakage_report,
                        FEATURE_NAMES)
 from .health import graph_health, GraphHealth
+# ---- 溯源可靠性通道（degraded-provenance，见 provenance.py）----
+from . import provenance
+from .provenance import (frame_reliability, frame_provenance, edge_reliability,
+                         reliability_factor, RELIABILITY_FALLBACK_CAP,
+                         RELIABILITY_ONTOLOGY, RELIABILITY_FLOOR)
 from . import baselines
 # ---- 查询侧可观测性泛函 Ω（只读查询，不读候选）----
 from .observability import (QueryObservability, ObservabilityMeter, measure,
@@ -74,4 +79,7 @@ __all__ = [
     "QueryObservability", "ObservabilityMeter", "measure",
     "matched_triggers", "activated_structure", "normalized_entropy",
     "geometric_mean", "regime_of", "EPS", "SINGLE_FLOW_ENTROPY", "SPARSE_MAX",
-]
+    # 溯源可靠性通道（degraded-provenance）
+    "provenance", "frame_reliability", "frame_provenance", "edge_reliability",
+    "reliability_factor", "RELIABILITY_FALLBACK_CAP", "RELIABILITY_ONTOLOGY",
+    "RELIABILITY_FLOOR",]

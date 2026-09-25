@@ -82,6 +82,11 @@ class MetaphorHyperedge:
     sentiment: Dict[str, float] = field(default_factory=dict)  # 受 EmoBi 启发
     confidence: float = 0.0
     source_type: str = "UNKNOWN"       # 用于类型安全约束
+    # 溯源可靠性 ∈ [0,1]（degraded-provenance 通道，见 provenance.py）。
+    # 1.0 = 框架在本体中登记（人工种子 / 自举回流沉淀）；0.5 = 抽取器临时
+    # 新建的回退框架（本体无条目）——候选**不丢弃**，只降可靠性。
+    # 默认 1.0：历史构造点（手工建边、旧序列化数据）不受影响。
+    provenance_reliability: float = 1.0
     is_extended: bool = False          # 是否为 L1.5 合并的跨 chunk 超边
     layer: int = 1                     # 1 = L1；1.5 = 扩展
     # ---- 演化治理（知识管理，见 Evidence 说明）----

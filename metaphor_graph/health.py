@@ -48,6 +48,15 @@ class GraphHealth:
     deprecated_rate: float = 0.0
     evidence_coverage: float = 0.0
     avg_confidence: float = 0.0
+    # ---- 诚实覆盖率（degraded-provenance 通道，可选）----
+    # 上面报出的 hierarchy_coverage 里，有多少是**本体登记框架 + 本体登记级联**
+    # 撑起来的？剩余的边挂在抽取器临时新建的回退框架上，靠
+    # builder._ensure_cascades 事后补 C_ADHOC_* 级联才够到 100%。
+    # 传 ontology 时才算；不传则为 None（历史口径逐位不变）。
+    registered_frame_coverage: Optional[float] = None
+    registered_cascade_coverage: Optional[float] = None
+    avg_provenance_reliability: float = 0.0
+    degraded_edge_rate: float = 0.0
     density: float = 0.0
     unmatched_pool: int = 0
     dirty_summaries: int = 0
@@ -84,6 +93,11 @@ class GraphHealth:
                 f"{pct(self.registered_cascade_coverage)} / 综合 "
                 f"{pct(self.registered_hierarchy_coverage)}"
                 f"（回退边 {self.n_fallback_edges} / ADHOC 级联 {self.adhoc_cascades}）")
+            # degrade 分支补充的额外诊断（退化边占比 / 平均溯源可靠性）
+            if getattr(self, "degraded_edge_rate", 0.0):
+                lines.append(
+                    f"退化边占比 {pct(self.degraded_edge_rate)}"
+                    f"｜平均溯源可靠性 {self.avg_provenance_reliability:.3f}")
         if self.warnings:
             lines.append("告警：")
             lines += [f"  - {w}" for w in self.warnings]
@@ -105,8 +119,7 @@ def graph_health(shg: MetaphorSHG,
 
     ontology：传入时额外计算**诚实覆盖率**（只计本体正式登记的框架/级联），
     用于暴露报出口径中的注水（见下方注释）。**不传时所有 registered_* 字段
-    保持 None、报告文本不含该行 —— 历史口径逐位不变。**
-    """
+    保持 None、报告文本不含该行 —— 历史口径逐位不变。**    """
     h = GraphHealth()
     edges = [e for e in shg.edges]
     h.n_edges = len(edges)
@@ -185,6 +198,26 @@ def graph_health(shg: MetaphorSHG,
     h.evidence_coverage = sum(1 for e in edges if e.evidence) / len(edges)
     h.avg_confidence = sum(e.confidence for e in edges) / len(edges)
 
+    # ---- 溯源可靠性 / 诚实覆盖率（可选，传 ontology 才算）----
+    rels = [getattr(e, "provenance_reliability", 1.0) for e in edges]
+    h.avg_provenance_reliability = sum(rels) / len(rels)
+    h.degraded_edge_rate = sum(1 for r in rels if r < 1.0) / len(rels)
+    if ontology is not None:
+        from .provenance import RELIABILITY_ONTOLOGY, frame_reliability
+        reg_frame = sum(1 for e in edges
+                        if frame_reliability(ontology, e.frame_id)
+                        >= RELIABILITY_ONTOLOGY)
+        h.registered_frame_coverage = reg_frame / len(edges)
+
+        def _in_reg_cascade(e) -> bool:
+            if frame_reliability(ontology, e.frame_id) < RELIABILITY_ONTOLOGY:
+                return False
+            cid = e.cascade_id or ontology.get_cascade(e.frame_id)
+            return bool(cid) and ontology.get_cascade_spec(cid) is not None
+
+        h.registered_cascade_coverage = (
+            sum(1 for e in edges if _in_reg_cascade(e)) / len(edges))
+
     # ---- 告警 ----
     if h.avg_arity < arity_floor:
         h.warnings.append(
@@ -200,6 +233,14 @@ def graph_health(shg: MetaphorSHG,
             f"未达方案 §7 的 P2 门槛，L2/L3 索引尚未建立。")
     if h.evidence_coverage == 0.0:
         h.warnings.append("证据链覆盖为 0：超边不可溯源，冲突消解无依据。")
+    if h.registered_frame_coverage is not None and \
+            h.registered_frame_coverage < coverage_floor:
+        h.warnings.append(
+            f"诚实框架覆盖率 {h.registered_frame_coverage * 100:.1f}% "
+            f"< {coverage_floor * 100:.0f}%：报出的 L2/L3 覆盖率由"
+            f"**临时回退框架 + 事后补的 C_ADHOC_ 级联**撑起"
+            f"（退化边占比 {h.degraded_edge_rate * 100:.1f}%），"
+            f"非本体正式归属，不可对外声称层级归属达标。")
     if h.unmatched_pool > max(50, h.n_edges * 0.3):
         h.warnings.append(
             f"未匹配累积池 {h.unmatched_pool} 条，已超阈值："
