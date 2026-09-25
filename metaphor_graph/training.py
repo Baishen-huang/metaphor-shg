@@ -47,6 +47,52 @@ FEATURE_NAMES = [
     "ground_jaccard",  # 喻底集合 Jaccard（扩展隐喻合并判据的连续化）
 ]
 
+# ---------------------------------------------------------------- 人工权重
+# **单一真源**。原实现把权重硬编码在两个地方（retrieval.py 与
+# evaluate_retrieval.py），且与训练学到的权重严重错配 —— `exp/typefeat` 实测：
+#   struct 人工 0.25 vs 学到 +0.0195 → **过权 49 倍**
+#   type   人工 0.20 vs 学到 +0.0487 → **过权 19 倍**
+# 后果：仅把人工权重改成与学到权重同比例（不训练任何模型），MRR 就从
+# 0.4809 升到 0.5496，**反超**训练后的 0.5447 —— 即"训练增益"主要是
+# 人工权重配错的产物。详见 .wt/typefeat/experiments/gen3/REPORT.md。
+#
+#   HAND_WEIGHTS_LEGACY —— 原 4 维（0.35/0.25/0.20/0.20），保留以复现历史数字
+#   HAND_WEIGHTS        —— 按训练学到权重的比例重标定（默认，7 维）
+HAND_WEIGHTS_LEGACY = {"sem": 0.35, "struct": 0.25, "clue": 0.20, "type": 0.20}
+
+# 学到权重的均值（110 个伪文档各训一个排序器后取均值，标准化空间）
+_LEARNED_SHARE = {"sem": 0.6911, "struct": 0.0195, "clue": 1.2543, "type": 0.0487,
+                  "same_frame": 0.1953, "same_cascade": 0.1958,
+                  "ground_jaccard": 0.4965}
+
+
+def _normalized(d: Dict[str, float]) -> Dict[str, float]:
+    tot = sum(d.values())
+    return {k: v / tot for k, v in d.items()} if tot > 0 else dict(d)
+
+
+#: 默认人工权重（按学到比例归一化，7 维）。缺失维视为 0。
+HAND_WEIGHTS = _normalized(_LEARNED_SHARE)
+
+
+def hand_weighted_score(features: Sequence[float],
+                        weights: Optional[Dict[str, float]] = None) -> float:
+    """按人工权重对 7 维特征加权求和（单一真源，供两条打分路径共用）。
+
+    features 顺序须与 FEATURE_NAMES 一致；`struct` 与 `clue` 按历史口径截断到 1。
+    """
+    w = weights if weights is not None else HAND_WEIGHTS
+    total = 0.0
+    for i, name in enumerate(FEATURE_NAMES):
+        wi = w.get(name, 0.0)
+        if wi == 0.0:
+            continue
+        v = features[i]
+        if name in ("struct", "clue"):
+            v = min(v, 1.0)
+        total += wi * v
+    return total
+
 
 # ------------------------------------------------------------------ 特征抽取
 def _jaccard(a: Sequence[str], b: Sequence[str]) -> float:

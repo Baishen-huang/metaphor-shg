@@ -31,7 +31,9 @@ logging.disable(logging.CRITICAL)
 from metaphor_graph.builder import MetaphorSHGBuilder
 from metaphor_graph.extractor import MetaphorExtractor
 from metaphor_graph.retrieval import RetrievalEngine
-from metaphor_graph.training import train_from_shg, FEATURE_NAMES
+from metaphor_graph.training import (train_from_shg, FEATURE_NAMES,
+                                     hand_weighted_score,
+                                     HAND_WEIGHTS_LEGACY)
 from metaphor_graph.eval_corpus import (
     DOCS, GOLD_EXTENDED, GOLD_RETRIEVAL, THRESHOLD_P3_ACC,
 )
@@ -183,8 +185,13 @@ def score_conditions(eng, scorer, query):
         ("trained", lambda f: scorer.score_features(f)),
         ("trained_no_role", lambda f: scorer.score_features(
             [0.0 if i in ROLE_IDX else v for i, v in enumerate(f)])),
-        ("hand_weighted", lambda f: 0.35 * f[0] + 0.25 * min(f[1], 1.0)
-         + 0.20 * f[2] + 0.20 * f[3]),
+        # 人工加权改为调用单一真源（training.hand_weighted_score）。
+        # 原实现硬编码 0.35/0.25/0.20/0.20，与学到权重严重错配
+        # （struct 过权 49 倍、type 19 倍），使"训练增益"成为配错权重的产物。
+        # 如需复现历史数字，传 weights=HAND_WEIGHTS_LEGACY。
+        ("hand_weighted", lambda f: hand_weighted_score(f)),
+        ("hand_weighted_legacy", lambda f: hand_weighted_score(
+            f, weights=HAND_WEIGHTS_LEGACY)),
     ):
         # 映射→chunk 取最高分
         chunk_score = {}

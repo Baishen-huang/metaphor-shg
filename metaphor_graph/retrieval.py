@@ -242,17 +242,19 @@ class RetrievalEngine:
             return round(float(self.scorer.score_features(
                 self._pair_features(query, mapping))), 4)
 
-        q_emb = embeddings.embed(query)
-        m_emb = embeddings.embed(mapping.describe())
-        sem_score = embeddings.cosine(q_emb, m_emb)
-        struct_score = self._centrality.get(mapping.id, 0.0)
-        clue_score = self._clue_count(query, mapping)
-        fspec = self.ont.get_frame(mapping.frame_id) if mapping.frame_id else None
-        mtype = fspec.mapping_type if fspec else mapping.frame_id or ""
-        type_score = 1.0 if self.ont.type_valid(mapping.source_type, mtype) else 0.0
-        score = (0.35 * sem_score + 0.25 * min(struct_score, 1.0)
-                 + 0.20 * clue_score + 0.20 * type_score)
-        return round(score, 4)
+        # 统一到与训练路径**同一套 7 维特征** + 单一真源权重。
+        #
+        # 原实现走的是 4 维手写公式（0.35·sem + 0.25·struct + 0.20·clue +
+        # 0.20·type），其中 type 由 `type_valid(source_type, mapping_type)` 现算。
+        # `exp/source` 实测该表达式与训练路径的 `type_ok` 对未注册的 F_LLM_*
+        # 边给出不同值（1.0 vs 0.0），且权重与学到权重严重错配
+        # （struct 过权 49 倍、type 19 倍，`exp/typefeat`）。
+        # 改用 _pair_features + hand_weighted_score 后：
+        #   - 两条路径对同一候选给出同一组特征（消除口径分歧）；
+        #   - 权重来自 training.HAND_WEIGHTS（按学到比例），不再手工拍定。
+        feats = self._pair_features(query, mapping)
+        from .training import hand_weighted_score  # 惰性导入避免循环依赖
+        return round(float(hand_weighted_score(feats)), 4)
 
     def _clue_count(self, query: str, mapping: MetaphorHyperedge) -> float:
         hits = sum(1 for t in mapping.triggers if t in query)
