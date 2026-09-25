@@ -47,6 +47,18 @@ def build_llm_backend():
     import json as _json
     from .llm_backend import OpenAIBackend, LocalHeuristicBackend
     if not os.environ.get("LLM_API_KEY"):
+        # ⚠️ 静默回落陷阱（exp/degrade 实测）：LocalHeuristicBackend 不实现
+        # discover_batch / batch_refine，于是调用方传的 --llm-cache **根本不被消费**，
+        # 却仍打印一份看似正常的指标 —— 实测产出假性 P1 = 0.434（真实 0.092）。
+        # 这类"看起来跑通了"的错误比崩溃危险得多，故这里显式告警。
+        # 需要零密钥重放请改用 PrecomputedBackend（见 build_replay_backend）。
+        print("=" * 78)
+        print("⚠️  未检测到 LLM_API_KEY —— 回落到 LocalHeuristicBackend（离线近似）")
+        print("    该后端不实现 discover_batch/batch_refine，传入的 --llm-cache")
+        print("    **不会被消费**，指标不可与「接真实 LLM」的结果比较。")
+        print("    零密钥重放真实缓存请用 PrecomputedBackend：")
+        print("      from metaphor_graph.evaluate_fullcorpus import build_replay_backend")
+        print("=" * 78)
         return LocalHeuristicBackend()
 
     model = os.environ.get("LLM_MODEL", "")
