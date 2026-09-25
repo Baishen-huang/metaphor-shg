@@ -1,0 +1,182 @@
+{
+ "A 本体级联(json)+兜底": {
+  "label": "A 本体级联(json)+兜底",
+  "n_l1": 856,
+  "n_with_cascade_id": 668,
+  "frac_with_cascade_id": 0.780373831775701,
+  "n_distinct_cascades_used": 222,
+  "struct_mean": 1.3966121495327102,
+  "struct_with_cas_mean": 1.5704323570432357,
+  "same_cascade_pair_hit": 29,
+  "same_cascade_implies_same_frame": 0.5172413793103449,
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5466608900944339,
+    "h3": 0.634493670886076,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5471355736387374,
+    "h3": 0.6329113924050633,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "n": 632
+   }
+  },
+  "cross_path_recall": 0.041666666666666664,
+  "cross_n": 632,
+  "omega": {
+   "mean": 0.005085000745330535,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.014173228346456693,
+   "omega_n_pos_frac": 0.014173228346456693
+  }
+ },
+ "B 本体级联(json)，兜底关": {
+  "label": "B 本体级联(json)，兜底关",
+  "n_l1": 856,
+  "n_with_cascade_id": 668,
+  "frac_with_cascade_id": 0.780373831775701,
+  "n_distinct_cascades_used": 222,
+  "struct_mean": 1.3966121495327102,
+  "struct_with_cas_mean": 1.5704323570432357,
+  "same_cascade_pair_hit": 29,
+  "same_cascade_implies_same_frame": 0.5172413793103449,
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5466608900944339,
+    "h3": 0.634493670886076,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5471355736387374,
+    "h3": 0.6329113924050633,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "n": 632
+   }
+  },
+  "cross_path_recall": 0.041666666666666664,
+  "cross_n": 632,
+  "omega": {
+   "mean": 0.005085000745330535,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.014173228346456693,
+   "omega_n_pos_frac": 0.014173228346456693
+  }
+ },
+ "C source 级联，兜底关": {
+  "label": "C source 级联，兜底关",
+  "n_l1": 856,
+  "n_with_cascade_id": 668,
+  "frac_with_cascade_id": 0.780373831775701,
+  "n_distinct_cascades_used": 204,
+  "struct_mean": 1.3966121495327102,
+  "struct_with_cas_mean": 1.5704323570432357,
+  "same_cascade_pair_hit": 76,
+  "same_cascade_implies_same_frame": 0.19736842105263158,
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5462916917821976,
+    "h3": 0.634493670886076,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5462125778581469,
+    "h3": 0.6313291139240507,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "n": 632
+   }
+  },
+  "cross_path_recall": 0.0759493670886076,
+  "cross_n": 632,
+  "omega": {
+   "mean": 0.02311064070395779,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.14803149606299212,
+   "omega_n_pos_frac": 0.14803149606299212
+  }
+ },
+ "E 全单例级联（唯一 id，非空）": {
+  "label": "E 全单例级联（唯一 id，非空）",
+  "n_l1": 856,
+  "n_with_cascade_id": 668,
+  "frac_with_cascade_id": 0.780373831775701,
+  "n_distinct_cascades_used": 362,
+  "struct_mean": 1.3966121495327102,
+  "struct_with_cas_mean": 1.5704323570432357,
+  "same_cascade_pair_hit": 15,
+  "same_cascade_implies_same_frame": 1.0,
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5463444343982311,
+    "h3": 0.6329113924050633,
+    "n": 632
+   },
+   "trained_no_role": {
+    "mrr": 0.5471355736387374,
+    "h3": 0.6329113924050633,
+    "n": 632
+   },
+   "hand_weighted": {
+    "mrr": 0.5024581826401439,
+    "h3": 0.6044303797468354,
+    "n": 632
+   }
+  },
+  "cross_path_recall": 0.03481012658227848,
+  "cross_n": 632,
+  "omega": {
+   "mean": 0.0026755633987360803,
+   "zero_frac": 0.8204724409448819,
+   "omega_n_mean": 0.0,
+   "omega_n_pos_frac": 0.0
+  }
+ },
+ "D 无级联": {
+  "label": "D 无级联",
+  "n_l1": 849,
+  "n_with_cascade_id": 0,
+  "frac_with_cascade_id": 0.0,
+  "n_distinct_cascades_used": 0,
+  "struct_mean": 1.0094228504122498,
+  "struct_with_cas_mean": 1.7535816618911175,
+  "same_cascade_pair_hit": 0,
+  "same_cascade_implies_same_frame": 0.0,
+  "per_cfg": {
+   "trained": {
+    "mrr": 0.5445352380952371,
+    "h3": 0.6224,
+    "n": 625
+   },
+   "trained_no_role": {
+    "mrr": 0.5437352380952372,
+    "h3": 0.6224,
+    "n": 625
+   },
+   "hand_weighted": {
+    "mrr": 0.4680895238095235,
+    "h3": 0.5552,
+    "n": 625
+   }
+  },
+  "cross_path_recall": 0.0352,
+  "cross_n": 625,
+  "omega": {
+   "mean": 0.0027053865576391898,
+   "zero_frac": 0.8184713375796179,
+   "omega_n_mean": 0.0,
+   "omega_n_pos_frac": 0.0
+  }
+ }
+}

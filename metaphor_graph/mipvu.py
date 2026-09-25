@@ -88,7 +88,16 @@ def mipvu_candidates(chunk: str,
         cascade_id = semfield.FIELD_TO_CASCADE.get(f)
         if not frame_id or not cascade_id:
             continue
-        if ont.get_frame(frame_id) is None or ont.cascades.get(cascade_id) is None:
+        # 桥接目标必须存在，且该框架必须**有 L3 归属**（否则语义域通道等于绕过层级）。
+        # 原实现只认 semfield 里写死的 6 个级联 id —— 那会让任何替换级联构造规则
+        # （cascade_rules 模块）的实验**静默关掉整条 MIPVU 通道**（实测丢 7 条 L1 边，
+        # 见 experiments/gen2/REPORT.md §4）。改为「框架存在 + 框架有级联归属」后：
+        #   - 默认 json 规则下逐位不变（6 个 id 都存在，get_cascade 也都有值）；
+        #   - none 规则（L3 消融）下通道正确地关闭。
+        if ont.get_frame(frame_id) is None:
+            continue
+        if ont.cascades.get(cascade_id) is None and \
+                ont.get_cascade(frame_id) is None:
             continue
 
         # 域内字面护栏（Wmatrix keyness）：chunk 明显围绕该语义域 → 跳过

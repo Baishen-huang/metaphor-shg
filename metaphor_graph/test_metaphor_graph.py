@@ -1296,6 +1296,226 @@ class TestNeo4jStore(unittest.TestCase):
             server.shutdown()
 
 
+class TestQueryObservability(unittest.TestCase):
+    """查询侧可观测性泛函 Ω（observability.py）。
+
+    最重要的护栏是 `test_omega_invariant_to_candidate_pool`：Ω 必须只读查询。
+    这不是「实验发现」而是「API 形状」——measure() 的签名里根本没有候选池，
+    该测试把这条不变式钉成回归护栏，防止后续有人为了刷指标把候选信号混进来。
+    """
+
+    def setUp(self):
+        from metaphor_graph.observability import ObservabilityMeter
+        self.meter = ObservabilityMeter()      # 种子本体（DEFAULT_ONTOLOGY）
+        self.ont = DEFAULT_ONTOLOGY
+
+    # ---------------------------------------------------- 只读查询的不变式
+    def test_omega_invariant_to_candidate_pool(self):
+        """打乱/截断/清空候选池，Ω 逐位不变（同一条查询）。"""
+        import copy
+        import random
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.eval_corpus import DOCS
+
+        query = "泥潭，沼泽"          # 触发词重叠型
+        q2 = "她的眼睛像什么一样晶莹剔透？"   # 改写型
+        base = {q: self.meter.measure(q).to_dict() for q in (query, q2)}
+
+        chunks = DOCS["doc_project"]
+        shg = MetaphorSHGBuilder().build(chunks, doc_id="dp")
+        variants = []
+        for seed in (0, 1, 7):
+            edges = copy.deepcopy(shg.edges)
+            random.Random(seed).shuffle(edges)
+            variants.append(edges[: max(1, len(edges) // 2)])
+            variants.append(edges)
+        variants.append([])                      # 空候选池
+
+        for edges in variants:
+            shg2 = MetaphorSHG(edges=edges)
+            eng = RetrievalEngine(shg2, chunks, doc_id="dp")
+            eng.cross_domain_retrieve(query)      # 触碰候选侧（排序/检索）
+            eng.cross_domain_retrieve(q2)
+            for q in (query, q2):
+                # 候选池变了，Ω 必须逐位相同（浮点也完全相同：纯本体查表）
+                self.assertEqual(self.meter.measure(q).to_dict(), base[q])
+
+    def test_measure_signature_has_no_candidate_argument(self):
+        """签名里不得出现候选池相关形参（结构性地保证不变式）。"""
+        import inspect
+        from metaphor_graph.observability import measure
+        params = list(inspect.signature(measure).parameters)
+        for bad in ("shg", "edges", "candidates", "retriever", "chunks",
+                    "ranked", "result", "scorer"):
+            self.assertNotIn(bad, params)
+
+    # ------------------------------------------------------------ 分量语义
+    def test_no_trigger_query_is_collapsed_zero(self):
+        r = self.meter.measure("今天天气不错，心情也很好")
+        self.assertEqual(r.omega, 0.0)
+        self.assertEqual(r.omega_e, 0.0)
+        self.assertEqual(r.omega_n, 0.0)
+        self.assertEqual(r.omega_f, 0.0)
+        self.assertEqual(r.completeness, 0.0)
+        self.assertEqual(r.regime, "collapsed")
+        self.assertEqual(r.n_seed_triggers, 0)
+
+    def test_empty_query_is_collapsed_zero(self):
+        r = self.meter.measure("")
+        self.assertEqual(r.omega, 0.0)
+        self.assertEqual(r.regime, "collapsed")
+
+    def test_trigger_hit_activates_frames(self):
+        r = self.meter.measure("泥潭")
+        self.assertEqual(r.matched_triggers, ("泥潭",))
+        self.assertTrue(r.activated_frames)
+        self.assertGreater(r.omega, 0.0)
+        self.assertGreater(r.omega_e, 0.0)
+
+    def test_paraphrase_lower_than_trigger_overlap(self):
+        """构造性直觉：改写句的 Ω 应低于触发词重叠句（方向性冒烟测试）。"""
+        overlap = self.meter.measure("泥潭，沼泽，陷进")
+        para = self.meter.measure("她的眼睛像什么一样晶莹剔透？")
+        self.assertGreater(overlap.omega, para.omega)
+
+    def test_omega_components_in_range(self):
+        for q in ("泥潭", "推进，停滞", "项目陷在泥潭里，推进不动，时间也浪费了",
+                  "她的眼睛像什么一样晶莹剔透？", "今天天气不错"):
+            r = self.meter.measure(q)
+            for v in (r.omega, r.omega_e, r.omega_n, r.omega_f, r.completeness):
+                self.assertGreaterEqual(v, 0.0, q)
+                self.assertLessEqual(v, 1.0, q)
+            self.assertLessEqual(r.omega, r.omega_geo + 1e-12)
+
+    def test_omega_equals_geo_times_completeness(self):
+        r = self.meter.measure("项目陷在泥潭里，推进不动，时间也浪费了")
+        self.assertAlmostEqual(r.omega, r.omega_geo * r.completeness, places=12)
+
+    def test_emergence_excludes_direct_targets(self):
+        """Ω_N 的分子必须是「不在直接命中集里」的目标域（涌现而非回声）。"""
+        r = self.meter.measure("泥潭")
+        direct = set(r.direct_targets)
+        emergent = set(r.emergent_targets)
+        self.assertEqual(direct & emergent, set())
+        self.assertTrue(emergent)               # 级联带来了新目标域
+
+    def test_completeness_is_char_coverage(self):
+        from metaphor_graph.observability import completeness
+        comp, obs = completeness("泥潭", ["泥潭"])
+        self.assertAlmostEqual(comp, 1.0)
+        self.assertEqual(obs, 2)
+        comp2, _ = completeness("abcdef泥潭", ["泥潭"])
+        self.assertAlmostEqual(comp2, 2 / 8)
+        # 重复出现按次数计（clip 到 1）
+        comp3, _ = completeness("泥潭泥潭泥潭", ["泥潭"])
+        self.assertAlmostEqual(comp3, 1.0)
+
+    # ------------------------------------------------------------ 几何平均
+    def test_geometric_mean_epsilon_floor(self):
+        from metaphor_graph.observability import geometric_mean
+        self.assertAlmostEqual(geometric_mean((1.0, 1.0, 1.0)), 1.0)
+        # 零分量被 ε 托住：Ω 不为 0，但显著低于其它分量
+        v = geometric_mean((1.0, 0.0, 1.0), eps=1e-3)
+        self.assertGreater(v, 0.0)
+        self.assertAlmostEqual(v, 0.1, places=6)   # (1·1e-3·1)^(1/3) = 0.1
+        self.assertLess(v, 0.5)
+
+    def test_geometric_mean_order_preserved(self):
+        from metaphor_graph.observability import geometric_mean
+        self.assertLess(geometric_mean((0.9, 0.1, 0.9)),
+                        geometric_mean((0.9, 0.2, 0.9)))
+
+    # ------------------------------------------------------------ 流量熵
+    def test_entropy_degenerate_cases(self):
+        from metaphor_graph.observability import normalized_entropy
+        self.assertEqual(normalized_entropy([]), 0.0)
+        self.assertEqual(normalized_entropy([0.0, 0.0]), 0.0)
+        self.assertEqual(normalized_entropy([3.0]), 0.5)   # 单条正流量 → 有限值
+        self.assertAlmostEqual(normalized_entropy([1.0, 1.0]), 1.0)
+        self.assertAlmostEqual(normalized_entropy([1.0, 1.0, 1.0, 1.0]), 1.0)
+        # 坍缩分布熵低，均匀分布熵高
+        self.assertLess(normalized_entropy([9.0, 1.0]),
+                        normalized_entropy([5.0, 5.0]))
+
+    def test_entropy_penalizes_single_trigger_collapse(self):
+        """两个触发词命中同一框架（流量坍缩）应比命中两个框架的 Ω 更低。"""
+        collapsed = self.meter.measure("泥潭，沼泽")        # 同框架（地形）
+        spread = self.meter.measure("泥潭，推进")           # 跨框架
+        self.assertLess(collapsed.omega_f, spread.omega_f)
+
+    # -------------------------------------------------------------- regime
+    def test_regime_boundaries(self):
+        from metaphor_graph.observability import regime_of
+        self.assertEqual(regime_of(0.0, 3), "collapsed")
+        self.assertEqual(regime_of(0.9, 0), "collapsed")   # 无框架 → collapsed
+        self.assertEqual(regime_of(0.49, 2), "sparse")
+        self.assertEqual(regime_of(0.5, 2), "dense")
+        self.assertEqual(regime_of(0.99, 2), "dense")
+
+    def test_regime_matches_measured(self):
+        self.assertEqual(self.meter.measure("今天天气不错").regime, "collapsed")
+        self.assertEqual(self.meter.measure("泥潭").regime, "dense")
+
+    # ---------------------------------------------------------- 一致性口径
+    def test_trigger_matching_same_as_cascade_path(self):
+        """Ω 的触发词口径必须与 cross_domain_retrieve 逐字一致。
+
+        否则 Ω 说「激活了」而级联通路空手而归，门控判据就自相矛盾。
+        """
+        from metaphor_graph.observability import matched_triggers
+        q = "项目陷在泥潭里，推进不动，时间也浪费了"
+        a = set(matched_triggers(q, self.ont))
+        b = {t for t in self.ont._trigger_index if t in q}
+        self.assertEqual(a, b)
+
+    def test_deterministic(self):
+        q = "项目陷在泥潭里，推进不动"
+        self.assertEqual(self.meter.measure(q).to_dict(),
+                         self.meter.measure(q).to_dict())
+
+    def test_meter_cache_and_gate(self):
+        m = self.meter
+        self.assertFalse(m.gate("今天天气不错", theta=0.1))
+        self.assertTrue(m.gate("泥潭", theta=0.1))
+        self.assertFalse(m.gate("泥潭", theta=0.99))
+
+    # -------------------------------------------------- 已知局限（护栏）
+    def test_omega_zero_iff_cascade_path_would_be_empty(self):
+        """契约：Ω=0 ⟺ 无触发词命中 ⟹ 级联通路必然空手而归。
+
+        这是**定理**（无触发词 → match_by_triggers 空 → cross_domain_retrieve 的
+        agg 空），不是经验发现。实测 632 条改写查询里 Ω=0 的 518 条，
+        级联通路非空的恰好 0 条。测试把这条定理钉住：若未来有人给 Ω 加了
+        「没有触发词但语义相近也算激活」之类的启发式，这里会红。
+        """
+        for q in ("今天天气不错", "", "abcdef", "完全没有触发词的长句子在这里"):
+            r = self.meter.measure(q)
+            self.assertEqual(r.omega, 0.0, q)
+            self.assertEqual(r.n_seed_triggers, 0, q)
+
+    def test_omega_is_not_monotone_in_trigger_count(self):
+        """已知局限的显式化：Ω 与「触发词命中数」在**真实数据上**秩相关 ρ=0.995，
+        但这不是设计意图，而是 0 块（无命中）主导的假象。
+
+        在 Ω>0 区间内 Ω 对触发词数**非单调**：
+          - Ω_E = 点亮框架数 / 种子触发词数 —— 多个触发词坍缩到同一框架时分母涨、
+            分子不涨，Ω_E 反而下降；
+          - 完备度因子 = 覆盖字符 / 查询长度 —— 查询越长，同样命中下 Ω 越低。
+        "泥潭"（1 词）Ω=0.794 > "泥潭，沼泽，陷进，深坑"（4 词）Ω=0.289。
+
+        这个测试记录该性质，供后续设计决策参考（若要让 Ω 真正度量「激活了多少结构」
+        而非「查询有多短」，完备度因子与 Ω_E 的归一化都需要重做）。
+        """
+        one = self.meter.measure("泥潭")
+        four = self.meter.measure("泥潭，沼泽，陷进，深坑")
+        self.assertEqual(four.n_seed_triggers, 4)
+        self.assertEqual(one.n_seed_triggers, 1)
+        self.assertGreater(one.omega, four.omega)   # 非单调：词多反而 Ω 低
+        self.assertGreater(one.completeness, four.completeness)
+        # 但 Ω=0 与 Ω>0 的分界仍严格由「有无触发词命中」决定
+        self.assertEqual(self.meter.measure("今天天气不错").omega, 0.0)
+
+
 class TestDeterministicIds(unittest.TestCase):
     """边/扩展边 id 必须跨构建可复现 —— 金标缓存与本体重放都跨进程引用 id。
     曾经 uuid4 随机 id 导致 judge 缓存重放时边对不上号（全零金标，实测踩坑）。"""
@@ -1589,6 +1809,248 @@ class TestManualWeightedTypeConsistency(unittest.TestCase):
         self.assertAlmostEqual(
             eng.metaphor_retriever_score("发条", e),
             round(hand_weighted_score(feat), 4), places=4)
+
+
+class TestCascadeConstructionRules(unittest.TestCase):
+    """L3 级联构造规则（`cascade_rules` 模块）的回归护栏。
+
+    背景（gen2 实验，见 experiments/gen2/REPORT.md）：生产本体的级联按**目标域**
+    打包，导致 99.2% 的级联成员共享单一目标域、中位规模 1 —— 级联退化成
+    「框架别名」，`cross_domain_retrieve` 的级联扩展段取不到新目标域。
+    这里钉住四件事：
+      1. 默认（`json`）行为**必须**与改动前逐位一致 —— 替代规则不得静默生效；
+      2. 每条替代规则的**结构性质**（source 规则必须跨目标域）；
+      3. 规则 id 的**确定性**（跨进程可复现）；
+      4. `apply_rule` 必须重建 `_frame_to_cascade` 反向索引。
+    """
+
+    @staticmethod
+    def _frames():
+        from metaphor_graph.ontology import FrameSpec
+        return [
+            FrameSpec(id="FA", name="A", mapping_type="M", source_domain="旅程",
+                      target_domain="生活", ground=["起点", "终点"],
+                      triggers=[], source_type="MOTION", support=5),
+            FrameSpec(id="FB", name="B", mapping_type="M", source_domain="旅程",
+                      target_domain="爱情", ground=["同行", "波折"],
+                      triggers=[], source_type="MOTION", support=3),
+            FrameSpec(id="FC", name="C", mapping_type="M", source_domain="战争",
+                      target_domain="生活", ground=["进攻", "阵地"],
+                      triggers=[], source_type="WAR", support=1),
+        ]
+
+    def test_all_rules_registered(self):
+        from metaphor_graph.cascade_rules import CASCADE_RULES
+        for r in ("json", "target", "source", "ground", "metanet",
+                  "source_type", "none"):
+            self.assertIn(r, CASCADE_RULES)
+
+    def test_unknown_rule_rejected(self):
+        from metaphor_graph.cascade_rules import build_cascades
+        with self.assertRaises(ValueError):
+            build_cascades(self._frames(), "no_such_rule")
+
+    def test_json_rule_returns_base_unchanged(self):
+        """json 规则必须原样返回传入的 base_cascades（默认行为不变）。"""
+        from metaphor_graph.cascade_rules import build_cascades
+        from metaphor_graph.ontology import CascadeSpec
+        base = {"C_X": CascadeSpec(id="C_X", name="X", member_frames=["FA", "FB"])}
+        out = build_cascades(self._frames(), "json", base_cascades=base)
+        self.assertEqual(set(out), {"C_X"})
+        self.assertIs(out["C_X"], base["C_X"])
+
+    def test_target_rule_singleton_per_distinct_target(self):
+        from metaphor_graph.cascade_rules import build_cascades
+        out = build_cascades(self._frames(), "target")
+        # 目标域 {生活, 爱情} → 2 个级联；生活 下有 FA/FC
+        sizes = sorted(len(c.member_frames) for c in out.values())
+        self.assertEqual(sizes, [1, 2])
+        members = {tuple(sorted(c.member_frames)) for c in out.values()}
+        self.assertIn(("FA", "FC"), members)
+
+    def test_source_rule_crosses_target_domains(self):
+        """source 规则的核心性质：同一级联可覆盖多个目标域。"""
+        from metaphor_graph.cascade_rules import build_cascades, cascade_stats
+        from metaphor_graph.ontology import FrameSpec
+        frames = self._frames()
+        out = build_cascades(frames, "source")
+        self.assertEqual(len(out), 2)                  # 旅程 / 战争
+        j = next(c for c in out.values() if set(c.member_frames) == {"FA", "FB"})
+        st = cascade_stats(out, {f.id: f for f in frames})
+        self.assertGreaterEqual(st["cross_target_rate"], 0.5)
+        # 该级联确实覆盖两个目标域（生活 + 爱情）
+        self.assertEqual({frames[0].target_domain, frames[1].target_domain},
+                         {"生活", "爱情"})
+        self.assertEqual(len(j.member_frames), 2)
+
+    def test_none_rule_is_empty(self):
+        from metaphor_graph.cascade_rules import build_cascades, cascade_stats
+        frames = self._frames()
+        out = build_cascades(frames, "none")
+        self.assertEqual(out, {})
+        st = cascade_stats(out, {f.id: f for f in frames})
+        self.assertEqual(st["frame_cascade_coverage"], 0.0)
+
+    def test_rules_deterministic(self):
+        """同一输入 → 同一 id 集合（跨进程可复现；内置 hash 会破坏这点）。"""
+        from metaphor_graph.cascade_rules import build_cascades
+        for r in ("target", "source", "ground", "source_type"):
+            a = build_cascades(self._frames(), r)
+            b = build_cascades(self._frames(), r)
+            self.assertEqual(sorted(a), sorted(b), r)
+            for k in a:
+                self.assertEqual(a[k].member_frames, b[k].member_frames, r)
+
+    def test_apply_rule_rebuilds_reverse_index(self):
+        """apply_rule 必须重建 _frame_to_cascade —— 不重建则 get_cascade 返回旧归属。"""
+        from metaphor_graph.cascade_rules import apply_rule
+        from metaphor_graph.ontology import CascadeOntology
+        ont = CascadeOntology(
+            frames={f.id: f for f in self._frames()},
+            cascades={})
+        self.assertIsNone(ont.get_cascade("FA"))
+        apply_rule(ont, "source")
+        cid_a = ont.get_cascade("FA")
+        cid_b = ont.get_cascade("FB")
+        self.assertIsNotNone(cid_a)
+        self.assertEqual(cid_a, cid_b, "FA/FB 同源域 → 必须归入同一级联")
+        self.assertNotEqual(cid_a, ont.get_cascade("FC"))
+        # 反向索引与正向成员表必须一致
+        spec = ont.get_cascade_spec(cid_a)
+        self.assertIn("FA", spec.member_frames)
+
+    def test_ground_rule_groups_by_shared_ground(self):
+        from metaphor_graph.cascade_rules import build_cascades
+        out = build_cascades(self._frames(), "ground")
+        # FA/FB 无共同喻底且各自喻底 Jaccard=0 → 各自成组；FC 同样独立
+        self.assertEqual(len(out), 3)
+
+    def test_metanet_rule_keeps_seed_cascades(self):
+        """metanet 规则保留种子级联（非 C_LLM_ 前缀），C_LLM_ 级联不参与归属。"""
+        from metaphor_graph.cascade_rules import build_cascades
+        from metaphor_graph.ontology import CascadeSpec
+        base = {
+            "C_SEED": CascadeSpec(id="C_SEED", name="SEED",
+                                  member_frames=["FA"]),
+            "C_LLM_1": CascadeSpec(id="C_LLM_1", name="LLM",
+                                   member_frames=["FB"]),
+        }
+        out = build_cascades(self._frames(), "metanet", base_cascades=base)
+        self.assertIn("C_SEED", out)
+        self.assertIn("FA", out["C_SEED"].member_frames)
+        self.assertNotIn("C_LLM_1", out)
+        # FB 脱离 C_LLM_1 后被兜底规则重组（默认 source → 与 FA 同级联）
+        self.assertEqual(out["C_SEED"].member_frames, ["FA"])
+
+    def test_builder_default_orphan_rule_is_target(self):
+        """默认必须仍是 target（不得静默改默认）—— 已上报数字依赖它。"""
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        b = MetaphorSHGBuilder()
+        self.assertEqual(b.orphan_cascade_rule, "target")
+
+    # ---- 孤儿打包规则：直接驱动 _ensure_cascades（合成输入，快且可控）----
+    @staticmethod
+    def _orphan_inputs():
+        """3 个孤儿框架，目标域各不相同、源域两两相同/不同 —— 让各规则可分。"""
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.models import (MetaphorFrame, MetaphorHyperedge,
+                                           ChunkSpan)
+        from metaphor_graph.ontology import FrameSpec
+
+        def edge(eid, frame_id, src, tgt, ground):
+            return MetaphorHyperedge(
+                id=eid, source_domain=src, target_domain=tgt,
+                ground=list(ground), triggers=["x"],
+                chunk_spans=[ChunkSpan(chunk_id="d_c0", start=0, end=1, text="x")],
+                frame_id=frame_id, confidence=0.9)
+
+        edges = [
+            edge("e1", "F_ORPH_A", "旅程", "生活", ["起点"]),
+            edge("e2", "F_ORPH_B", "旅程", "爱情", ["同行"]),
+            edge("e3", "F_ORPH_C", "战争", "生活", ["进攻"]),
+        ]
+        frames = [MetaphorFrame(id=fid, name=fid, member_mapping_ids=[eid])
+                  for fid, eid in (("F_ORPH_A", "e1"), ("F_ORPH_B", "e2"),
+                                   ("F_ORPH_C", "e3"))]
+        return MetaphorSHGBuilder, edges, frames
+
+    def test_orphan_target_rule_groups_by_target_domain(self):
+        """原口径：同目标域的孤儿进同一级联（A/C 同「生活」）。"""
+        Builder, edges, frames = self._orphan_inputs()
+        cascades = []
+        Builder(orphan_cascade_rule="target")._ensure_cascades(
+            edges, frames, cascades)
+        self.assertEqual(len(cascades), 2)                    # 生活 / 爱情
+        groups = {tuple(c.member_frame_ids) for c in cascades}
+        self.assertIn(("F_ORPH_A", "F_ORPH_C"), groups)
+        self.assertTrue(all(c.id.startswith("C_ADHOC_") for c in cascades),
+                        "原口径的 id 前缀必须保持 C_ADHOC_（缓存/导出都引用它）")
+
+    def test_orphan_source_rule_groups_by_source_domain(self):
+        """替代规则：同源域的孤儿进同一级联（A/B 同「旅程」），且 id 前缀可区分。"""
+        Builder, edges, frames = self._orphan_inputs()
+        cascades = []
+        Builder(orphan_cascade_rule="source")._ensure_cascades(
+            edges, frames, cascades)
+        self.assertEqual(len(cascades), 2)                    # 旅程 / 战争
+        groups = {tuple(c.member_frame_ids) for c in cascades}
+        self.assertIn(("F_ORPH_A", "F_ORPH_B"), groups)
+        self.assertTrue(all(c.id.startswith("C_ADHOC_SOURCE_") for c in cascades))
+        # 与 target 规则的 id 集合必须不同（否则说明规则没生效）
+        t = []
+        Builder(orphan_cascade_rule="target")._ensure_cascades(edges, frames, t)
+        self.assertNotEqual(sorted(c.id for c in cascades),
+                            sorted(c.id for c in t))
+
+    def test_orphan_none_rule_adds_nothing(self):
+        """orphan_cascade_rule='none' 是 L3 消融开关：一条级联都不补。"""
+        Builder, edges, frames = self._orphan_inputs()
+        cascades = []
+        Builder(orphan_cascade_rule="none")._ensure_cascades(
+            edges, frames, cascades)
+        self.assertEqual(cascades, [])
+
+    def test_orphan_rule_deterministic(self):
+        """同一输入 → 同一 id（跨进程可复现，md5 而非内置 hash）。"""
+        Builder, edges, frames = self._orphan_inputs()
+        for rule in ("target", "source", "source_type", "ground"):
+            a, b = [], []
+            Builder(orphan_cascade_rule=rule)._ensure_cascades(edges, frames, a)
+            Builder(orphan_cascade_rule=rule)._ensure_cascades(edges, frames, b)
+            self.assertEqual(sorted(c.id for c in a), sorted(c.id for c in b),
+                             rule)
+
+    def test_orphan_rule_rejects_unknown(self):
+        Builder, edges, frames = self._orphan_inputs()
+        with self.assertRaises(ValueError):
+            Builder(orphan_cascade_rule="bogus")._ensure_cascades(
+                edges, frames, [])
+
+    def test_production_ontology_defect_is_pinned(self):
+        """把缺陷本身钉成回归护栏：生产本体的级联必须**仍然是**单一目标域主导。
+
+        这条测试在默认本体上跑；若未来有人修好了本体级联（如改用 source 规则
+        重新沉淀 ontology_default.json），本测试会失败 —— 那时应更新断言并
+        同步论文 §6.3 的表述，而不是删掉测试。
+        """
+        # 注意：evaluate_fullcorpus 在模块级调用 logging.disable(CRITICAL)
+        # （评测脚本不希望被日志刷屏）。测试套件里 import 它会**顺带静音**
+        # 后续用例的 assertLogs（实测让 TestOpenAIBackendHTTP 的 2 条降级
+        # 测试失败）。故此处保存并恢复全局 disable 级别。
+        import logging as _logging
+        _saved = _logging.root.manager.disable
+        try:
+            from metaphor_graph.evaluate_fullcorpus import build_replay_ontology
+            from metaphor_graph.cascade_rules import cascade_stats
+            ont, _nf = build_replay_ontology()
+        finally:
+            _logging.disable(_saved)
+        st = cascade_stats(ont.cascades, ont.frames)
+        self.assertGreater(st["n_cascades"], 700)
+        self.assertLess(st["cross_target_rate"], 0.02,
+                        "生产本体级联应几乎全是单目标域（实测 0.8%）")
+        self.assertLessEqual(st["size_median"], 1.0)
+        self.assertGreater(st["singleton_rate"], 0.5)
 
 
 
