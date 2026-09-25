@@ -1,0 +1,1387 @@
+{
+ "json": {
+  "_n": {
+   "n_all": 635,
+   "n_sub": 114,
+   "n_pos": 48
+  },
+  "holm": {
+   "n_new_domains": 0.024975024975024976,
+   "n_reach": 0.024975024975024976,
+   "n_members": 0.024975024975024976,
+   "S_log": 0.024975024975024976,
+   "S_log_dom": 0.024975024975024976,
+   "S_geo_nodiv": 0.024975024975024976,
+   "S_bucket_reach": 0.03796203796203796,
+   "n_frames": 0.21578421578421578,
+   "n_cascades": 0.21578421578421578,
+   "omega_f": 0.25574425574425574,
+   "omega_nounclip_both": 0.38961038961038963,
+   "omega": 0.6293706293706294,
+   "omega_nounclipN": 0.6293706293706294,
+   "S_query": 0.6293706293706294,
+   "n_expanded_td": 0.8131868131868132,
+   "omega_geo": 0.8131868131868132,
+   "completeness": 1.0,
+   "n_seed": 1.0,
+   "n_emergent": 1.0,
+   "n_cross_cascades": 1.0,
+   "omega_n": 1.0,
+   "qlen": 1.0,
+   "n_seed_indicator": 1.0,
+   "omega_e": 1.0,
+   "S_struct": 1.0
+  },
+  "targeting_excess": {
+   "n": 635,
+   "observed_hits": 48,
+   "expected_hits": 27.6825,
+   "excess": 0.031996062992125984,
+   "excess_ci": [
+    0.017299212598425196,
+    0.04838188976377953
+   ],
+   "rate_obs": 0.07559055118110236,
+   "rate_exp": 0.04359448818897638,
+   "ratio": 1.7339474397182335,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "targeting_excess_sub": {
+   "n": 114,
+   "observed_hits": 48,
+   "expected_hits": 27.6825,
+   "excess": 0.1782236842105263,
+   "excess_ci": [
+    0.09688596491228069,
+    0.26322368421052633
+   ],
+   "rate_obs": 0.42105263157894735,
+   "rate_exp": 0.24282894736842106,
+   "ratio": 1.7339474397182335,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "increment_over_size": {
+   "n_seed": {
+    "auc": 0.49310344827586206,
+    "ci": [
+     0.46595744680851064,
+     0.512280701754386
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8517870532366908,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 1.0
+   },
+   "n_frames": {
+    "auc": 0.5103448275862069,
+    "ci": [
+     0.48011363636363635,
+     0.5555555555555556
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.24518870282429392,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.75,
+    "auc_doc_ci": [
+     0.5,
+     1.0
+    ],
+    "holm_p": 0.21578421578421578
+   },
+   "n_cascades": {
+    "auc": 0.5103448275862069,
+    "ci": [
+     0.48011363636363635,
+     0.5555555555555556
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.24518870282429392,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.75,
+    "auc_doc_ci": [
+     0.5,
+     1.0
+    ],
+    "holm_p": 0.21578421578421578
+   },
+   "n_members": {
+    "auc": 0.5103448275862069,
+    "ci": [
+     0.47285067873303166,
+     0.5531914893617021
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.25218695326168455,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.25,
+    "auc_doc_ci": [
+     0.0,
+     0.5
+    ],
+    "holm_p": 0.024975024975024976
+   },
+   "n_emergent": {
+    "auc": 0.4896551724137931,
+    "ci": [
+     0.4585365853658537,
+     0.5091324200913242
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8202949262684329,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 1.0
+   },
+   "n_new_domains": {
+    "auc": 0.4879310344827586,
+    "ci": [
+     0.44081632653061226,
+     0.5202702702702703
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8330417395651087,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.25,
+    "auc_doc_ci": [
+     0.0,
+     0.5
+    ],
+    "holm_p": 0.024975024975024976
+   },
+   "n_reach": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 0.024975024975024976
+   },
+   "n_expanded_td": {
+    "auc": 0.503448275862069,
+    "ci": [
+     0.4625748502994012,
+     0.5525
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.43739065233691576,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.75,
+    "auc_doc_ci": [
+     0.5,
+     1.0
+    ],
+    "holm_p": 0.8131868131868132
+   },
+   "n_cross_cascades": {
+    "auc": 0.4896551724137931,
+    "ci": [
+     0.4585365853658537,
+     0.5091324200913242
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8202949262684329,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 1.0
+   },
+   "omega": {
+    "auc": 0.7,
+    "ci": [
+     0.5353982300884956,
+     0.8349609375
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.011747063234191453,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 1.0,
+    "auc_doc_ci": [
+     1.0,
+     1.0
+    ],
+    "holm_p": 0.6293706293706294
+   },
+   "omega_geo": {
+    "auc": 0.5017241379310344,
+    "ci": [
+     0.4613003095975232,
+     0.5497512437810945
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.4771307173206698,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.75,
+    "auc_doc_ci": [
+     0.5,
+     1.0
+    ],
+    "holm_p": 0.8131868131868132
+   },
+   "omega_n": {
+    "auc": 0.4896551724137931,
+    "ci": [
+     0.4585365853658537,
+     0.5091324200913242
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8202949262684329,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 1.0
+   },
+   "omega_e": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 1.0
+   },
+   "omega_f": {
+    "auc": 0.5086206896551724,
+    "ci": [
+     0.4789156626506024,
+     0.5511111111111111
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.2659335166208448,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.75,
+    "auc_doc_ci": [
+     0.5,
+     1.0
+    ],
+    "holm_p": 0.25574425574425574
+   },
+   "completeness": {
+    "auc": 0.7068965517241379,
+    "ci": [
+     0.5332278481012658,
+     0.8453947368421053
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.010247438140464884,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 1.0,
+    "auc_doc_ci": [
+     1.0,
+     1.0
+    ],
+    "holm_p": 1.0
+   },
+   "n_seed_indicator": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.5,
+    "auc_doc_ci": [
+     0.5,
+     0.5
+    ],
+    "holm_p": 1.0
+   },
+   "qlen": {
+    "auc": 0.28793103448275864,
+    "ci": [
+     0.14838709677419354,
+     0.46261682242990654
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.9927518120469883,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.0,
+    "auc_doc_ci": [
+     0.0,
+     0.0
+    ],
+    "holm_p": 1.0
+   },
+   "omega_nounclipN": {
+    "auc": 0.7,
+    "ci": [
+     0.5353982300884956,
+     0.8349609375
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.011747063234191453,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 1.0,
+    "auc_doc_ci": [
+     1.0,
+     1.0
+    ],
+    "holm_p": 0.6293706293706294
+   },
+   "S_log": {
+    "auc": 0.5086206896551724,
+    "ci": [
+     0.478,
+     0.5531914893617021
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.2944263934016496,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": 0.75,
+    "auc_doc_ci": [
+     0.5,
+     1.0
+    ],
+    "holm_p": 0.024975024975024976
+   }
+  }
+ },
+ "source": {
+  "_n": {
+   "n_all": 635,
+   "n_sub": 114,
+   "n_pos": 68
+  },
+  "holm": {
+   "n_emergent": 0.024975024975024976,
+   "n_new_domains": 0.024975024975024976,
+   "n_reach": 0.024975024975024976,
+   "n_members": 0.024975024975024976,
+   "n_expanded_td": 0.024975024975024976,
+   "omega_nounclipN": 0.024975024975024976,
+   "omega_nounclip_both": 0.024975024975024976,
+   "S_log": 0.024975024975024976,
+   "S_log_dom": 0.024975024975024976,
+   "S_geo_nodiv": 0.024975024975024976,
+   "S_bucket_reach": 0.024975024975024976,
+   "S_query": 0.024975024975024976,
+   "n_cross_cascades": 0.025974025974025976,
+   "omega_geo": 0.025974025974025976,
+   "omega_n": 0.025974025974025976,
+   "omega": 0.04995004995004995,
+   "n_cascades": 1.0,
+   "completeness": 1.0,
+   "n_seed": 1.0,
+   "n_frames": 1.0,
+   "omega_f": 1.0,
+   "qlen": 1.0,
+   "n_seed_indicator": 1.0,
+   "omega_e": 1.0,
+   "S_struct": 1.0
+  },
+  "targeting_excess": {
+   "n": 635,
+   "observed_hits": 68,
+   "expected_hits": 38.3675,
+   "excess": 0.04666535433070866,
+   "excess_ci": [
+    0.031913385826771654,
+    0.06335826771653544
+   ],
+   "rate_obs": 0.10708661417322834,
+   "rate_exp": 0.060421259842519684,
+   "ratio": 1.7723333550531049,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "targeting_excess_sub": {
+   "n": 114,
+   "observed_hits": 68,
+   "expected_hits": 38.3675,
+   "excess": 0.25993421052631577,
+   "excess_ci": [
+    0.18631578947368424,
+    0.3369517543859649
+   ],
+   "rate_obs": 0.5964912280701754,
+   "rate_exp": 0.33655701754385964,
+   "ratio": 1.7723333550531049,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "increment_over_size": {
+   "n_seed": {
+    "auc": 0.5173611111111112,
+    "ci": [
+     0.462406015037594,
+     0.5942857142857143
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.31442139465133717,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_frames": {
+    "auc": 0.5138888888888888,
+    "ci": [
+     0.42783505154639173,
+     0.6068965517241379
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.3201699575106223,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_cascades": {
+    "auc": 0.4895833333333333,
+    "ci": [
+     0.4253731343283582,
+     0.5374149659863946
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.7700574856285929,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_members": {
+    "auc": 0.5104166666666666,
+    "ci": [
+     0.4627659574468085,
+     0.575
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.3514121469632592,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_emergent": {
+    "auc": 0.4861111111111111,
+    "ci": [
+     0.39316239316239315,
+     0.5726495726495726
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.7170707323169208,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_new_domains": {
+    "auc": 0.4861111111111111,
+    "ci": [
+     0.39316239316239315,
+     0.5726495726495726
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.7170707323169208,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_reach": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_expanded_td": {
+    "auc": 0.5104166666666666,
+    "ci": [
+     0.4627659574468085,
+     0.575
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.3221694576355911,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_cross_cascades": {
+    "auc": 0.4895833333333333,
+    "ci": [
+     0.43258426966292135,
+     0.53125
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8842789302674331,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.025974025974025976
+   },
+   "omega": {
+    "auc": 0.6527777777777778,
+    "ci": [
+     0.44285714285714284,
+     0.8248407643312102
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.04673831542114471,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.04995004995004995
+   },
+   "omega_geo": {
+    "auc": 0.5277777777777778,
+    "ci": [
+     0.4579646017699115,
+     0.618421052631579
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.1752061984503874,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.025974025974025976
+   },
+   "omega_n": {
+    "auc": 0.5069444444444444,
+    "ci": [
+     0.5,
+     0.5379746835443038
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.3436640839790053,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.025974025974025976
+   },
+   "omega_e": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_f": {
+    "auc": 0.5138888888888888,
+    "ci": [
+     0.43846153846153846,
+     0.6025641025641025
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.32441889527618095,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "completeness": {
+    "auc": 0.65625,
+    "ci": [
+     0.45185185185185184,
+     0.8241206030150754
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.04323919020244939,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_seed_indicator": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "qlen": {
+    "auc": 0.34375,
+    "ci": [
+     0.1736842105263158,
+     0.541958041958042
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.9610097475631092,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_nounclipN": {
+    "auc": 0.6493055555555556,
+    "ci": [
+     0.438953488372093,
+     0.823170731707317
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.04998750312421894,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "S_log": {
+    "auc": 0.5277777777777778,
+    "ci": [
+     0.4441176470588235,
+     0.6284722222222222
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.19245188702824295,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 16,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   }
+  }
+ },
+ "metanet": {
+  "_n": {
+   "n_all": 635,
+   "n_sub": 114,
+   "n_pos": 60
+  },
+  "holm": {
+   "n_emergent": 0.024975024975024976,
+   "n_new_domains": 0.024975024975024976,
+   "n_reach": 0.024975024975024976,
+   "n_members": 0.024975024975024976,
+   "n_expanded_td": 0.024975024975024976,
+   "omega_nounclipN": 0.024975024975024976,
+   "omega_nounclip_both": 0.024975024975024976,
+   "S_log": 0.024975024975024976,
+   "S_log_dom": 0.024975024975024976,
+   "S_geo_nodiv": 0.024975024975024976,
+   "S_bucket_reach": 0.024975024975024976,
+   "S_query": 0.024975024975024976,
+   "n_cross_cascades": 0.1038961038961039,
+   "omega_geo": 0.1078921078921079,
+   "omega": 0.16483516483516483,
+   "omega_n": 0.16983016983016985,
+   "n_cascades": 1.0,
+   "completeness": 1.0,
+   "n_frames": 1.0,
+   "n_seed": 1.0,
+   "omega_f": 1.0,
+   "qlen": 1.0,
+   "n_seed_indicator": 1.0,
+   "omega_e": 1.0,
+   "S_struct": 1.0
+  },
+  "targeting_excess": {
+   "n": 635,
+   "observed_hits": 60,
+   "expected_hits": 33.705,
+   "excess": 0.04140944881889764,
+   "excess_ci": [
+    0.026586614173228346,
+    0.05753937007874016
+   ],
+   "rate_obs": 0.09448818897637795,
+   "rate_exp": 0.05307874015748031,
+   "ratio": 1.7801513128615933,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "targeting_excess_sub": {
+   "n": 114,
+   "observed_hits": 60,
+   "expected_hits": 33.705,
+   "excess": 0.23065789473684212,
+   "excess_ci": [
+    0.15206140350877193,
+    0.3063377192982456
+   ],
+   "rate_obs": 0.5263157894736842,
+   "rate_exp": 0.29565789473684206,
+   "ratio": 1.7801513128615933,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "increment_over_size": {
+   "n_seed": {
+    "auc": 0.48711340206185566,
+    "ci": [
+     0.4523809523809524,
+     0.508695652173913
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.8397900524868783,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_frames": {
+    "auc": 0.5,
+    "ci": [
+     0.45215311004784686,
+     0.556910569105691
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.5026243439140214,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_cascades": {
+    "auc": 0.5,
+    "ci": [
+     0.46,
+     0.5459183673469388
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.49487628092976754,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_members": {
+    "auc": 0.5154639175257731,
+    "ci": [
+     0.4881889763779528,
+     0.5594594594594594
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.2419395151212197,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_emergent": {
+    "auc": 0.5077319587628866,
+    "ci": [
+     0.4672131147540984,
+     0.5529411764705883
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.43814046488377906,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_new_domains": {
+    "auc": 0.5,
+    "ci": [
+     0.44495412844036697,
+     0.5495049504950495
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.5788552861784554,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_reach": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_expanded_td": {
+    "auc": 0.5154639175257731,
+    "ci": [
+     0.4881889763779528,
+     0.5594594594594594
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.2419395151212197,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_cross_cascades": {
+    "auc": 0.49742268041237114,
+    "ci": [
+     0.48295454545454547,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.1038961038961039
+   },
+   "omega": {
+    "auc": 0.7422680412371134,
+    "ci": [
+     0.5563725490196079,
+     0.8873239436619719
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.005998500374906273,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.16483516483516483
+   },
+   "omega_geo": {
+    "auc": 0.520618556701031,
+    "ci": [
+     0.4788732394366197,
+     0.5854700854700855
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.19295176205948514,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.1078921078921079
+   },
+   "omega_n": {
+    "auc": 0.5103092783505154,
+    "ci": [
+     0.5,
+     0.5409356725146199
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.5786053486628343,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.16983016983016985
+   },
+   "omega_e": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_f": {
+    "auc": 0.5,
+    "ci": [
+     0.45215311004784686,
+     0.556910569105691
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.5026243439140214,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "completeness": {
+    "auc": 0.7242268041237113,
+    "ci": [
+     0.5382513661202186,
+     0.8727272727272727
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.010247438140464884,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_seed_indicator": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "qlen": {
+    "auc": 0.2603092783505155,
+    "ci": [
+     0.11428571428571428,
+     0.45098039215686275
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.9957510622344414,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_nounclipN": {
+    "auc": 0.7422680412371134,
+    "ci": [
+     0.5563725490196079,
+     0.8873239436619719
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.005748562859285179,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "S_log": {
+    "auc": 0.520618556701031,
+    "ci": [
+     0.4764705882352941,
+     0.584070796460177
+    ],
+    "n_boot_ok": 2000,
+    "strat_perm_p": 0.17745563609097725,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 17,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   }
+  }
+ },
+ "source_type": {
+  "_n": {
+   "n_all": 635,
+   "n_sub": 114,
+   "n_pos": 108
+  },
+  "holm": {
+   "n_emergent": 0.024975024975024976,
+   "n_new_domains": 0.024975024975024976,
+   "n_reach": 0.024975024975024976,
+   "n_members": 0.024975024975024976,
+   "n_expanded_td": 0.024975024975024976,
+   "omega_nounclipN": 0.024975024975024976,
+   "omega_nounclip_both": 0.024975024975024976,
+   "S_log": 0.024975024975024976,
+   "S_log_dom": 0.024975024975024976,
+   "S_geo_nodiv": 0.024975024975024976,
+   "S_query": 0.024975024975024976,
+   "completeness": 0.027972027972027972,
+   "omega": 0.027972027972027972,
+   "n_frames": 1.0,
+   "omega_geo": 1.0,
+   "omega_f": 1.0,
+   "n_seed": 1.0,
+   "n_cascades": 1.0,
+   "n_cross_cascades": 1.0,
+   "qlen": 1.0,
+   "n_seed_indicator": 1.0,
+   "omega_e": 1.0,
+   "omega_n": 1.0,
+   "S_struct": 1.0,
+   "S_bucket_reach": 1.0
+  },
+  "targeting_excess": {
+   "n": 635,
+   "observed_hits": 108,
+   "expected_hits": 102.965,
+   "excess": 0.007929133858267712,
+   "excess_ci": [
+    0.0006141732283464576,
+    0.015059055118110237
+   ],
+   "rate_obs": 0.1700787401574803,
+   "rate_exp": 0.1621496062992126,
+   "ratio": 1.0489001116884378,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "targeting_excess_sub": {
+   "n": 114,
+   "observed_hits": 108,
+   "expected_hits": 102.965,
+   "excess": 0.04416666666666664,
+   "excess_ci": [
+    0.0038815789473683813,
+    0.08394736842105258
+   ],
+   "rate_obs": 0.9473684210526315,
+   "rate_exp": 0.903201754385965,
+   "ratio": 1.0489001116884378,
+   "n_mc": 400,
+   "vocab_size": 733
+  },
+  "increment_over_size": {
+   "n_seed": {
+    "auc": 0.573170731707317,
+    "ci": [
+     0.5,
+     0.6666666666666666
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.6798300424893776,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_frames": {
+    "auc": 0.573170731707317,
+    "ci": [
+     0.5,
+     0.6666666666666666
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.6798300424893776,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_cascades": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "n_members": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_emergent": {
+    "auc": 0.4268292682926829,
+    "ci": [
+     0.3333333333333333,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_new_domains": {
+    "auc": 0.4268292682926829,
+    "ci": [
+     0.3333333333333333,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_reach": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_expanded_td": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "n_cross_cascades": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega": {
+    "auc": 0.8292682926829268,
+    "ci": [
+     0.6363636363636364,
+     1.0
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.03449137715571107,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.027972027972027972
+   },
+   "omega_geo": {
+    "auc": 0.573170731707317,
+    "ci": [
+     0.5,
+     0.6666666666666666
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.6798300424893776,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_n": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_e": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_f": {
+    "auc": 0.573170731707317,
+    "ci": [
+     0.5,
+     0.6666666666666666
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.6798300424893776,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "completeness": {
+    "auc": 0.8292682926829268,
+    "ci": [
+     0.6363636363636364,
+     1.0
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.03449137715571107,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.027972027972027972
+   },
+   "n_seed_indicator": {
+    "auc": 0.5,
+    "ci": [
+     0.5,
+     0.5
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 1.0,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "qlen": {
+    "auc": 0.17073170731707318,
+    "ci": [
+     0.0,
+     0.36363636363636365
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.9725068732816796,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 1.0
+   },
+   "omega_nounclipN": {
+    "auc": 0.8292682926829268,
+    "ci": [
+     0.6363636363636364,
+     1.0
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.03449137715571107,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   },
+   "S_log": {
+    "auc": 0.573170731707317,
+    "ci": [
+     0.5,
+     0.6666666666666666
+    ],
+    "n_boot_ok": 1986,
+    "strat_perm_p": 0.6798300424893776,
+    "strat_perm_n": 4000,
+    "strat_n_informative": 12,
+    "auc_doc": null,
+    "auc_doc_ci": null,
+    "holm_p": 0.024975024975024976
+   }
+  }
+ }
+}
