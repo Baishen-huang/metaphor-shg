@@ -342,6 +342,12 @@ def main():
                          "该规则（gen2 实验用，检验 H4 是否依赖级联层质量）")
     ap.add_argument("--orphan-cascade-rule", default="target",
                     choices=("target", "source", "ground", "source_type", "none"))
+    # exp/dynamics：驱动/源项版 HGNN 参数。默认 1.0 / 0.0 = 原无源项口径，
+    # 与历史实现逐位相同（实测 maxdiff=0.000e+00）。
+    ap.add_argument("--alpha", type=float, default=1.0,
+                    help="源项系数 α（X ← (1-α)X0 + α·M·X）；1.0 = 无源项（原口径）")
+    ap.add_argument("--leak", type=float, default=0.0,
+                    help="阻尼 ε（S ← (1-ε)S）；0.0 = 无阻尼（原口径）")
     args = ap.parse_args()
     if args.cascade_rule != "seed":
         from metaphor_graph.evaluate_fullcorpus import build_replay_ontology
