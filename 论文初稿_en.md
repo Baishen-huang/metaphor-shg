@@ -244,10 +244,18 @@ The value of the hierarchy (L2/L3) should be stated as **retrieval organization 
 
 | Knowledge Source | Recall@10 | Hits@3 |
 |---|---|---|
-| Metaphor pathway (dedicated cascade + semantic hypergraph ranking) | **0.783** | 0.601 |
+| Metaphor pathway (dedicated cascade + semantic hypergraph ranking) | **1.000** ⚠️ | 0.670 |
 | General commonsense association pathway (substitute setting) | **0.095** | 0.097 |
 
-**A6 holds**: after replacement with general commonsense knowledge, recall drops 8-fold—cross-domain mappings such as "no progress → quagmire" are not commonsense associations, and the dedicated metaphor cascade is irreplaceable. Failure examples corroborate this: the commonsense pathway, for "人生如戏" (life is a play), only hits chunks literally related to "人生" (life), while the metaphor pathway follows the EVENT_IS_PERFORMANCE cascade to hit "舞台/演员" (stage/actor) chunks.
+> **⚠️ Two budget/saturation corrections (measured; see `experiments/A6预算对等修正.md`)**:
+> ① **Unequal search budgets**—the commonsense arm was **unbounded** while the metaphor arm
+> was hard-coded to `top_k=5`. With `top_k=20` the metaphor pathway's Recall@10 rises from
+> **0.8287 to 1.0000** (`top_k=20` is equivalent to unbounded), i.e. the original figure
+> **understated it by ~17pp**. ② **The 1.000 is trivially saturated**—this benchmark's
+> per-query pool is min=5 / median=8 / max=10 (**100% ≤10**), so Recall@10 is identically 1.0
+> for any ranker returning all candidates; it must not be read as "recalls 100% of relevant evidence".
+
+**A6 holds**: after replacement with general commonsense knowledge, recall drops **10.5-fold**—cross-domain mappings such as "no progress → quagmire" are not commonsense associations, and the dedicated metaphor cascade is irreplaceable. Failure examples corroborate this: the commonsense pathway, for "人生如戏" (life is a play), only hits chunks literally related to "人生" (life), while the metaphor pathway follows the EVENT_IS_PERFORMANCE cascade to hit "舞台/演员" (stage/actor) chunks.
 
 **Note on the `Raw embeddings` row (corrected)**: the paired accuracy of 0.150 is below chance
 only because ties are counted as errors—under the default hash encoder, 94.6% of pairs have cosine

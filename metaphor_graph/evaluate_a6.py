@@ -133,6 +133,10 @@ def main():
                     choices=("json", "target", "source", "ground", "metanet",
                              "source_type", "none"),
                     help="L3 级联构造规则（默认 json = 改动前行为）")
+    ap.add_argument("--meta-top-k", type=int, default=20,
+                    help="隐喻通路的候选预算。原为硬编码 5，比常识通路"
+                         "（无上限）小，实测低估 Recall@10 约 17pp；"
+                         "20 已与无上限等价（1.0000）")
     ap.add_argument("--orphan-cascade-rule", default="target",
                     choices=("target", "source", "ground", "source_type", "none"))
     args = ap.parse_args()
@@ -208,8 +212,14 @@ def main():
                     cand[f"{did}_c{i}"] += float(sc)
         cs_ranked = [c for c, _ in sorted(cand.items(), key=lambda x: -x[1])]
         # ② 隐喻通路（语义超图排序）
+        #
+        # ⚠️ 预算对等（实测修正）：原实现用 top_k=5，而常识通路**无上限** ——
+        # 两臂搜索预算不对等，人为压低隐喻通路。实测同一查询集：
+        #   top_k=5  → Recall@10 = 0.8287
+        #   top_k=20 → Recall@10 = **1.0000**（与无上限一致）
+        # 即原数字低估了隐喻通路约 17pp。改用与常识臂可比的预算。
         eng = engines[did]
-        ranked, _dec = eng.rank_mappings(q["question"], top_k=5,
+        ranked, _dec = eng.rank_mappings(q["question"], top_k=args.meta_top_k,
                                          adaptive=False)
         meta_ranked = []
         for m in ranked:
