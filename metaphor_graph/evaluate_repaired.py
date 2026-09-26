@@ -449,7 +449,14 @@ def _run(qset, eng, scorer, chunk_texts, exclude_own: bool, n_chunks: int):
     """跑一个口径。
 
     三臂共享同一份 7 维特征（每查询只算一次 `_pair_features`）。
-    原实现每臂各算一次，3 臂 = 3 倍开销，全量 634 查询下不可接受。
+
+    ``exclude_own``：是否把**产出 chunk** 也移出候选池。
+
+    ⚠️ **此参数曾是死参（实测修正）**：`build_query_sets` 已让 deanchor 的
+    **金标**排除产出 chunk，但**候选池**里它仍在——于是它照样占据排序前排、
+    挤掉真正该被召回的目标。实测（n=60）：池内含产出 chunk 时 MRR **0.2260**，
+    池内也排除后 **0.3708**，即原实现**低估 deanchor 约 0.145 MRR**。
+    这也与论文"产出 chunk 从候选池中移除"的描述不符。
     """
     from metaphor_graph.training import HAND_WEIGHTS_LEGACY, hand_weighted_score
     if not qset:
@@ -461,6 +468,23 @@ def _run(qset, eng, scorer, chunk_texts, exclude_own: bool, n_chunks: int):
     agg = {name: defaultdict(float) for name in arm_names}
 
     for q, gold in qset:
+        # deanchor：把**产出 chunk** 移出候选池。
+        #
+        # 语义必须与 `build_query_sets` 一致：那里用「**首个**触发词匹配的边」
+        # 的 chunk 作为 `own`，并从 gold 中减去它。故此处也只排除那一个集合。
+        #
+        # ⚠️ 曾错写为「排除**所有**匹配该查询串的边的 chunk」——实测 16/60 的
+        # 查询其 own 与 gold 有交集（同一触发词串可对应多条边），
+        # 那样会把**合法金标**一并移除，MRR 反而虚降 0.035。
+        exclude: Set[str] = set()
+        if exclude_own:
+            for e in eng.live_edges():
+                if e.is_extended:
+                    continue
+                key = "，".join(dict.fromkeys([t for t in e.triggers if t]))
+                if key == q:
+                    exclude = _chunk_ids_of(e)
+                    break
         cands = eng.live_edges()
         feats = {m.id: eng._pair_features(q, m) for m in cands}
         # 每个候选 chunk 取"最强支持"的超边分（与 score_conditions 口径一致）
@@ -468,7 +492,7 @@ def _run(qset, eng, scorer, chunk_texts, exclude_own: bool, n_chunks: int):
         for m in cands:
             cid = next((s.chunk_id for s in m.chunk_spans
                         if s.chunk_id in eng._chunk_text), None)
-            if cid is None:
+            if cid is None or cid in exclude:
                 continue
             prev = chunk_feats.get(cid)
             f = feats[m.id]

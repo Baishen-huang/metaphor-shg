@@ -145,18 +145,18 @@ requires such fields to accompany the metrics (SIGIR 1998; 2007).
 | Setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Random |
 |---|---|---|---|---|---|
 | **anchored** (gold = producing chunk) | 634 | **0.8956** | 0.8390 | **0.9006** | 0.0069 |
-| **de-anchored** (producing chunk removed) | 385 | **0.2330** | 0.2307 | **0.2211** | 0.0069 |
+| **de-anchored** (producing chunk removed) | 385 | **0.3620** | 0.3601 | **0.3488** | 0.0069 |
 
 **Four conclusions**:
 
-1. **Anchoring inflates MRR by ≈ +0.66** (0.8956 vs 0.2330): about **74%** of the originally
+1. **Anchoring inflates MRR by ≈ +0.53** (0.8956 vs 0.3620): about **60%** of the originally
    reported numbers come from "ranking the known answer first".
 2. **The architecture does possess genuine cross-domain retrieval ability**: the de-anchored MRR of
-   **0.2330 is 34× the random baseline** of 0.0069, with Recall@10 = 0.3357 (random expectation
+   **0.3620 is 52× the random baseline** of 0.0069, with Recall@10 = 0.3357 (random expectation
    ≈0.009). Had the ability come entirely from anchoring, the de-anchored result would fall to
    chance—**this rules out "the architecture is entirely ineffective".**
 3. **Weight recalibration only helps under anchoring** (anchored +0.0565 / de-anchored +0.0023).
-4. **The training gain reverses under de-anchoring** (anchored +0.005 → de-anchored −0.012): the
+4. **The training gain reverses under de-anchoring** (anchored +0.005 → de-anchored −0.013): the
    ranker learns to reproduce the construction anchor.
 
 ## 5 Extraction and Construction Results
@@ -313,7 +313,7 @@ set of retrieval numbers that **separate architectural ability from construction
 | Query family / setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Trained − recalibrated |
 |---|---|---|---|---|---|
 | Overlap anchored | 634 | **0.8956** | 0.8390 | **0.9006** | **+0.0050** |
-| Overlap de-anchored | 385 | **0.2330** | 0.2307 | 0.2211 | **−0.0119** |
+| Overlap de-anchored | 385 | **0.3620** | 0.3601 | 0.3488 | **−0.0132** |
 | **Paraphrased anchored** | 777 | **0.1172** | 0.0775 | **0.1341** | **+0.0169** |
 | **Paraphrased de-anchored** | 508 | 0.0882 | 0.0935 | 0.0809 | **−0.0073** |
 
@@ -357,7 +357,7 @@ embedder**:
 
 | Embedder | anchored MRR | de-anchored MRR | Anchoring effect | de-anchored / random |
 |---|---|---|---|---|
-| Hash (full 634/385) | 0.8956 | 0.2330 | **+0.6626** | **33.8×** |
+| Hash (full 634/385) | 0.8956 | 0.3620 | **+0.5336** | **52.5×** |
 | Real (subset 519/308) | 0.9066 | 0.2191 | **+0.6875** | **31.8×** |
 
 The anchoring effect is nearly identical across embedders (+0.66 vs +0.69), and the de-anchored

@@ -2921,6 +2921,47 @@ class TestQuerySignal(unittest.TestCase):
         self.assertEqual(measure_signal(q, self.ont).to_dict(), v1)
 
 
+class TestDeanchorExcludesProducingChunk(unittest.TestCase):
+    """deanchor 口径必须真正把产出 chunk 移出**候选池**（不只是移出金标）。
+
+    回归护栏：`evaluate_repaired._run` 的 `exclude_own` 曾是**死参** ——
+    `build_query_sets` 已让 deanchor 的金标排除产出 chunk，但候选池里它仍在，
+    照样占据排序前排。实测（n=60）修正前后 MRR 0.2474 → 0.4014。
+    另：排除语义必须与 build_query_sets 一致（只排除**首个**匹配边），
+    否则会把合法金标一并移除（实测 16/60 查询的 own ∩ gold 非空）。
+    """
+
+    def test_run_uses_exclude_own(self):
+        src = self._run_src()
+        self.assertIn("exclude_own", src.split('"""')[2],
+                      "exclude_own 必须在函数体内被使用，不能是死参")
+        self.assertIn("cid in exclude", src,
+                      "候选过滤必须真正跳过被排除的 chunk")
+
+    def test_first_match_semantics(self):
+        """排除集只取首个匹配边 —— 与 build_query_sets 的口径一致。"""
+        src = self._run_src()
+        self.assertIn("break", src,
+                      "反查产出边后必须 break（否则会排除所有同名边，误删合法金标）")
+
+    @staticmethod
+    def _run_src() -> str:
+        """读取 _run 源码，并**保存/恢复全局日志级别**。
+
+        `evaluate_repaired` 在模块级调用 `logging.disable(CRITICAL)` ——
+        import 它会全局关掉日志，使同套件里依赖 `assertLogs` 的用例失败
+        （gen2 报告已记录这个坑）。此处显式恢复。
+        """
+        import inspect
+        import logging as _logging
+        saved = _logging.root.manager.disable
+        try:
+            from metaphor_graph import evaluate_repaired as er
+            return inspect.getsource(er._run)
+        finally:
+            _logging.disable(saved)
+
+
 class TestLiteralStopwordGuardIsDataDriven(unittest.TestCase):
     """字面干扰的豁免源域必须来自数据表，不得硬编码在判定逻辑里。
 
