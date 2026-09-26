@@ -1,0 +1,1695 @@
+{
+ "pathway": [
+  {
+   "id": "ablation.py::measure",
+   "module": "ablation.py",
+   "name": "measure",
+   "line": 58,
+   "doc": "跑一遍抽取，返回 P/R/F1/P1。",
+   "args": [
+    "ex",
+    "samples"
+   ]
+  },
+  {
+   "id": "ablation.py::refine",
+   "module": "ablation.py",
+   "name": "refine",
+   "line": 51,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "bootstrap_triggers.py::extract_equative_pattern",
+   "module": "bootstrap_triggers.py",
+   "name": "extract_equative_pattern",
+   "line": 144,
+   "doc": "从等比句抽取「标记+喻体」模式串（如 是舞台 / 像棉花糖 / 若太阳 / 花般）。",
+   "args": [
+    "sent"
+   ]
+  },
+  {
+   "id": "bootstrap_triggers.py::build_bootstrap_ontology",
+   "module": "bootstrap_triggers.py",
+   "name": "build_bootstrap_ontology",
+   "line": 260,
+   "doc": "把自举喻体词灌进新 cascade，叠加到 base 本体。",
+   "args": [
+    "base",
+    "json_path",
+    "top_k",
+    "min_lift"
+   ]
+  },
+  {
+   "id": "builder.py::build",
+   "module": "builder.py",
+   "name": "build",
+   "line": 55,
+   "doc": "",
+   "args": [
+    "self",
+    "chunks",
+    "doc_id"
+   ]
+  },
+  {
+   "id": "cascade_rules.py::build_cascades",
+   "module": "cascade_rules.py",
+   "name": "build_cascades",
+   "line": 164,
+   "doc": "按规则构造级联字典。`json` 规则原样返回 base_cascades（默认不变）。",
+   "args": [
+    "frames",
+    "rule",
+    "base_cascades"
+   ]
+  },
+  {
+   "id": "context_budget.py::select",
+   "module": "context_budget.py",
+   "name": "select",
+   "line": 80,
+   "doc": "scored: [(id, score), ...]，按分数降序返回被选中的子集。",
+   "args": [
+    "self",
+    "scored",
+    "density"
+   ]
+  },
+  {
+   "id": "evaluate_a6.py::build_cs_neighbors",
+   "module": "evaluate_a6.py",
+   "name": "build_cs_neighbors",
+   "line": 87,
+   "doc": "为概念词批量生成常识邻居（落盘缓存，重跑零请求）。",
+   "args": [
+    "backend",
+    "terms",
+    "batch_size"
+   ]
+  },
+  {
+   "id": "evaluate_document_corpus.py::build_chunks",
+   "module": "evaluate_document_corpus.py",
+   "name": "build_chunks",
+   "line": 106,
+   "doc": "",
+   "args": [
+    "n_caijing",
+    "n_gov",
+    "n_luxun"
+   ]
+  },
+  {
+   "id": "evaluate_fullcorpus.py::build_replay_ontology",
+   "module": "evaluate_fullcorpus.py",
+   "name": "build_replay_ontology",
+   "line": 69,
+   "doc": "组装重放本体。`cascade_rule` 见 `cascade_rules` 模块。",
+   "args": [
+    "ontology_json",
+    "cascade_rule"
+   ]
+  },
+  {
+   "id": "evaluate_fullcorpus.py::build_replay_backend",
+   "module": "evaluate_fullcorpus.py",
+   "name": "build_replay_backend",
+   "line": 86,
+   "doc": "discover/refine 全走真实 DeepSeek 缓存（重放），零 API 请求。",
+   "args": [
+    "ont",
+    "discover_cache"
+   ]
+  },
+  {
+   "id": "evaluate_fullcorpus.py::build_queries",
+   "module": "evaluate_fullcorpus.py",
+   "name": "build_queries",
+   "line": 103,
+   "doc": "返回 {\"q_ext\": [(query, gold_set)], \"q_self\": [...], \"q_cas\": [...]}。",
+   "args": [
+    "shg",
+    "ont"
+   ]
+  },
+  {
+   "id": "evaluate_hgnn.py::build_shg",
+   "module": "evaluate_hgnn.py",
+   "name": "build_shg",
+   "line": 54,
+   "doc": "统一的建图入口（所有 measure_* 必须走这里，避免口径漂移）。",
+   "args": [
+    "chunks",
+    "doc_id"
+   ]
+  },
+  {
+   "id": "evaluate_hgnn.py::measure_p4a",
+   "module": "evaluate_hgnn.py",
+   "name": "measure_p4a",
+   "line": 81,
+   "doc": "跨层检索增益：HGNN vs 原始嵌入。返回每配置聚合指标。",
+   "args": [
+    "alpha",
+    "leak"
+   ]
+  },
+  {
+   "id": "evaluate_hgnn.py::measure_p4b",
+   "module": "evaluate_hgnn.py",
+   "name": "measure_p4b",
+   "line": 113,
+   "doc": "检测器判别力：真 L1 边 vs 跨框架负样本对的隐喻连贯度分离度。",
+   "args": [
+    "alpha",
+    "leak"
+   ]
+  },
+  {
+   "id": "evaluate_hgnn.py::measure_h4",
+   "module": "evaluate_hgnn.py",
+   "name": "measure_h4",
+   "line": 225,
+   "doc": "H4 改口径：判别信号到底来自哪里？——三种对照 vs 完整 HGNN。",
+   "args": [
+    "alpha",
+    "leak",
+    "methods"
+   ]
+  },
+  {
+   "id": "evaluate_llmgold.py::build_queries_rich",
+   "module": "evaluate_llmgold.py",
+   "name": "build_queries_rich",
+   "line": 119,
+   "doc": "与 evaluate_fullcorpus.build_queries 同口径，但携带边与原文信息。",
+   "args": [
+    "shg",
+    "chunk_map",
+    "doc_id"
+   ]
+  },
+  {
+   "id": "evaluate_llmgold.py::filter_violations",
+   "module": "evaluate_llmgold.py",
+   "name": "filter_violations",
+   "line": 186,
+   "doc": "程序化红线：改写不得含原触发词/源域/目标域（clue 捷径必须被切断）。",
+   "args": [
+    "all_queries",
+    "cache"
+   ]
+  },
+  {
+   "id": "evaluate_real.py::build_llm_backend",
+   "module": "evaluate_real.py",
+   "name": "build_llm_backend",
+   "line": 36,
+   "doc": "按环境构造 LLM 后端（§6.6）。",
+   "args": []
+  },
+  {
+   "id": "evaluate_repaired.py::build_global_graph",
+   "module": "evaluate_repaired.py",
+   "name": "build_global_graph",
+   "line": 65,
+   "doc": "把全部伪文档合并成**一张全局图**，chunk id 全局连续编号。",
+   "args": [
+    "samples",
+    "ont",
+    "backend",
+    "k",
+    "llm_conf"
+   ]
+  },
+  {
+   "id": "evaluate_repaired.py::build_paraphrased_sets",
+   "module": "evaluate_repaired.py",
+   "name": "build_paraphrased_sets",
+   "line": 164,
+   "doc": "改写型查询（含触发词被程序化禁用），映射到全局池上。",
+   "args": [
+    "gshg",
+    "max_q"
+   ]
+  },
+  {
+   "id": "evaluate_repaired.py::build_query_sets",
+   "module": "evaluate_repaired.py",
+   "name": "build_query_sets",
+   "line": 198,
+   "doc": "三种口径的查询/金标。",
+   "args": [
+    "gshg",
+    "max_q"
+   ]
+  },
+  {
+   "id": "evaluate_repaired.py::rank_all",
+   "module": "evaluate_repaired.py",
+   "name": "rank_all",
+   "line": 254,
+   "doc": "对全部候选 chunk 打分排序（排除 exclude 中的 chunk）。",
+   "args": [
+    "eng",
+    "scorer",
+    "query",
+    "exclude",
+    "weights"
+   ]
+  },
+  {
+   "id": "evaluate_retrieval.py::measure_p3",
+   "module": "evaluate_retrieval.py",
+   "name": "measure_p3",
+   "line": 68,
+   "doc": "返回 (precision, recall, f1, n_pred, n_gold, spurious)。",
+   "args": [
+    "doc_id",
+    "chunks"
+   ]
+  },
+  {
+   "id": "evaluate_retrieval.py::measure_h3",
+   "module": "evaluate_retrieval.py",
+   "name": "measure_h3",
+   "line": 109,
+   "doc": "H3：去掉隐喻通路、仅留字面通路 → 跨域 Recall 应跌至 B1（基线）水平。",
+   "args": [
+    "doc_id",
+    "chunks",
+    "gold_items"
+   ]
+  },
+  {
+   "id": "evaluate_retrieval.py::measure_p3_flag",
+   "module": "evaluate_retrieval.py",
+   "name": "measure_p3_flag",
+   "line": 142,
+   "doc": "A5：跨 chunk 扩展超边对 P3 的贡献（关 builder.use_extended 后重测 P3 F1）。",
+   "args": [
+    "doc_id",
+    "chunks",
+    "use_extended"
+   ]
+  },
+  {
+   "id": "evaluate_retrieval.py::measure_a8",
+   "module": "evaluate_retrieval.py",
+   "name": "measure_a8",
+   "line": 164,
+   "doc": "A8：关自适应阈值 → 检索质量/稳定性变化。",
+   "args": [
+    "doc_id",
+    "chunks",
+    "gold_items"
+   ]
+  },
+  {
+   "id": "evaluate_retrieval.py::score_conditions",
+   "module": "evaluate_retrieval.py",
+   "name": "score_conditions",
+   "line": 200,
+   "doc": "返回打分配置下，候选映射→chunk 的排序得分表。",
+   "args": [
+    "eng",
+    "scorer",
+    "query",
+    "legacy_arm",
+    "reliability",
+    "floor"
+   ]
+  },
+  {
+   "id": "extended.py::link_extended_metaphors",
+   "module": "extended.py",
+   "name": "link_extended_metaphors",
+   "line": 36,
+   "doc": "将满足条件的相邻 L1 超边合并为跨 chunk 扩展超边（is_extended=True）。",
+   "args": [
+    "edges",
+    "chunk_order",
+    "max_gap",
+    "continuity"
+   ]
+  },
+  {
+   "id": "extractor.py::extract",
+   "module": "extractor.py",
+   "name": "extract",
+   "line": 170,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "doc_id",
+    "chunk_id"
+   ]
+  },
+  {
+   "id": "hgnn.py::retrieve",
+   "module": "hgnn.py",
+   "name": "retrieve",
+   "line": 234,
+   "doc": "图感知检索：按「查询 vs 各超边」的跨层余弦降序返回 (边, 分)。",
+   "args": [
+    "self",
+    "query_text",
+    "edges",
+    "k"
+   ]
+  },
+  {
+   "id": "hgnn.py::retrieve_raw",
+   "module": "hgnn.py",
+   "name": "retrieve_raw",
+   "line": 251,
+   "doc": "原始嵌入空间检索（无跨层传播），作为 HGNN 的对照基线。",
+   "args": [
+    "self",
+    "query_text",
+    "edges",
+    "k"
+   ]
+  },
+  {
+   "id": "llm_backend.py::verify_chains_batch",
+   "module": "llm_backend.py",
+   "name": "verify_chains_batch",
+   "line": 757,
+   "doc": "批量 LLM 校验扩展隐喻链，返回 {chain_key: bool}。",
+   "args": [
+    "backend",
+    "chains",
+    "batch_size",
+    "verbose",
+    "cache_path"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover",
+   "module": "llm_backend.py",
+   "name": "discover",
+   "line": 74,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine",
+   "module": "llm_backend.py",
+   "name": "refine",
+   "line": 76,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover",
+   "module": "llm_backend.py",
+   "name": "discover",
+   "line": 311,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover_batch",
+   "module": "llm_backend.py",
+   "name": "discover_batch",
+   "line": 331,
+   "doc": "一次请求处理多句，返回与 chunks 等长的结果列表。",
+   "args": [
+    "self",
+    "chunks"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine_batch",
+   "module": "llm_backend.py",
+   "name": "refine_batch",
+   "line": 370,
+   "doc": "一次请求判断多条 (文本, 源域, 目标域)，返回等长结果列表。",
+   "args": [
+    "self",
+    "items"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine",
+   "module": "llm_backend.py",
+   "name": "refine",
+   "line": 404,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover",
+   "module": "llm_backend.py",
+   "name": "discover",
+   "line": 545,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine",
+   "module": "llm_backend.py",
+   "name": "refine",
+   "line": 572,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover",
+   "module": "llm_backend.py",
+   "name": "discover",
+   "line": 605,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine",
+   "module": "llm_backend.py",
+   "name": "refine",
+   "line": 608,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover",
+   "module": "llm_backend.py",
+   "name": "discover",
+   "line": 636,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine",
+   "module": "llm_backend.py",
+   "name": "refine",
+   "line": 639,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "llm_backend.py::discover",
+   "module": "llm_backend.py",
+   "name": "discover",
+   "line": 905,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "llm_backend.py::refine",
+   "module": "llm_backend.py",
+   "name": "refine",
+   "line": 908,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "llm_ontology.py::build_specs",
+   "module": "llm_ontology.py",
+   "name": "build_specs",
+   "line": 159,
+   "doc": "把 (源域,目标域) 聚合成 FrameSpec / CascadeSpec。",
+   "args": [
+    "agg",
+    "backend",
+    "min_count",
+    "max_triggers",
+    "canon",
+    "min_trigger_len"
+   ]
+  },
+  {
+   "id": "llm_ontology.py::filter_triggers_by_lift",
+   "module": "llm_ontology.py",
+   "name": "filter_triggers_by_lift",
+   "line": 241,
+   "doc": "用 **train.xml 标注**按 lift 过滤触发词（与 bootstrap_triggers 同一套纪律）。",
+   "args": [
+    "frames",
+    "train_path",
+    "min_lift",
+    "min_df"
+   ]
+  },
+  {
+   "id": "llm_ontology.py::build_llm_ontology",
+   "module": "llm_ontology.py",
+   "name": "build_llm_ontology",
+   "line": 334,
+   "doc": "把落盘的框架/级联并入本体（base 默认用现有默认本体）。",
+   "args": [
+    "path",
+    "base"
+   ]
+  },
+  {
+   "id": "metagraph.py::build_from_shg",
+   "module": "metagraph.py",
+   "name": "build_from_shg",
+   "line": 56,
+   "doc": "",
+   "args": [
+    "self",
+    "shg",
+    "chunks",
+    "doc_id"
+   ]
+  },
+  {
+   "id": "metagraph.py::retrieve",
+   "module": "metagraph.py",
+   "name": "retrieve",
+   "line": 112,
+   "doc": "",
+   "args": [
+    "self",
+    "query",
+    "top_k"
+   ]
+  },
+  {
+   "id": "metanet_migrate.py::build_metanet_ontology",
+   "module": "metanet_migrate.py",
+   "name": "build_metanet_ontology",
+   "line": 126,
+   "doc": "把概念隐喻种子合并进基础本体，返回扩充后的 CascadeOntology。",
+   "args": [
+    "base",
+    "items",
+    "dump_path"
+   ]
+  },
+  {
+   "id": "models.py::merge_evidence",
+   "module": "models.py",
+   "name": "merge_evidence",
+   "line": 212,
+   "doc": "合并超边时保留全部证据链（不丢溯源）。",
+   "args": [
+    "target",
+    "sources"
+   ]
+  },
+  {
+   "id": "observability.py::matched_triggers",
+   "module": "observability.py",
+   "name": "matched_triggers",
+   "line": 112,
+   "doc": "查询中出现的本体触发词。",
+   "args": [
+    "query",
+    "ontology"
+   ]
+  },
+  {
+   "id": "observability.py::measure",
+   "module": "observability.py",
+   "name": "measure",
+   "line": 229,
+   "doc": "计算查询的 Ω。**签名里没有候选池**——不变式由 API 形状保证。",
+   "args": [
+    "query",
+    "ontology"
+   ]
+  },
+  {
+   "id": "observability.py::measure",
+   "module": "observability.py",
+   "name": "measure",
+   "line": 282,
+   "doc": "",
+   "args": [
+    "self",
+    "query"
+   ]
+  },
+  {
+   "id": "observability.py::measure_many",
+   "module": "observability.py",
+   "name": "measure_many",
+   "line": 290,
+   "doc": "",
+   "args": [
+    "self",
+    "queries"
+   ]
+  },
+  {
+   "id": "observability.py::gate",
+   "module": "observability.py",
+   "name": "gate",
+   "line": 294,
+   "doc": "Ω ≥ theta 时放行级联通路，否则建议走回退通路。",
+   "args": [
+    "self",
+    "query",
+    "theta"
+   ]
+  },
+  {
+   "id": "ontology.py::match_by_triggers",
+   "module": "ontology.py",
+   "name": "match_by_triggers",
+   "line": 377,
+   "doc": "",
+   "args": [
+    "self",
+    "tokens"
+   ]
+  },
+  {
+   "id": "ontology.py::match_frame",
+   "module": "ontology.py",
+   "name": "match_frame",
+   "line": 387,
+   "doc": "",
+   "args": [
+    "self",
+    "source_domain",
+    "target_domain"
+   ]
+  },
+  {
+   "id": "ontology_bilingual.py::build_bilingual",
+   "module": "ontology_bilingual.py",
+   "name": "build_bilingual",
+   "line": 189,
+   "doc": "",
+   "args": [
+    "ontology_json",
+    "out_path"
+   ]
+  },
+  {
+   "id": "ontology_clean.py::clean_ground",
+   "module": "ontology_clean.py",
+   "name": "clean_ground",
+   "line": 99,
+   "doc": "剔掉喻底里的明喻标记，返回 (清洗后喻底, 剔除数)。",
+   "args": [
+    "ground"
+   ]
+  },
+  {
+   "id": "ontology_clean.py::clean_frames",
+   "module": "ontology_clean.py",
+   "name": "clean_frames",
+   "line": 105,
+   "doc": "应用全部清洗规则，返回 (框架列表, 统计)。",
+   "args": [
+    "frames",
+    "counts",
+    "core_min_support",
+    "drop_self_loops"
+   ]
+  },
+  {
+   "id": "ontology_clean.py::clean",
+   "module": "ontology_clean.py",
+   "name": "clean",
+   "line": 156,
+   "doc": "完整清洗流程：载入 → 重算支持度 → 清洗 → 重建级联 → 落盘。",
+   "args": [
+    "train_json",
+    "train_cache",
+    "out_path",
+    "core_min_support"
+   ]
+  },
+  {
+   "id": "ontology_clean.py::verify",
+   "module": "ontology_clean.py",
+   "name": "verify",
+   "line": 267,
+   "doc": "三变体对照：P1 / 召回 / 精确率 / F1 / P2 覆盖率 / refine 命中率。",
+   "args": [
+    "clean_json",
+    "original_json",
+    "discover_cache"
+   ]
+  },
+  {
+   "id": "ontology_clean.py::discover",
+   "module": "ontology_clean.py",
+   "name": "discover",
+   "line": 212,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk"
+   ]
+  },
+  {
+   "id": "ontology_clean.py::refine",
+   "module": "ontology_clean.py",
+   "name": "refine",
+   "line": 215,
+   "doc": "",
+   "args": [
+    "self",
+    "chunk",
+    "frame"
+   ]
+  },
+  {
+   "id": "query_signal.py::compose",
+   "module": "query_signal.py",
+   "name": "compose",
+   "line": 140,
+   "doc": "按四个开关合成一个标量（gen3 机制归因实验的核心工具）。",
+   "args": [
+    "components"
+   ]
+  },
+  {
+   "id": "query_signal.py::measure_signal",
+   "module": "query_signal.py",
+   "name": "measure_signal",
+   "line": 278,
+   "doc": "计算查询侧结构信号。**签名里没有候选池**——不变式由 API 形状保证。",
+   "args": [
+    "query",
+    "ontology"
+   ]
+  },
+  {
+   "id": "query_signal.py::gate_by",
+   "module": "query_signal.py",
+   "name": "gate_by",
+   "line": 381,
+   "doc": "通用门控：信号 ≥ theta 时放行。不改变任何已上报数字。",
+   "args": [
+    "signal",
+    "name",
+    "theta"
+   ]
+  },
+  {
+   "id": "retrieval.py::rank_mappings",
+   "module": "retrieval.py",
+   "name": "rank_mappings",
+   "line": 314,
+   "doc": "对所有候选超边打分并按自适应阈值筛选（供生成前组装上下文）。",
+   "args": [
+    "self",
+    "query",
+    "mappings",
+    "adaptive",
+    "top_k"
+   ]
+  },
+  {
+   "id": "training.py::extract_text_features",
+   "module": "training.py",
+   "name": "extract_text_features",
+   "line": 106,
+   "doc": "给定「查询文本」与「候选超边」，抽出同样的 7 维特征。",
+   "args": [
+    "query_text",
+    "cand",
+    "centrality",
+    "ontology"
+   ]
+  },
+  {
+   "id": "training.py::extract_features",
+   "module": "training.py",
+   "name": "extract_features",
+   "line": 148,
+   "doc": "给定「查询超边」与「候选超边」，抽出 7 维特征。",
+   "args": [
+    "query_edge",
+    "cand",
+    "centrality",
+    "ontology"
+   ]
+  },
+  {
+   "id": "training.py::build_training_set",
+   "module": "training.py",
+   "name": "build_training_set",
+   "line": 342,
+   "doc": "零标注成本构造监督信号。",
+   "args": [
+    "shg",
+    "chunk_order",
+    "max_gap",
+    "negatives_per_positive",
+    "centrality",
+    "seed"
+   ]
+  },
+  {
+   "id": "training.py::build_weak_refine_set",
+   "module": "training.py",
+   "name": "build_weak_refine_set",
+   "line": 570,
+   "doc": "LLM-refine **弱监督**训练集（P3「排序器收口」的离线迭代，路线图 §8.2）。",
+   "args": [
+    "shg",
+    "chunk_order",
+    "chunks",
+    "ontology",
+    "refine_path",
+    "negatives_per_positive"
+   ]
+  },
+  {
+   "id": "training.py::score_features",
+   "module": "training.py",
+   "name": "score_features",
+   "line": 542,
+   "doc": "",
+   "args": [
+    "self",
+    "features"
+   ]
+  }
+ ],
+ "criterion": [
+  {
+   "id": "context_budget.py::DENSITY_LOW",
+   "module": "context_budget.py",
+   "name": "DENSITY_LOW",
+   "line": 27,
+   "value": "2.35",
+   "note": "HyperRAG 论文的图密度分档边界"
+  },
+  {
+   "id": "context_budget.py::DENSITY_HIGH",
+   "module": "context_budget.py",
+   "name": "DENSITY_HIGH",
+   "line": 28,
+   "value": "5.0",
+   "note": ""
+  },
+  {
+   "id": "embeddings.py::DIM",
+   "module": "embeddings.py",
+   "name": "DIM",
+   "line": 25,
+   "value": "512",
+   "note": ""
+  },
+  {
+   "id": "eval_corpus.py::THRESHOLD_P3_ACC",
+   "module": "eval_corpus.py",
+   "name": "THRESHOLD_P3_ACC",
+   "line": 93,
+   "value": "0.70      # 跨 chunk 消歧准确率（F1）> 70%",
+   "note": "评测门槛（对齐方案 / README §7.0）"
+  },
+  {
+   "id": "evaluate_document_corpus.py::CHUNK_SIZE",
+   "module": "evaluate_document_corpus.py",
+   "name": "CHUNK_SIZE",
+   "line": 43,
+   "value": "500       # 字符（方案 §4.6：400–600）",
+   "note": ""
+  },
+  {
+   "id": "evaluate_document_corpus.py::CHUNK_OVERLAP",
+   "module": "evaluate_document_corpus.py",
+   "name": "CHUNK_OVERLAP",
+   "line": 44,
+   "value": "50     # 10% 重叠",
+   "note": ""
+  },
+  {
+   "id": "evaluate_document_corpus.py::MAX_CHUNKS_PER_DOC",
+   "module": "evaluate_document_corpus.py",
+   "name": "MAX_CHUNKS_PER_DOC",
+   "line": 45,
+   "value": "40",
+   "note": ""
+  },
+  {
+   "id": "observability.py::EPS",
+   "module": "observability.py",
+   "name": "EPS",
+   "line": 51,
+   "value": "1e-3                  # 几何平均的分量下界（防止一个 0",
+   "note": "---------------------------------------------------------------------------"
+  },
+  {
+   "id": "observability.py::SINGLE_FLOW_ENTROPY",
+   "module": "observability.py",
+   "name": "SINGLE_FLOW_ENTROPY",
+   "line": 52,
+   "value": "0.5   # 只有一条正流量时的有限熵值（退化情形的约定值）",
+   "note": ""
+  },
+  {
+   "id": "observability.py::SPARSE_MAX",
+   "module": "observability.py",
+   "name": "SPARSE_MAX",
+   "line": 53,
+   "value": "0.5            # Ω < 此值 → sparse；≥ → den",
+   "note": ""
+  },
+  {
+   "id": "ontology.py::TYPE_RELIABILITY_REGISTERED",
+   "module": "ontology.py",
+   "name": "TYPE_RELIABILITY_REGISTERED",
+   "line": 130,
+   "value": "1.0",
+   "note": "但可靠性打折，与本体框架可区分。"
+  },
+  {
+   "id": "ontology.py::TYPE_RELIABILITY_FALLBACK",
+   "module": "ontology.py",
+   "name": "TYPE_RELIABILITY_FALLBACK",
+   "line": 131,
+   "value": "0.5",
+   "note": ""
+  },
+  {
+   "id": "ontology.py::TYPE_RELIABILITY_INVALID",
+   "module": "ontology.py",
+   "name": "TYPE_RELIABILITY_INVALID",
+   "line": 132,
+   "value": "0.0",
+   "note": ""
+  },
+  {
+   "id": "provenance.py::RELIABILITY_ONTOLOGY",
+   "module": "provenance.py",
+   "name": "RELIABILITY_ONTOLOGY",
+   "line": 39,
+   "value": "1.0",
+   "note": "本体登记框架的可靠性（上限）"
+  },
+  {
+   "id": "provenance.py::RELIABILITY_FALLBACK_CAP",
+   "module": "provenance.py",
+   "name": "RELIABILITY_FALLBACK_CAP",
+   "line": 41,
+   "value": "0.5",
+   "note": "回退框架（抽取器临时新建、本体无条目）的可靠性 —— 显式封顶"
+  },
+  {
+   "id": "provenance.py::RELIABILITY_FLOOR",
+   "module": "provenance.py",
+   "name": "RELIABILITY_FLOOR",
+   "line": 43,
+   "value": "0.5",
+   "note": "打分层的下界。1.0 = 关闭该通道（因子恒为 1，历史口径）"
+  },
+  {
+   "id": "provenance.py::RELIABILITY_FLOOR_OFF",
+   "module": "provenance.py",
+   "name": "RELIABILITY_FLOOR_OFF",
+   "line": 44,
+   "value": "1.0",
+   "note": ""
+  }
+ ],
+ "refactor": [
+  {
+   "id": "context_budget.py:102",
+   "module": "context_budget.py",
+   "line": 102,
+   "text": "低密度：图遍历容易断，宁多勿少——不再设上限"
+  },
+  {
+   "id": "evaluate_a6.py:145",
+   "module": "evaluate_a6.py",
+   "line": 145,
+   "text": "（初版误用语料库文档 cj/gov/lx，键对不上，n=0，已修正）。"
+  },
+  {
+   "id": "evaluate_a6.py:216",
+   "module": "evaluate_a6.py",
+   "line": 216,
+   "text": "⚠️ 预算对等（实测修正）：原实现用 top_k=5，而常识通路**无上限** ——"
+  },
+  {
+   "id": "evaluate_retrieval.py:226",
+   "module": "evaluate_retrieval.py",
+   "line": 226,
+   "text": "人工加权改为调用单一真源（training.hand_weighted_score）。"
+  },
+  {
+   "id": "evaluate_retrieval.py:227",
+   "module": "evaluate_retrieval.py",
+   "line": 227,
+   "text": "原实现硬编码 0.35/0.25/0.20/0.20，与学到权重严重错配"
+  },
+  {
+   "id": "extractor.py:187",
+   "module": "extractor.py",
+   "line": 187,
+   "text": "LLM 开放发现通道：结论已由 discover 给出，不再二次调用 refine"
+  },
+  {
+   "id": "llm_ontology.py:207",
+   "module": "llm_ontology.py",
+   "line": 207,
+   "text": "推断真实 source_type（此前一律 GENERIC_VEHICLE，会让类型约束完全失效）"
+  },
+  {
+   "id": "mipvu.py:92",
+   "module": "mipvu.py",
+   "line": 92,
+   "text": "原实现只认 semfield 里写死的 6 个级联 id —— 那会让任何替换级联构造规则"
+  },
+  {
+   "id": "mipvu.py:94",
+   "module": "mipvu.py",
+   "line": 94,
+   "text": "见 experiments/gen2/REPORT.md §4）。改为「框架存在 + 框架有级联归属」后："
+  },
+  {
+   "id": "ontology.py:25",
+   "module": "ontology.py",
+   "line": 25,
+   "text": "为什么需要：LLM 自举出的框架此前 **98.6% 被标成 GENERIC_VEHICLE**，"
+  },
+  {
+   "id": "ontology.py:114",
+   "module": "ontology.py",
+   "line": 114,
+   "text": "背景：此前两条打分路径对 type 特征各写一份表达式，且口径不同："
+  },
+  {
+   "id": "ontology.py:123",
+   "module": "ontology.py",
+   "line": 123,
+   "text": "LLM 开放发现换来 +55.8pp 召回的载体，丢弃等于关掉开放发现。改为给"
+  },
+  {
+   "id": "retrieval.py:293",
+   "module": "retrieval.py",
+   "line": 293,
+   "text": "统一到与训练路径**同一套 7 维特征** + 单一真源权重。"
+  },
+  {
+   "id": "retrieval.py:295",
+   "module": "retrieval.py",
+   "line": 295,
+   "text": "原实现走的是 4 维手写公式（0.35·sem + 0.25·struct + 0.20·clue +"
+  },
+  {
+   "id": "retrieval.py:302",
+   "module": "retrieval.py",
+   "line": 302,
+   "text": "- 权重来自 training.HAND_WEIGHTS（按学到比例），不再手工拍定。"
+  },
+  {
+   "id": "retrieval.py:307",
+   "module": "retrieval.py",
+   "line": 307,
+   "text": "ontology.type_reliability_of 得到（exp/source 的封顶可靠性修复），"
+  },
+  {
+   "id": "retrieval.py:308",
+   "module": "retrieval.py",
+   "line": 308,
+   "text": "本函数不再单独计算，故两条路径口径一致。"
+  },
+  {
+   "id": "training.py:52",
+   "module": "training.py",
+   "line": 52,
+   "text": "**单一真源**。原实现把权重硬编码在两个地方（retrieval.py 与"
+  },
+  {
+   "id": "training.py:128",
+   "module": "training.py",
+   "line": 128,
+   "text": "此前这里是 `1.0 if cand.frame_id else 0.0`，而检索路径查本体后 type_valid"
+  }
+ ],
+ "concept": [
+  {
+   "id": "ablation.py::TrackedBackend",
+   "module": "ablation.py",
+   "name": "TrackedBackend",
+   "line": 44,
+   "bases": [
+    "PrecomputedBackend"
+   ],
+   "doc": "记录查不到的 refine 键 —— 消融不该偷偷多花 API 钱，也该知道数据缺口。",
+   "kind": "class"
+  },
+  {
+   "id": "baselines.py::Baseline",
+   "module": "baselines.py",
+   "name": "Baseline",
+   "line": 37,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "baselines.py::Ablation",
+   "module": "baselines.py",
+   "name": "Ablation",
+   "line": 97,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "baselines.py::EvalSuite",
+   "module": "baselines.py",
+   "name": "EvalSuite",
+   "line": 124,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "builder.py::MetaphorSHGBuilder",
+   "module": "builder.py",
+   "name": "MetaphorSHGBuilder",
+   "line": 24,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "context_budget.py::ThresholdDecision",
+   "module": "context_budget.py",
+   "name": "ThresholdDecision",
+   "line": 44,
+   "bases": [],
+   "doc": "一次自适应选择的审计记录（可写进 RetrieverResult.trace）。",
+   "kind": "class"
+  },
+  {
+   "id": "context_budget.py::AdaptiveThreshold",
+   "module": "context_budget.py",
+   "name": "AdaptiveThreshold",
+   "line": 58,
+   "bases": [],
+   "doc": "按「每跳至少 M 条」的目标反推阈值，并按图密度切换策略。",
+   "kind": "class"
+  },
+  {
+   "id": "context_budget.py::ContextPack",
+   "module": "context_budget.py",
+   "name": "ContextPack",
+   "line": 121,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "context_budget.py::ContextBudget",
+   "module": "context_budget.py",
+   "name": "ContextBudget",
+   "line": 138,
+   "bases": [],
+   "doc": "按 50 / 30 / 20 分配上下文，未用完的额度顺延给下一类。",
+   "kind": "class"
+  },
+  {
+   "id": "data_loader.py::MetaphorSample",
+   "module": "data_loader.py",
+   "name": "MetaphorSample",
+   "line": 21,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "demo_llm.py::_Handler",
+   "module": "demo_llm.py",
+   "name": "_Handler",
+   "line": 80,
+   "bases": [
+    "BaseHTTPRequestHandler"
+   ],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "embeddings.py::EmbedderFatalError",
+   "module": "embeddings.py",
+   "name": "EmbedderFatalError",
+   "line": 81,
+   "bases": [
+    "RuntimeError"
+   ],
+   "doc": "认证/计费类致命错误（401/402/403）。重试无用，必须响亮报错。",
+   "kind": "class"
+  },
+  {
+   "id": "embeddings.py::EmbedderError",
+   "module": "embeddings.py",
+   "name": "EmbedderError",
+   "line": 85,
+   "bases": [
+    "RuntimeError"
+   ],
+   "doc": "网络/超时/解析等一般性错误。是否降级由调用方决定。",
+   "kind": "class"
+  },
+  {
+   "id": "embeddings.py::NgramEmbedder",
+   "module": "embeddings.py",
+   "name": "NgramEmbedder",
+   "line": 140,
+   "bases": [],
+   "doc": "改进哈希编码器：**1–3 gram + 符号哈希**（feature hashing, Weinberger et al.）。",
+   "kind": "class"
+  },
+  {
+   "id": "embeddings.py::OpenAICompatibleEmbedder",
+   "module": "embeddings.py",
+   "name": "OpenAICompatibleEmbedder",
+   "line": 184,
+   "bases": [],
+   "doc": "OpenAI 兼容 `/embeddings` 端点客户端。",
+   "kind": "class"
+  },
+  {
+   "id": "evaluate_hgnn.py::_NumpyGRU",
+   "module": "evaluate_hgnn.py",
+   "name": "_NumpyGRU",
+   "line": 172,
+   "bases": [],
+   "doc": "最小 GRU 前向（numpy，固定种子，**不训练**）。",
+   "kind": "class"
+  },
+  {
+   "id": "evaluate_repaired_real.py::CachedRealEmbedder",
+   "module": "evaluate_repaired_real.py",
+   "name": "CachedRealEmbedder",
+   "line": 45,
+   "bases": [],
+   "doc": "只读真实句向量缓存；未命中返回 None（由调用方决定跳过策略）。",
+   "kind": "class"
+  },
+  {
+   "id": "extractor.py::MetaphorExtractor",
+   "module": "extractor.py",
+   "name": "MetaphorExtractor",
+   "line": 40,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "health.py::GraphHealth",
+   "module": "health.py",
+   "name": "GraphHealth",
+   "line": 32,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "hgnn.py::MetaphorHGNN",
+   "module": "hgnn.py",
+   "name": "MetaphorHGNN",
+   "line": 25,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "hlindex.py::HLIndex",
+   "module": "hlindex.py",
+   "name": "HLIndex",
+   "line": 17,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::LLMFatalError",
+   "module": "llm_backend.py",
+   "name": "LLMFatalError",
+   "line": 53,
+   "bases": [
+    "RuntimeError"
+   ],
+   "doc": "LLM 后端致命错误（认证/计费/权限）。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::MetaphorLLMBackend",
+   "module": "llm_backend.py",
+   "name": "MetaphorLLMBackend",
+   "line": 65,
+   "bases": [
+    "Protocol"
+   ],
+   "doc": "LLM 后端接口（结构化协议，鸭子类型即可，无需继承）。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::LLMCandidate",
+   "module": "llm_backend.py",
+   "name": "LLMCandidate",
+   "line": 82,
+   "bases": [],
+   "doc": "LLM 开放发现产出的单条隐喻候选（尚未过类型安全约束）。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::LLMRefine",
+   "module": "llm_backend.py",
+   "name": "LLMRefine",
+   "line": 93,
+   "bases": [],
+   "doc": "LLM 对「已命中候选」的细化结论。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::OpenAIBackend",
+   "module": "llm_backend.py",
+   "name": "OpenAIBackend",
+   "line": 195,
+   "bases": [],
+   "doc": "OpenAI 兼容 Chat Completions 后端（零额外依赖，标准库 urllib）。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::LocalHeuristicBackend",
+   "module": "llm_backend.py",
+   "name": "LocalHeuristicBackend",
+   "line": 434,
+   "bases": [],
+   "doc": "离线 LLM 近似：用「等比标记 + 喻体名词」做开放发现，再把喻体绑定到本体。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::PrecomputedBackend",
+   "module": "llm_backend.py",
+   "name": "PrecomputedBackend",
+   "line": 586,
+   "bases": [],
+   "doc": "把「批量预取」的 LLM 结果当作后端喂给抽取器。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::_RefineCollector",
+   "module": "llm_backend.py",
+   "name": "_RefineCollector",
+   "line": 629,
+   "bases": [],
+   "doc": "第一趟：只记录抽取器会发出哪些 refine 请求，不真调 LLM。",
+   "kind": "class"
+  },
+  {
+   "id": "llm_backend.py::MockBackend",
+   "module": "llm_backend.py",
+   "name": "MockBackend",
+   "line": 897,
+   "bases": [],
+   "doc": "返回预置结果，便于单元测试验证抽取器与后端的接线。",
+   "kind": "class"
+  },
+  {
+   "id": "metagraph.py::MetaNode",
+   "module": "metagraph.py",
+   "name": "MetaNode",
+   "line": 29,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "metagraph.py::MetaEdge",
+   "module": "metagraph.py",
+   "name": "MetaEdge",
+   "line": 37,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "metagraph.py::MetaphorMetagraph",
+   "module": "metagraph.py",
+   "name": "MetaphorMetagraph",
+   "line": 43,
+   "bases": [],
+   "doc": "三层隐喻元图（内存表示）。",
+   "kind": "class"
+  },
+  {
+   "id": "metagraph.py::MetaphorURetrieval",
+   "module": "metagraph.py",
+   "name": "MetaphorURetrieval",
+   "line": 87,
+   "bases": [],
+   "doc": "隐喻版 U-Retrieval（§4.3.2）。",
+   "kind": "class"
+  },
+  {
+   "id": "metanet_migrate.py::MetaNetImporter",
+   "module": "metanet_migrate.py",
+   "name": "MetaNetImporter",
+   "line": 175,
+   "bases": [],
+   "doc": "解析外部 MetaNet / Framester 导出的概念隐喻 JSON。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::Evidence",
+   "module": "models.py",
+   "name": "Evidence",
+   "line": 24,
+   "bases": [],
+   "doc": "一条超边的证据项（溯源 + 冲突消解用）。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::ChunkSpan",
+   "module": "models.py",
+   "name": "ChunkSpan",
+   "line": 48,
+   "bases": [],
+   "doc": "一个隐喻片段在原文中的定位信息。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::MetaphorHyperedge",
+   "module": "models.py",
+   "name": "MetaphorHyperedge",
+   "line": 66,
+   "bases": [],
+   "doc": "L1：一条隐喻映射 = 一条超边。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::MetaphorFrame",
+   "module": "models.py",
+   "name": "MetaphorFrame",
+   "line": 133,
+   "bases": [],
+   "doc": "L2：一般隐喻 = 超顶点（L1 超边的类型化子集，按框架分组）。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::MetaphorCascade",
+   "module": "models.py",
+   "name": "MetaphorCascade",
+   "line": 148,
+   "bases": [],
+   "doc": "L3：隐喻级联 = 超超顶点（L2 框架的集合）。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::MetaphorSHG",
+   "module": "models.py",
+   "name": "MetaphorSHG",
+   "line": 167,
+   "bases": [],
+   "doc": "四层隐喻超超图（方案 A）的容器对象。",
+   "kind": "class"
+  },
+  {
+   "id": "models.py::RetrieverResult",
+   "module": "models.py",
+   "name": "RetrieverResult",
+   "line": 196,
+   "bases": [],
+   "doc": "检索结果（A/B 共享）。",
+   "kind": "class"
+  },
+  {
+   "id": "observability.py::QueryObservability",
+   "module": "observability.py",
+   "name": "QueryObservability",
+   "line": 60,
+   "bases": [],
+   "doc": "一次查询的 Ω 观测记录（全部字段均为查询侧，无候选污染）。",
+   "kind": "class"
+  },
+  {
+   "id": "observability.py::ObservabilityMeter",
+   "module": "observability.py",
+   "name": "ObservabilityMeter",
+   "line": 272,
+   "bases": [],
+   "doc": "带缓存的测量器（批量实验用；本体固定，测量仍是纯查询函数）。",
+   "kind": "class"
+  },
+  {
+   "id": "ontology.py::FrameSpec",
+   "module": "ontology.py",
+   "name": "FrameSpec",
+   "line": 137,
+   "bases": [],
+   "doc": "一个 L2 框架（一般隐喻）的本体条目。",
+   "kind": "class"
+  },
+  {
+   "id": "ontology.py::CascadeSpec",
+   "module": "ontology.py",
+   "name": "CascadeSpec",
+   "line": 155,
+   "bases": [],
+   "doc": "一个 L3 级联的本体条目。",
+   "kind": "class"
+  },
+  {
+   "id": "ontology.py::CascadeOntology",
+   "module": "ontology.py",
+   "name": "CascadeOntology",
+   "line": 353,
+   "bases": [],
+   "doc": "中文级联本体的查表层。",
+   "kind": "class"
+  },
+  {
+   "id": "ontology_clean.py::_CountingPrecomputed",
+   "module": "ontology_clean.py",
+   "name": "_CountingPrecomputed",
+   "line": 197,
+   "bases": [],
+   "doc": "PrecomputedBackend + refine 缓存命中计数。",
+   "kind": "class"
+  },
+  {
+   "id": "query_signal.py::QuerySignal",
+   "module": "query_signal.py",
+   "name": "QuerySignal",
+   "line": 179,
+   "bases": [],
+   "doc": "一次查询的查询侧结构信号（全部字段均为查询侧，无候选污染）。",
+   "kind": "class"
+  },
+  {
+   "id": "query_signal.py::StratifiedNormalizer",
+   "module": "query_signal.py",
+   "name": "StratifiedNormalizer",
+   "line": 321,
+   "bases": [],
+   "doc": "把任意查询侧计数按 **n_seed 分层** 标准化：z = (x − μ_stratum) / σ_stratum。",
+   "kind": "class"
+  },
+  {
+   "id": "retrieval.py::RetrievalEngine",
+   "module": "retrieval.py",
+   "name": "RetrievalEngine",
+   "line": 50,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "storage.py::Neo4jFatalError",
+   "module": "storage.py",
+   "name": "Neo4jFatalError",
+   "line": 174,
+   "bases": [
+    "RuntimeError"
+   ],
+   "doc": "认证类致命错误（401/403）。与 llm_backend/embeddings 同一纪律：响亮报错。",
+   "kind": "class"
+  },
+  {
+   "id": "storage.py::Neo4jError",
+   "module": "storage.py",
+   "name": "Neo4jError",
+   "line": 178,
+   "bases": [
+    "RuntimeError"
+   ],
+   "doc": "Cypher 执行错误 / 网络 / 响应格式异常。",
+   "kind": "class"
+  },
+  {
+   "id": "storage.py::Neo4jStore",
+   "module": "storage.py",
+   "name": "Neo4jStore",
+   "line": 182,
+   "bases": [],
+   "doc": "通过 Neo4j **HTTP 事务端点**读写四层隐喻图（标准库 urllib，零额外依赖）。",
+   "kind": "class"
+  },
+  {
+   "id": "training.py::TrainingSet",
+   "module": "training.py",
+   "name": "TrainingSet",
+   "line": 181,
+   "bases": [],
+   "doc": "",
+   "kind": "class"
+  },
+  {
+   "id": "training.py::MetaphorScorer",
+   "module": "training.py",
+   "name": "MetaphorScorer",
+   "line": 456,
+   "bases": [],
+   "doc": "纯 numpy 的 logistic 排序器（对标 HyperRetriever 的可训练 MLP）。",
+   "kind": "class"
+  }
+ ]
+}
