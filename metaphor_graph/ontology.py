@@ -409,38 +409,15 @@ class CascadeOntology:
     def type_valid(source_type: str, mapping_type: str) -> bool:
         return mapping_type in TYPE_CONSTRAINTS.get(source_type, [])
 
-    @staticmethod
-    def type_reliability(frame_id: Optional[str],
-                         source_type: str = "",
-                         frames: Optional[Dict[str, "FrameSpec"]] = None) -> float:
-        """type 护栏的**封顶可靠性**——两条打分路径唯一的 type 口径。
-
-        training.extract_features / extract_text_features 与
-        retrieval.RetrievalEngine.metaphor_retriever_score 都必须调它，
-        否则就是特征漂移（训练期与推理期同一维语义不一致）。
-
-        判定顺序：
-          1. 无 frame_id                → 0.0（没有任何类型归属信息）
-          2. frame_id 在本体中注册：
-               type_valid 通过          → 1.0
-               type_valid 不通过        → 0.0（真·非法映射，可核验的否定）
-          3. frame_id 未注册（F_LLM_* 回退框架，以及 F_NOVEL_* 等临时框架）
-                                        → 0.5（封顶：无法核验，但不丢弃——
-                开放发现换来的召回必须保住）
-
-        注意 2 与 3 的差别是「可核验的通过/否决」vs「无法核验」：前者是
-        约束真正起了作用，后者是信息缺失，二者不该混成同一个 0.0。
-        """
-        if not frame_id:
-            return TYPE_RELIABILITY_INVALID
-        spec = (frames or {}).get(frame_id)
-        if spec is None:
-            # 未注册：无法核验映射类型 → 给封顶可靠性（绝不丢弃候选）
-            return TYPE_RELIABILITY_FALLBACK
-        st = source_type or spec.source_type
-        if CascadeOntology.type_valid(st, spec.mapping_type):
-            return TYPE_RELIABILITY_REGISTERED
-        return TYPE_RELIABILITY_INVALID
+    # ⚠️ 曾有第二个实现 `type_reliability`（@staticmethod，需显式传 frames）。
+    # 它**零调用点**，但 docstring 自称"两条打分路径唯一的 type 口径" ——
+    # 这种孪生实现正是特征漂移的来源（本项目已因两处 type 表达式不一致
+    # 付出过代价，见 exp/source）。已于清单审计后删除，只保留
+    # `type_reliability_of`（实例方法，用本体自身的 frames 表）。
+    #
+    # 保留实例方法而非静态方法的理由：消融脚本对 `ont.type_valid` 的
+    # 实例级打补丁（A1 计数用）能照常生效；子类覆写 type_valid 时
+    # 可靠性通道跟着走，不会两条口径分叉。
 
     def type_reliability_of(self, frame_id: Optional[str],
                             source_type: str = "") -> float:

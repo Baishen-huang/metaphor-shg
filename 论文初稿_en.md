@@ -144,7 +144,7 @@ requires such fields to accompany the metrics (SIGIR 1998; 2007).
 
 | Setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Random |
 |---|---|---|---|---|---|
-| **anchored** (gold = producing chunk) | 634 | **0.8956** | 0.8390 | **0.9006** | 0.0069 |
+| **anchored** (gold = producing chunk) | 634 | **0.8953** | 0.7400 | **0.9037** | 0.0069 |
 | **de-anchored** (producing chunk removed) | 385 | **0.3620** | 0.3601 | **0.3488** | 0.0069 |
 
 **Four conclusions**:
@@ -155,7 +155,7 @@ requires such fields to accompany the metrics (SIGIR 1998; 2007).
    **0.3620 is 52× the random baseline** of 0.0069, with Recall@10 = 0.3357 (random expectation
    ≈0.009). Had the ability come entirely from anchoring, the de-anchored result would fall to
    chance—**this rules out "the architecture is entirely ineffective".**
-3. **Weight recalibration only helps under anchoring** (anchored +0.0565 / de-anchored +0.0023).
+3. **Weight recalibration only helps under anchoring** (anchored +0.1553 / de-anchored +0.0019).
 4. **The training gain reverses under de-anchoring** (anchored +0.005 → de-anchored −0.013): the
    ranker learns to reproduce the construction anchor.
 
@@ -312,7 +312,7 @@ set of retrieval numbers that **separate architectural ability from construction
 
 | Query family / setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Trained − recalibrated |
 |---|---|---|---|---|---|
-| Overlap anchored | 634 | **0.8956** | 0.8390 | **0.9006** | **+0.0050** |
+| Overlap anchored | 634 | **0.8953** | 0.7400 | **0.9037** | **+0.0084** |
 | Overlap de-anchored | 385 | **0.3620** | 0.3601 | 0.3488 | **−0.0132** |
 | **Paraphrased anchored** | 777 | **0.1172** | 0.0775 | **0.1341** | **+0.0169** |
 | **Paraphrased de-anchored** | 508 | 0.0882 | 0.0935 | 0.0809 | **−0.0073** |
@@ -324,6 +324,13 @@ set of retrieval numbers that **separate architectural ability from construction
 the core claim of §6.1 holds, but its supporting evidence should be replaced by this 34× figure
 rather than the trivially saturated 1.000; (3) weight recalibration only helps under anchoring
 (+0.0565 vs +0.0023); (4) the training gain reverses under de-anchoring (+0.005 → −0.012).
+
+**⚠️ The `hand_legacy` row is corrected (measured)**: it was reported as 0.8390 and
+re-runs at **0.7400**. Mechanism: the `type`-feature fix (unregistered fallback edges
+1.0 → 0.5) is amplified **~11.9×** for the legacy-weight arm (`type` weight 0.20 vs
+0.0168 after recalibration), so only that row moves materially (the recalibrated arm
+goes 0.8956 → 0.8953, essentially unchanged). The old 0.8390 predates the `type` fix.
+Consequently the weight-recalibration effect rises from +5.7pp to **+15.5pp**.
 
 **Correction to the three-pathway decomposition of §6.1**: the original "semantic hypergraph path
 recall 1.000" was **trivially saturated** (with a pool ≤10, Recall@10 is identically 1.0 for any

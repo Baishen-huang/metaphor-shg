@@ -217,6 +217,9 @@ class OpenAIBackend:
         # 累计用量（读响应里的 usage 字段，用于精确核算成本，而非估算）
         self.usage = {"calls": 0, "prompt_tokens": 0, "completion_tokens": 0,
                       "prompt_cache_hit_tokens": 0, "prompt_cache_miss_tokens": 0}
+        # 批处理解析失败计数：>0 说明有整批静默降级为空（结果不可信，
+        # 与"确实没发现隐喻"不可区分）。评测脚本应检查该值。
+        self.batch_parse_failures = 0
         # 致命错误标记（401/402/403）；非空表示结果不可信
         self.fatal_error: Optional[str] = None
         # 透传厂商私有参数（合并进请求体）。典型用途：
@@ -343,7 +346,15 @@ class OpenAIBackend:
                             _DISCOVER_BATCH_USER.format(n=n, body=body))
         out: List[List[LLMCandidate]] = [[] for _ in chunks]
         if not isinstance(parsed, dict):
-            logger.warning("discover_batch: 响应不是 JSON 对象，整批降级为空。")
+            # ⚠️ 整批降级为空是**静默失败**的高危形态（与 evaluate_real 的
+            # 假性 P1=0.434 同型）：调用方看到的只是"这批没发现隐喻"，
+            # 无法区分"确实没有"与"解析失败"。评测脚本普遍
+            # `logging.disable(CRITICAL)`，logger 不会显示 —— 故显式计数 + print。
+            self.batch_parse_failures += 1
+            msg = (f"discover_batch: 响应不是 JSON 对象，整批 {n} 条降级为空"
+                   f"（累计 {self.batch_parse_failures} 批）")
+            logger.warning(msg)
+            print(f"⚠️ {msg}")
             return out
         for key, items in parsed.items():
             try:
@@ -384,7 +395,11 @@ class OpenAIBackend:
         parsed = self._chat(_REFINE_SYSTEM, _REFINE_BATCH_USER.format(n=n, body=body))
         out: List[Optional[LLMRefine]] = [None] * n
         if not isinstance(parsed, dict):
-            logger.warning("refine_batch: 响应不是 JSON 对象，整批降级为空。")
+            self.batch_parse_failures += 1
+            msg = (f"refine_batch: 响应不是 JSON 对象，整批 {n} 条降级为空"
+                   f"（累计 {self.batch_parse_failures} 批）")
+            logger.warning(msg)
+            print(f"⚠️ {msg}")
             return out
         for key, val in parsed.items():
             try:

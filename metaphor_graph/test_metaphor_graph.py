@@ -2921,6 +2921,39 @@ class TestQuerySignal(unittest.TestCase):
         self.assertEqual(measure_signal(q, self.ont).to_dict(), v1)
 
 
+class TestBatchDegradationIsVisible(unittest.TestCase):
+    """批处理整批降级必须**可见**（计数 + print），不能只靠 logger。
+
+    回归护栏：评测脚本普遍 `logging.disable(CRITICAL)`，logger.warning 不会显示，
+    于是"整批解析失败降级为空"与"确实没发现隐喻"对调用方不可区分 ——
+    这与 evaluate_real 的假性 P1=0.434 是同型静默失败。
+    """
+
+    def test_counter_initialized(self):
+        from metaphor_graph.llm_backend import OpenAIBackend
+        b = OpenAIBackend(api_key="dummy")
+        self.assertTrue(hasattr(b, "batch_parse_failures"))
+        self.assertEqual(b.batch_parse_failures, 0)
+
+    def test_degradation_prints_and_counts(self):
+        """解析失败时必须 print（可见）且计数递增。"""
+        import inspect
+        from metaphor_graph import llm_backend as lb
+        for fn in (lb.OpenAIBackend.discover_batch, lb.OpenAIBackend.refine_batch):
+            src = inspect.getsource(fn)
+            self.assertIn("batch_parse_failures += 1", src,
+                          f"{fn.__name__} 未计数整批降级")
+            self.assertIn("print(", src,
+                          f"{fn.__name__} 的降级告警仅走 logger，评测中不可见")
+
+    def test_type_reliability_has_single_implementation(self):
+        """type 可靠性只能有一个实现（孪生实现是特征漂移的来源）。"""
+        from metaphor_graph.ontology import CascadeOntology
+        self.assertFalse(hasattr(CascadeOntology, "type_reliability"),
+                         "静态孪生实现 type_reliability 又出现了")
+        self.assertTrue(hasattr(CascadeOntology, "type_reliability_of"))
+
+
 class TestDeanchorExcludesProducingChunk(unittest.TestCase):
     """deanchor 口径必须真正把产出 chunk 移出**候选池**（不只是移出金标）。
 
@@ -3145,7 +3178,6 @@ class TestReachabilityAudit(unittest.TestCase):
             "metaphor_graph/models.py::MetaphorSHG.incidence",
             "metaphor_graph/models.py::Evidence.age_days",
             "metaphor_graph/observability.py::ObservabilityMeter.measure_many",
-            "metaphor_graph/ontology.py::CascadeOntology.type_reliability",
             "metaphor_graph/metanet_migrate.py::MetaNetImporter",
         }
         dead = {n["id"] for n in self.result["nodes"]
