@@ -298,6 +298,15 @@ Methodological conclusion: **component-level retrieval conclusions (§6.1–6.4)
 
 **Density**: on the coherent document corpus (106 real documents), extended-chain density is 6.3 chains per hundred L1s and 30% of documents contain chains—both **10×** the independent short-sentence corpus (0.6%, 4.5%)—so the domain-of-value assumption for L1.5 holds quantitatively.
 
+> **⚠️ Stage caveat (measured)**: the density figure **depends on the pipeline stage**; both must be labelled:
+>
+> | Stage | Chains | Density | Documents with chains |
+> |---|---|---|---|
+> | **After candidate generation** (loose `ground1` criterion) | **52** | **6.3%** | 30% |
+> | **After semantic verification** (`verify_chains_batch`) | **11** | **1.3%** | 8% |
+>
+> The 6.3% cited here is the **candidate** density (stage-1 output, used to argue that extended metaphors genuinely cluster in coherent documents); 1.3% is the **post-verification** density (stage-2 output, used to argue the precision gain). The two **must not be stated side by side**: `evaluate_document_corpus --stage report` reads the results file directly, so if that file holds the post-verify version it prints 1.3%. Reproducing the candidate density requires running `--stage run` *without* `--llm-verify` first.
+
 **Quality loop**: strict MIPVU-criterion LLM judge blind evaluation (n=30) shows candidate chain precision of only 16.7% (literature 38% / government reports 17% / finance 6%), with the main failure cause being lexicalized idioms ("基础上" (on the basis of), "聚焦" (focus)) counted as metaphor mentions. Text-level continuation signals (trigger-word recurrence across paragraphs / shared vehicles ≥2) proved ineffective in practice (density 52→49, surviving chains unchanged); **semantic-level verification** (`verify_chains_batch`, LLM judging chain by chain) filtered 52 candidates down to 11, and the retained set achieved a precision of **66.7%** under a **cross-model independent judge** (4/6; n is small, remaining cases pending)—roughly a 4-fold improvement.
 
 The significance of the two-stage pipeline is symmetric to the extraction side: the first stage generates loosely to preserve high-density candidates (10×), the second stage performs semantic verification to ensure usable precision (4×)—together, they make L1.5 simultaneously usable and interpretable in real RAG scenarios. (Pipeline code `verify_chains_batch` / `--llm-verify`; cache is replayable.)
@@ -434,7 +443,7 @@ This paper demonstrates that the n-ary nature of metaphor can be translated into
 
 | Table/Experiment | Command |
 |---|---|
-| §5.1 | `python -m metaphor_graph.evaluate_real --use-metanet --use-bootstrap --use-semfield --use-llm --llm-batch 20 --llm-conf 0.85 --llm-cache data/llm_cache_deepseek.json` |
+| §5.1 | `python -m metaphor_graph.evaluate_real --use-metanet --use-bootstrap --use-semfield --use-llm --llm-batch 20 --llm-conf 0.85 --llm-cache data/llm_cache_deepseek.json --use-llm-ontology` (**`--use-llm-ontology` is required**: it is `store_true` and defaults off; without it recall is 0.696 vs 0.704 and F1 0.818 vs 0.823. Also requires `LLM_API_KEY`, else silent fallback yields a fake P1=0.329; for zero-key replay use `PrecomputedBackend`) |
 | §5.2 | `python -m metaphor_graph.ontology_clean --verify`; bilingual: `python -m metaphor_graph.ontology_bilingual --llm-complete` |
 | §6.1/6.2 | `python -m metaphor_graph.evaluate_fullcorpus [--embedder real]` and `python -m metaphor_graph.evaluate_llmgold --stage eval [--embedder real]` |
 | §6.3 | `python -m metaphor_graph.evaluate_hgnn [--embedder real]` |
