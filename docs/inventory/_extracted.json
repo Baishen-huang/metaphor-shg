@@ -24,6 +24,17 @@
    ]
   },
   {
+   "id": "audit_reachability.py::walk",
+   "module": "audit_reachability.py",
+   "name": "walk",
+   "line": 203,
+   "doc": "",
+   "args": [
+    "root",
+    "allow_outside"
+   ]
+  },
+  {
    "id": "bootstrap_triggers.py::extract_equative_pattern",
    "module": "bootstrap_triggers.py",
    "name": "extract_equative_pattern",
@@ -815,7 +826,7 @@
    "id": "query_signal.py::measure_signal",
    "module": "query_signal.py",
    "name": "measure_signal",
-   "line": 278,
+   "line": 285,
    "doc": "计算查询侧结构信号。**签名里没有候选池**——不变式由 API 形状保证。",
    "args": [
     "query",
@@ -826,7 +837,7 @@
    "id": "query_signal.py::gate_by",
    "module": "query_signal.py",
    "name": "gate_by",
-   "line": 381,
+   "line": 388,
    "doc": "通用门控：信号 ≥ theta 时放行。不改变任何已上报数字。",
    "args": [
     "signal",
@@ -1056,6 +1067,12 @@
  ],
  "refactor": [
   {
+   "id": "audit_reachability.py:654",
+   "module": "audit_reachability.py",
+   "line": 654,
+   "text": "测试文件整体已在 roots[\"test\"] 里，不再重复登记为生产入口"
+  },
+  {
    "id": "context_budget.py:102",
    "module": "context_budget.py",
    "line": 102,
@@ -1090,6 +1107,12 @@
    "module": "extractor.py",
    "line": 187,
    "text": "LLM 开放发现通道：结论已由 discover 给出，不再二次调用 refine"
+  },
+  {
+   "id": "health.py:207",
+   "module": "health.py",
+   "line": 207,
+   "text": "⚠️ 此处**不再**重算 registered_* —— 上方（ontology 分支）已用"
   },
   {
    "id": "llm_ontology.py:207",
@@ -1180,6 +1203,44 @@
     "PrecomputedBackend"
    ],
    "doc": "记录查不到的 refine 键 —— 消融不该偷偷多花 API 钱，也该知道数据缺口。",
+   "kind": "class"
+  },
+  {
+   "id": "audit_reachability.py::DefNode",
+   "module": "audit_reachability.py",
+   "name": "DefNode",
+   "line": 143,
+   "bases": [],
+   "doc": "一个被审计的定义（函数 / 方法 / 类）。",
+   "kind": "class"
+  },
+  {
+   "id": "audit_reachability.py::Site",
+   "module": "audit_reachability.py",
+   "name": "Site",
+   "line": 177,
+   "bases": [],
+   "doc": "一个调用点 / 引用点。",
+   "kind": "class"
+  },
+  {
+   "id": "audit_reachability.py::_ModuleParser",
+   "module": "audit_reachability.py",
+   "name": "_ModuleParser",
+   "line": 432,
+   "bases": [
+    "ast.NodeVisitor"
+   ],
+   "doc": "遍历一个模块，收集定义、调用点/引用点、导入表。",
+   "kind": "class"
+  },
+  {
+   "id": "audit_reachability.py::ReachabilityAudit",
+   "module": "audit_reachability.py",
+   "name": "ReachabilityAudit",
+   "line": 574,
+   "bases": [],
+   "doc": "可达性 + 可疑模式审计。",
    "kind": "class"
   },
   {
@@ -1619,7 +1680,7 @@
    "id": "query_signal.py::QuerySignal",
    "module": "query_signal.py",
    "name": "QuerySignal",
-   "line": 179,
+   "line": 186,
    "bases": [],
    "doc": "一次查询的查询侧结构信号（全部字段均为查询侧，无候选污染）。",
    "kind": "class"
@@ -1628,7 +1689,7 @@
    "id": "query_signal.py::StratifiedNormalizer",
    "module": "query_signal.py",
    "name": "StratifiedNormalizer",
-   "line": 321,
+   "line": 328,
    "bases": [],
    "doc": "把任意查询侧计数按 **n_seed 分层** 标准化：z = (x − μ_stratum) / σ_stratum。",
    "kind": "class"

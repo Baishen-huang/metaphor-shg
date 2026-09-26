@@ -2921,5 +2921,304 @@ class TestQuerySignal(unittest.TestCase):
         self.assertEqual(measure_signal(q, self.ont).to_dict(), v1)
 
 
+class TestHonestCoverageConsistency(unittest.TestCase):
+    """诚实覆盖率三个字段必须自洽：hc == min(fc, cc)。
+
+    回归护栏：health.graph_health 曾在两个分支各算一次 registered_*，
+    第二段用宽口径（frame_reliability，把 frame_id=None 当已登记）覆写
+    fc/cc，却不重算 hc —— 构造反例实测 fc=cc=1.0 而 hc=0.5。
+    现已合并为唯一口径（严格：frame_id 非空且 get_frame 命中）。
+    """
+
+    def _mk(self, frame_id):
+        from metaphor_graph.models import MetaphorHyperedge
+        return MetaphorHyperedge(id=f"L1_{frame_id or 'none'}",
+                                 source_domain="x", target_domain="y",
+                                 ground=["g"], triggers=["t"],
+                                 frame_id=frame_id, cascade_id=None)
+
+    def test_hc_equals_min_of_fc_cc(self):
+        from metaphor_graph.health import graph_health
+        from metaphor_graph.models import MetaphorSHG
+        from metaphor_graph.ontology import CascadeOntology
+        for fid in (None, "F_NOT_REG"):
+            shg = MetaphorSHG(edges=[self._mk(fid)], frames=[], cascades=[])
+            h = graph_health(shg, ontology=CascadeOntology())
+            self.assertAlmostEqual(
+                h.registered_hierarchy_coverage,
+                min(h.registered_frame_coverage, h.registered_cascade_coverage),
+                places=9,
+                msg=f"frame_id={fid!r} 时 hc != min(fc, cc)")
+
+    def test_strict_and_graded_counts_coexist(self):
+        """分级计数（frame_reliability）必须存在，但不得覆写覆盖率字段。"""
+        from metaphor_graph.health import graph_health
+        from metaphor_graph.models import MetaphorSHG
+        from metaphor_graph.ontology import CascadeOntology
+        shg = MetaphorSHG(edges=[self._mk("F_NOT_REG")], frames=[], cascades=[])
+        h = graph_health(shg, ontology=CascadeOntology())
+        self.assertTrue(hasattr(h, "n_reliability_ontology"))
+        # 严格口径：F_NOT_REG 未登记 → 覆盖率 0
+        self.assertAlmostEqual(h.registered_frame_coverage, 0.0, places=9)
+        # 宽口径分级计数：frame_reliability 对未登记回退框架给 0.5 < 1.0 → 不计入
+        self.assertEqual(h.n_reliability_ontology, 0)
+
+
+class TestReachabilityAudit(unittest.TestCase):
+    """静态可达性审计的回归护栏。
+
+    背景：本项目已三次出现「代码存在但生产路径从不执行」的缺陷，人工审查
+    反复漏过（hgnn 跨层传播从不被打分路径调用；mipvu 写死 6 个级联 id 静默
+    关掉整条通道；evaluate_real 静默回落产生假性 P1=0.434）。故改为机器检查：
+    ``metaphor_graph/audit_reachability.py`` 用 AST 静态解析全仓，报告每个公开
+    定义的分类与可疑模式。本类把该工具**钉成回归护栏**：
+
+      (a) 审计能跑完且不抛异常；
+      (b) 「孤立」函数数量不超过已登记基线（新增死代码会被抓出来）；
+      (c) mipvu.py 里不得再出现硬编码门控（已修缺陷保持修复）。
+
+    基线说明：``ISOLATED_BASELINE`` 是**当前实测值**，不是理想值。它是
+    棘轮（ratchet）——只许降不许升。清理掉死代码后请同步下调该数字，
+    否则护栏会失去意义（``test_isolation_baseline_is_actually_pinned``
+    会强制这件事）。
+    """
+
+    #: 当前实测的「孤立」公开定义数（见 docs/inventory/reachability.md）。
+    #: 只许下调；上调必须同时给出理由并更新审计报告。
+    ISOLATED_BASELINE = 15
+
+    #: 当前实测的「仅导出」数（__init__.py 导出但无任何调用点）。
+    EXPORTED_ONLY_BASELINE = 2
+
+    #: 审计工具跳过自身与同类元工具的【可疑模式】扫描（见 PATTERN_SKIP_FILES）。
+    PATTERN_SKIP_FILES = ("audit_reachability.py", "audit_fairness.py",
+                          "inventory.py")
+
+    @classmethod
+    def setUpClass(cls):
+        from metaphor_graph import audit_reachability as AR
+        cls.AR = AR
+        cls.result, cls.audit = AR.audit()
+
+    # ---------------------------------------------------------------- (a) 能跑通
+
+    def test_audit_runs_without_error(self):
+        """审计能完成，且没有任何文件解析失败。"""
+        res = self.result
+        self.assertEqual(res["meta"]["parse_errors"], [])
+        self.assertGreater(res["meta"]["scanned_files"], 100)
+        self.assertGreater(res["meta"]["audited_public_defs"], 500)
+        # 四个分类必须覆盖全部被审定义
+        total = sum(res["summary"].values())
+        self.assertEqual(total, res["meta"]["audited_public_defs"])
+        self.assertEqual(set(res["summary"]),
+                         {"生产路径", "仅测试", "仅导出", "孤立"})
+
+    def test_every_node_has_a_classification_and_confidence(self):
+        for n in self.result["nodes"]:
+            self.assertIn(n["classification"],
+                          ("生产路径", "仅测试", "仅导出", "孤立"), n["id"])
+            self.assertIn(n["confidence"], ("high", "medium", "low"), n["id"])
+            if n["classification"] == "生产路径":
+                self.assertTrue(n["shortest_path"], n["id"])
+                self.assertEqual(n["shortest_path"][-1], n["id"])
+
+    def test_audit_is_deterministic(self):
+        """两次独立审计必须给出逐位相同的分类（无集合迭代顺序泄漏）。"""
+        res2, _ = self.AR.audit()
+        a = {n["id"]: n["classification"] for n in self.result["nodes"]}
+        b = {n["id"]: n["classification"] for n in res2["nodes"]}
+        self.assertEqual(a, b)
+
+    # ---------------------------------------------------- (b) 死代码棘轮护栏
+
+    def test_isolated_functions_do_not_exceed_baseline(self):
+        """「孤立」数量不超过已登记基线 —— 新增死代码会被抓出来。"""
+        dead = [n for n in self.result["nodes"] if n["classification"] == "孤立"]
+        msg = ("孤立（无任何入口可达）公开定义 %d 个，超过基线 %d。\n"
+               "新增死代码会静默失效 —— 请接线或删除。当前孤立清单：\n%s"
+               % (len(dead), self.ISOLATED_BASELINE,
+                  "\n".join(f"  {n['file']}:{n['line']}  {n['qualname']}"
+                            for n in sorted(dead, key=lambda x: (x["file"], x["line"])))))
+        self.assertLessEqual(len(dead), self.ISOLATED_BASELINE, msg)
+
+    def test_exported_only_does_not_exceed_baseline(self):
+        """「仅导出」数量不超过基线（__init__ 导出但无人调用的公开 API）。"""
+        exp = [n for n in self.result["nodes"] if n["classification"] == "仅导出"]
+        self.assertLessEqual(len(exp), self.EXPORTED_ONLY_BASELINE,
+                             "仅导出 %d 个 > 基线 %d：%s"
+                             % (len(exp), self.EXPORTED_ONLY_BASELINE,
+                                [n["id"] for n in exp]))
+
+    def test_isolation_baseline_is_actually_pinned(self):
+        """基线必须是紧的（当前实测值），否则棘轮形同虚设。
+
+        若孤立数远低于基线（例如已清理一批死代码），说明该下调基线了。
+        """
+        dead = [n for n in self.result["nodes"] if n["classification"] == "孤立"]
+        self.assertLessEqual(
+            self.ISOLATED_BASELINE - len(dead), 3,
+            "孤立数 %d 远低于基线 %d —— 请下调 ISOLATED_BASELINE，"
+            "否则新死代码有 %d 个名额可以偷偷溜进来"
+            % (len(dead), self.ISOLATED_BASELINE,
+               self.ISOLATED_BASELINE - len(dead)))
+
+    def test_known_dead_code_is_registered(self):
+        """已确认的死代码必须在清单里（防止「悄悄复活」或「悄悄消失」）。
+
+        这些是人工核对过的真死代码，不是分析器误报。若某项变得可达，
+        说明它被接线了 —— 那是好消息，请从本清单移除并下调基线。
+        """
+        registered = {
+            "metaphor_graph/embeddings.py::get_embedder",
+            "metaphor_graph/models.py::MetaphorSHG.incidence",
+            "metaphor_graph/models.py::Evidence.age_days",
+            "metaphor_graph/observability.py::ObservabilityMeter.measure_many",
+            "metaphor_graph/ontology.py::CascadeOntology.type_reliability",
+            "metaphor_graph/metanet_migrate.py::MetaNetImporter",
+        }
+        dead = {n["id"] for n in self.result["nodes"]
+                if n["classification"] == "孤立"}
+        missing = registered - dead
+        self.assertFalse(missing,
+                         "以下已登记死代码不再被判为孤立（可能已接线）：%s\n"
+                         "若是刻意接线，请更新本清单与 ISOLATED_BASELINE。"
+                         % sorted(missing))
+
+    # ------------------------------------------------------- (c) mipvu 回归护栏
+
+    def test_no_hardcoded_gate_in_mipvu(self):
+        """mipvu.py 不得再出现硬编码门控（已修缺陷保持修复）。
+
+        历史缺陷：原实现把语义域→级联的桥接门控写死成 semfield 里 6 个
+        级联 id，于是任何替换级联构造规则（cascade_rules）的实验都会
+        **静默关掉整条 MIPVU 通道**（实测丢 7 条 L1 边）。
+        修法是改为「框架存在 + 框架有级联归属」，与字面量解耦。
+        """
+        hits = [g for g in self.result["patterns"]["hardcoded_gate"]
+                if g["file"].endswith("mipvu.py")]
+        self.assertEqual(
+            hits, [],
+            "mipvu.py 又出现硬编码门控 —— 这正是已修缺陷的形态：\n%s"
+            % "\n".join(f"  L{g['line']} {g['function']} {g['literals']}"
+                        for g in hits))
+
+    def test_mipvu_uses_ontology_lookup_not_literal_ids(self):
+        """mipvu 的桥接门控必须是本体查询，而不是字面量 id 比较。
+
+        直接检查 AST：mipvu.py 里不得出现把 ``C_*``/``F_*`` 本体 id 写死
+        进 ``.get(...)`` 查表（历史缺陷的精确形态）。
+        """
+        import ast as _ast
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)), "mipvu.py")
+        with open(p, encoding="utf-8") as f:
+            tree = _ast.parse(f.read())
+        bad = []
+        for node in _ast.walk(tree):
+            if not isinstance(node, _ast.Call):
+                continue
+            f = node.func
+            if not isinstance(f, _ast.Attribute) or f.attr != "get":
+                continue
+            for a in node.args:
+                if isinstance(a, _ast.Constant) and isinstance(a.value, str) \
+                        and a.value.startswith(("C_", "F_")):
+                    bad.append((node.lineno, a.value))
+        self.assertEqual(bad, [],
+                         "mipvu.py 把本体 id 写死进查表：%s" % bad)
+
+    def test_mipvu_candidate_channel_is_reachable(self):
+        """MIPVU 通道本身必须可达（不能整条通道变成死代码）。"""
+        by_id = {n["id"]: n for n in self.result["nodes"]}
+        n = by_id.get("metaphor_graph/mipvu.py::mipvu_candidates")
+        self.assertIsNotNone(n, "mipvu_candidates 未出现在审计清单里")
+        self.assertEqual(n["classification"], "生产路径",
+                         "MIPVU 候选通道不在生产路径上：%s" % n["classification"])
+        self.assertGreater(n["call_site_count"], 0)
+
+    # ------------------------------------------------- 三个历史缺陷的护栏
+
+    def test_three_historical_defects_are_pinned(self):
+        """三个已知历史缺陷对应的代码位置必须仍被审计覆盖。
+
+        本用例不重复判定「缺陷是否存在」（那分别由上面的 mipvu 用例、
+        以及 hgnn / evaluate_real 的专项测试负责），只保证审计工具确实
+        覆盖了这些位置 —— 否则护栏会因「审计没看到」而虚假通过。
+        """
+        by_id = {n["id"]: n for n in self.result["nodes"]}
+        for nid in ("metaphor_graph/hgnn.py::MetaphorHGNN.forward",
+                    "metaphor_graph/hgnn.py::MetaphorHGNN.retrieve",
+                    "metaphor_graph/mipvu.py::mipvu_candidates",
+                    "metaphor_graph/evaluate_real.py::build_llm_backend",
+                    "metaphor_graph/extractor.py::MetaphorExtractor.extract"):
+            self.assertIn(nid, by_id, "审计未覆盖 %s" % nid)
+
+    def test_hgnn_scoring_path_separation_is_visible(self):
+        """审计必须能区分「hgnn 传播被调用」与「打分路径走 hgnn」。
+
+        历史缺陷是后者不成立而前者成立（flat ≡ HGNN，|ΔAUC| ≤ 0.005）。
+        本用例把该区分显式化：``MetaphorHGNN.forward`` 可达，但
+        ``RetrievalEngine`` 的打分模块里不出现 hgnn 调用 —— 若将来有人
+        把 hgnn 接进打分路径，本用例会失败，提示重跑 H4 对照。
+        """
+        import ast as _ast
+        p = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                         "retrieval.py")
+        with open(p, encoding="utf-8") as f:
+            tree = _ast.parse(f.read())
+        hits = []
+        for node in _ast.walk(tree):
+            if isinstance(node, _ast.Name) and node.id in (
+                    "MetaphorHGNN", "hgnn", "HGNN"):
+                hits.append((node.lineno, node.id))
+            if isinstance(node, _ast.Attribute) and node.attr in (
+                    "forward", "metaphor_coherence", "propagation_matrix"):
+                hits.append((node.lineno, node.attr))
+        self.assertEqual(
+            hits, [],
+            "retrieval.py 出现了 HGNN 调用 —— 打分路径可能已接入跨层传播。\n"
+            "这正是「flat ≡ HGNN」结论的前提被推翻的情形：请重跑 H4 对照"
+            "（experiments/auc_h4.py）并更新论文 §6.4。命中位置：%s" % hits)
+
+    # --------------------------------------------------- 可疑模式清单可读性
+
+    def test_pattern_sections_are_populated_and_structured(self):
+        """四个可疑模式小节都必须存在且结构完整（防止检测器静默失效）。"""
+        p = self.result["patterns"]
+        self.assertEqual(set(p), {"hardcoded_gate", "hardcoded_gate_review",
+                                  "silent_fallback", "unused_public_docstring",
+                                  "unused_param"})
+        for g in p["hardcoded_gate"]:
+            self.assertIn(g["risk"], ("review", "low"))
+            self.assertTrue(g["literals"])
+        for f in p["silent_fallback"]:
+            self.assertIn(f["kind"], ("except 空吞", "except 返回空值",
+                                      "guard 返回空值",
+                                      "guard 返回替身实现"))
+        # 模式扫描不应把测试文件与审计工具自身算进来（纯噪声）
+        for key in ("hardcoded_gate", "silent_fallback", "unused_param"):
+            for item in p[key]:
+                self.assertNotIn("test_metaphor_graph.py", item["file"])
+                self.assertFalse(
+                    any(item["file"].endswith(s) for s in self.PATTERN_SKIP_FILES),
+                    "%s 出现在 %s 里（应被 PATTERN_SKIP_FILES 跳过）"
+                    % (item["file"], key))
+
+    def test_limitations_are_declared(self):
+        """能力边界必须显式声明（诚实性要求：不许假装静态分析是全知的）。"""
+        lims = self.result["limitations"]
+        self.assertGreaterEqual(len(lims), 6)
+        joined = " ".join(lims)
+        for kw in ("动态", "白名单", "不执行"):
+            self.assertIn(kw, joined, "局限说明缺少关键项：%s" % kw)
+
+    def test_json_payload_is_serializable(self):
+        """--json 的输出必须可序列化（回归护栏：集合/对象漏进 payload）。"""
+        import json as _json
+        s = _json.dumps(self.result, ensure_ascii=False)
+        back = _json.loads(s)
+        self.assertEqual(back["summary"], self.result["summary"])
+
+
 if __name__ == "__main__":
     unittest.main(verbosity=2)

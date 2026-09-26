@@ -602,7 +602,8 @@ class ReachabilityAudit:
         self._scanned = True
         for full, rel in _iter_py_files():
             try:
-                src = open(full, encoding="utf-8").read()
+                with open(full, encoding="utf-8") as f:
+                    src = f.read()
                 tree = ast.parse(src, filename=full)
             except (SyntaxError, UnicodeDecodeError, OSError) as e:  # pragma: no cover
                 self.errors.append(f"{rel}: {type(e).__name__}: {e}")
@@ -1107,9 +1108,20 @@ class ReachabilityAudit:
     def result(self):
         self.scan()
         dist_all, pred_all = self._bfs(("prod_internal", "prod_external", "test"))
-        dist_int, pred_int = self._bfs(("prod_internal",))
-        dist_ext, pred_ext = self._bfs(("prod_external",))
-        dist_test, pred_test = self._bfs(("test",))
+        dist_int, _ = self._bfs(("prod_internal",))
+        dist_ext, _ = self._bfs(("prod_external",))
+        dist_test, _ = self._bfs(("test",))
+        # 调用链只用高置信边（假链会毁掉报告可读性）
+        _, pred_int_hi = self._bfs(("prod_internal",), high_only=True)
+        _, pred_ext_hi = self._bfs(("prod_external",), high_only=True)
+        _, pred_test_hi = self._bfs(("test",), high_only=True)
+        # 高置信子图覆盖不到时的全图回退（按需计算，缓存）
+        fallback = {}
+
+        def full_pred(kinds):
+            if kinds not in fallback:
+                fallback[kinds] = self._bfs(kinds)[1]
+            return fallback[kinds]
 
         nodes = []
         summary = defaultdict(int)
@@ -1123,13 +1135,17 @@ class ReachabilityAudit:
             exported = nid in self.exported
             if from_int or from_ext:
                 cls = "生产路径"
-                root_kind = "prod_internal" if from_int else "prod_external"
-                pred = pred_int if from_int else pred_ext
-                p = self._path(nid, pred)
+                kinds = ("prod_internal",) if from_int else ("prod_external",)
+                root_kind = kinds[0]
+                p = self._path(nid, pred_int_hi if from_int else pred_ext_hi)
+                if len(p) < 2:
+                    p = self._path(nid, full_pred(kinds))
             elif from_test:
                 cls = "仅测试"
                 root_kind = "test"
-                p = self._path(nid, pred_test)
+                p = self._path(nid, pred_test_hi)
+                if len(p) < 2:
+                    p = self._path(nid, full_pred(("test",)))
             elif exported:
                 cls = "仅导出"
                 root_kind = None
@@ -1165,6 +1181,31 @@ class ReachabilityAudit:
                 "confidence": conf,
                 "unused_params": d.unused_params,
             })
+
+        # 「仅靠低置信兜底边可达」= 名字兜底猜出来的可达，不是精确调用点。
+        # 这是最需要人工复核的一类：hgnn 跨层传播的缺陷正落在这种
+        # 「看起来被调用、实则没有任何精确调用点」的区域。
+        # 只对**被审包**内的定义判定：experiments/ 里 `mean`/`auc`/`g` 这类
+        # 高频短名会因同名兜底大面积互相连边，判定结果没有信息量。
+        hi_cache = {}
+
+        def hi_set(kinds):
+            if kinds not in hi_cache:
+                hi_cache[kinds] = self._bfs(kinds, high_only=True)[0]
+            return hi_cache[kinds]
+
+        for n in nodes:
+            if n["classification"] not in ("生产路径", "仅测试"):
+                n["low_confidence_only"] = False
+                continue
+            if not n["file"].startswith(PKG_NAME + "/") or \
+                    n["file"].endswith(TEST_BASENAME):
+                n["low_confidence_only"] = False
+                continue
+            kinds = (("prod_internal",) if n["reach_from"] == "prod_internal"
+                     else ("prod_external",) if n["reach_from"] == "prod_external"
+                     else ("test",))
+            n["low_confidence_only"] = n["id"] not in hi_set(kinds)
 
         patterns = self._patterns()
         return {
@@ -1237,10 +1278,6 @@ class ReachabilityAudit:
             "unused_public_docstring": unused_pub,
             "unused_param": unused_params,
         }
-
-
-def _attr_chain_ok(chain):
-    return bool(chain)
 
 
 def _annotation_class(node):
@@ -1332,10 +1369,13 @@ def _gate_of(if_node, d, audit):
     """硬编码门控：字面量集合/字面量比较 且 分支体是「跳过工作」。
 
     风险分级（``risk``）：
-      ``review`` 分支跳过**整个函数/整个循环之外**的工作 —— 这类门控一旦字面量
-                 与数据脱节，就会静默关闭整条通道（mipvu 的历史缺陷形态）；
-      ``low``    分支体在循环内逐项 continue，或字面量来自带 STOP/SKIP/WORD
-                 等语义提示的模块常量（词表/噪声表/CLI 分支）—— 正常实现。
+      ``review`` 分支跳过**整个函数/整个循环之外**的工作，或门控字面量是
+                 **标识符型 id 清单**（``C_*``/``F_*``/全大写下划线）——
+                 后者正是 mipvu 历史缺陷的形态：把本体 id 写死成清单，
+                 一旦本体/构造规则变化，门控静默失效并关掉整条通道。
+                 注意：**循环内**也不例外 —— mipvu 的缺陷就在循环里。
+      ``low``    分支体在循环内逐项过滤，或字面量来自带 STOP/SKIP/WORD
+                 等语义提示的模块常量（词表/噪声表），或纯数字标签域校验。
     """
     skips = _skip_stmts(if_node.body) or _skip_stmts(if_node.orelse)
     if not skips:
@@ -1361,13 +1401,15 @@ def _gate_of(if_node, d, audit):
     if not hits:
         return None
     kinds = {k for k, _ in hits}
+    all_lits = [x for _, vals in hits for x in vals]
     const_names = [k for k in kinds if k.startswith("模块常量集合")]
-    risky = not in_loop
-    if const_names and all(
+    # 标识符型字面量（C_*/F_*/全大写）→ 本体/注册表 id 清单，一律 review
+    id_list = all_lits and all(_is_identifier_literal(x) for x in all_lits)
+    risky = id_list or not in_loop
+    if not id_list and const_names and all(
             any(h in nm.upper() for h in _LOW_RISK_CONST_HINTS) for nm in const_names):
         risky = False
     # 纯数值字面量集合（`lab in (0, 1, 2)`）是标签域校验，不是通道门控
-    all_lits = [x for _, vals in hits for x in vals]
     if all_lits and all(_is_number_literal(x) for x in all_lits):
         risky = False
     lits = sorted(set(all_lits))
@@ -1382,8 +1424,18 @@ def _gate_of(if_node, d, audit):
         "literals": lits,
         "risk": "review" if risky else "low",
         "in_loop": in_loop,
+        "id_list": bool(id_list),
         "public": d.is_public,
     }
+
+
+def _is_identifier_literal(text):
+    """``'C_EVENT_IS_PLAY'`` / ``'GENERIC_VEHICLE'`` → 注册表 id 形态。"""
+    s = text.strip("'\"")
+    if not s or not s.isascii():
+        return False
+    return bool(s) and (s.isupper() or "_" in s) and all(
+        ch.isalnum() or ch == "_" for ch in s)
 
 
 def _is_number_literal(text):
@@ -1475,26 +1527,71 @@ def _is_trivial_guard(if_node):
     return True
 
 
-def _fallback_of_guard(if_node, d, audit):
-    """降级返回：``if not key: return <空值>`` / ``if x is None: return []``。
+def _sole_return(body):
+    """从分支体里取出唯一的 return（允许前面有 print/日志/告警语句）。
 
-    只报**函数级**的降级出口（return 空值），这是 evaluate_real 那类
-    「静默产出看似正常的结果」缺陷的形态。循环内的逐项 continue 过滤不报
-    （见 ``_is_trivial_guard``）。
+    ``evaluate_real.build_llm_backend`` 的真实形态是：
+    ``if not KEY: print(警告…); return LocalHeuristicBackend()`` ——
+    告警与 return 同在一个分支里，故不能要求分支体只有一条语句。
+    只要**有且仅有一个** return、且它之后没有其他语句，就算降级出口。
+    """
+    ret_idx = [i for i, s in enumerate(body) if isinstance(s, ast.Return)]
+    if len(ret_idx) != 1 or ret_idx[0] != len(body) - 1:
+        return None
+    # 前面的语句只能是告警/日志/无副作用的表达式，不能是赋值或控制流
+    for s in body[:ret_idx[0]]:
+        if not isinstance(s, ast.Expr):
+            return None
+        if isinstance(s.value, ast.Call):
+            f = s.value.func
+            nm = f.attr if isinstance(f, ast.Attribute) else (
+                f.id if isinstance(f, ast.Name) else None)
+            if nm not in _LOGGING_CALLS:
+                return None
+        elif not isinstance(s.value, ast.Constant):
+            return None
+    return body[ret_idx[0]]
+
+
+def _fallback_of_guard(if_node, d, audit):
+    """降级出口：``if not key: return <空值>`` / ``if <缺条件>: return <替身实现>``。
+
+    只报**函数级**的降级出口（return），这是 evaluate_real 那类
+    「静默产出看似正常的结果」缺陷的形态：
+
+      * ``return <空值>``（None / [] / {} / ""）—— 把失败伪装成「无结果」；
+      * ``return <某个构造调用>``（``LocalHeuristicBackend()``）——
+        **换实现**：调用方拿到一个类型兼容、行为不同的对象，指标看似正常
+        但含义已变（实测假性 P1 = 0.434，真实 0.092）。这类出口即使有
+        打印告警也仍然危险，故单独标记 ``kind="guard 返回替身实现"``。
+
+    循环内的逐项 continue 过滤不报（见 ``_is_trivial_guard``）。
     """
     if not _is_negative_existence(if_node.test):
         return None
-    body = if_node.body
-    if len(body) != 1 or not isinstance(body[0], ast.Return):
+    ret = _sole_return(if_node.body)
+    if ret is None:
         return None
-    if not _empty_value(body[0].value):
-        return None
-    if _is_trivial_guard(if_node):
-        return None
-    return {"id": d.nid, "file": d.file, "line": if_node.lineno,
-            "function": d.qualname, "kind": "guard 返回空值",
-            "exception": ast.unparse(if_node.test)[:70], "public": d.is_public,
-            "returns": ast.unparse(body[0].value)[:30] if body[0].value else "None"}
+    if _empty_value(ret.value):
+        if _is_trivial_guard(if_node):
+            return None
+        return {"id": d.nid, "file": d.file, "line": if_node.lineno,
+                "function": d.qualname, "kind": "guard 返回空值",
+                "exception": ast.unparse(if_node.test)[:70], "public": d.is_public,
+                "returns": ast.unparse(ret.value)[:30] if ret.value else "None"}
+    if isinstance(ret.value, ast.Call):
+        callee = ret.value.func
+        name = callee.attr if isinstance(callee, ast.Attribute) else (
+            callee.id if isinstance(callee, ast.Name) else "")
+        # 只报「返回一个新构造的对象」——这是换实现；返回普通函数调用
+        # （`return _parse(x)`）是正常的分支返回。
+        if name and name[:1].isupper():
+            return {"id": d.nid, "file": d.file, "line": if_node.lineno,
+                    "function": d.qualname, "kind": "guard 返回替身实现",
+                    "exception": ast.unparse(if_node.test)[:70],
+                    "public": d.is_public,
+                    "returns": ast.unparse(ret.value)[:40]}
+    return None
 
 
 _LIMITATIONS = [
@@ -1591,14 +1688,22 @@ def render_text(res, audit, section="all"):
         ap("【四】「仅测试」可达（生产路径上无调用点，只有测试覆盖）")
         ap("-" * 84)
         t = [n for n in res["nodes"] if n["classification"] == "仅测试"]
-        for n in sorted(t, key=lambda x: (x["file"], x["line"])):
-            ap(f"  {n['file']}:{n['line']}  {n['qualname']}  [{n['kind']}]")
-        ap(f"  —— 共 {len(t)} 个")
+        t_pkg = [n for n in t if not n["file"].endswith(TEST_BASENAME)]
+        t_test = [n for n in t if n["file"].endswith(TEST_BASENAME)]
+        ap("  4-a 被审包内的定义（有信息量：这些 API 只有测试在用）")
+        if not t_pkg:
+            ap("    （无）")
+        for n in sorted(t_pkg, key=lambda x: (x["file"], x["line"])):
+            ap(f"    {n['file']}:{n['line']}  {n['qualname']}  [{n['kind']}]")
+        ap(f"    —— 共 {len(t_pkg)} 个")
+        ap("")
+        ap(f"  4-b 测试文件自身的定义（{len(t_test)} 个）—— 它们本来就是测试入口，")
+        ap("      列在这里只为完整性；单测方法之间不构成「生产调用链」。")
         ap("")
 
     if section in ("all", "paths"):
         ap("-" * 84)
-        ap("【五】代表调用链（抽样：每个模块最深/最浅各一条）")
+        ap("【五】代表调用链（抽样）")
         ap("-" * 84)
         shown = 0
         for n in sorted(res["nodes"], key=lambda x: (x["file"], x["line"])):
@@ -1608,6 +1713,21 @@ def render_text(res, audit, section="all"):
                 ap(f"  {n['qualname']} (len={n['path_len']}, 置信 {n['confidence']})")
                 ap(f"      {_fmt_path(n['shortest_path'], audit)}")
                 shown += 1
+        ap("")
+        low_only = [n for n in res["nodes"] if n.get("low_confidence_only")]
+        ap("-" * 84)
+        ap("【五-b】⚠️ 仅靠「名字兜底」可达（无任何精确调用点，最需人工复核）")
+        ap("-" * 84)
+        ap("  这类符号在生产路径上「看似被调用」，但连边来自无法解析接收者的")
+        ap("  同名兜底规则，不是精确调用点。hgnn 跨层传播的历史缺陷正落在这一带：")
+        ap("  打分路径从不算它，静态看却像有调用方。")
+        ap("  仅列被审包内的定义（experiments/ 的高频短名会因同名兜底大面积互相")
+        ap("  连边，判定无信息量）。")
+        ap("")
+        for n in sorted(low_only, key=lambda x: (x["file"], x["line"])):
+            ap(f"  {n['file']}:{n['line']}  {n['qualname']}  "
+               f"[{n['kind']}, {n['classification']}, 调用点 {n['call_site_count']}]")
+        ap(f"  —— 共 {len(low_only)} 个")
         ap("")
 
     if section in ("all", "patterns"):
@@ -1640,13 +1760,19 @@ def render_text(res, audit, section="all"):
         ap("【七】可疑模式 ②：静默回落（吞异常 / 无日志降级）")
         ap("-" * 84)
         ap("  判定：except 体只有 pass/continue/break 或 return 空值，且无 raise/日志；")
-        ap("        或函数级 `if not <数据>: return <空值>`。evaluate_real 的")
-        ap("        假性 P1=0.434 属于前者（静默换后端，仍打印看似正常的指标）。")
+        ap("        或函数级 `if not <条件>: return <空值 / 替身实现>`。")
+        ap("  ⚠️ 最危险的一类是「guard 返回替身实现」（如无 API key 时返回")
+        ap("     LocalHeuristicBackend()）—— 调用方拿到类型兼容、行为不同的对象，")
+        ap("     指标看似正常但含义已变（evaluate_real 的假性 P1=0.434 属于此类）。")
         ap("")
         for f in p["silent_fallback"]:
-            ap(f"  {f['file']}:{f['line']}  {f['function']}  [{f['kind']}]"
-               f"  ({f['exception']})")
-        ap(f"  —— 共 {len(p['silent_fallback'])} 处")
+            mark = "⚠️" if f["kind"] == "guard 返回替身实现" else "  "
+            extra = f"  → {f.get('returns', '')}" if f.get("returns") else ""
+            ap(f"  {mark} {f['file']}:{f['line']}  {f['function']}  [{f['kind']}]"
+               f"  ({f['exception']}){extra}")
+        sub = [f for f in p["silent_fallback"]
+               if f["kind"] == "guard 返回替身实现"]
+        ap(f"  —— 共 {len(p['silent_fallback'])} 处（其中替身实现 {len(sub)} 处）")
         ap("")
         ap("-" * 84)
         ap("【八】可疑模式 ③：有 docstring 但零调用点的公开函数")

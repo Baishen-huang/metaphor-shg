@@ -43,6 +43,8 @@ class GraphHealth:
     registered_frame_coverage: Optional[float] = None
     registered_cascade_coverage: Optional[float] = None
     registered_hierarchy_coverage: Optional[float] = None
+    registered_frame_coverage_strict: Optional[float] = None
+    n_reliability_ontology: int = 0
     n_fallback_edges: int = 0
     adhoc_cascades: int = 0
     deprecated_rate: float = 0.0
@@ -202,21 +204,26 @@ def graph_health(shg: MetaphorSHG,
     rels = [getattr(e, "provenance_reliability", 1.0) for e in edges]
     h.avg_provenance_reliability = sum(rels) / len(rels)
     h.degraded_edge_rate = sum(1 for r in rels if r < 1.0) / len(rels)
+    # ⚠️ 此处**不再**重算 registered_* —— 上方（ontology 分支）已用
+    # 「`frame_id` 非空且 `get_frame` 命中」的严格口径算过一次，并据此
+    # 求了 `registered_hierarchy_coverage = min(fc, cc)` 与告警。
+    #
+    # 曾经的 bug（实测）：本段用 `frame_reliability(...) >= 1.0` 的**宽口径**
+    # 覆写 `registered_frame_coverage` / `registered_cascade_coverage`，
+    # 却**不重算** `registered_hierarchy_coverage` —— 于是三者可能自相矛盾
+    # （构造反例实测 fc=cc=1.0 而 hc=0.5）。两者判据的差别在
+    # `frame_id=None`：严格口径算未登记，宽口径（`frame_reliability` 对
+    # `None` 返回 1.0）算已登记。
+    #
+    # 生产图（builder 保证每条边都有 frame_id）不触发该分歧，但口径必须唯一。
+    # 保留 `frame_reliability` 的分级统计供审计，但**不写回** registered_*。
     if ontology is not None:
         from .provenance import RELIABILITY_ONTOLOGY, frame_reliability
-        reg_frame = sum(1 for e in edges
-                        if frame_reliability(ontology, e.frame_id)
-                        >= RELIABILITY_ONTOLOGY)
-        h.registered_frame_coverage = reg_frame / len(edges)
-
-        def _in_reg_cascade(e) -> bool:
-            if frame_reliability(ontology, e.frame_id) < RELIABILITY_ONTOLOGY:
-                return False
-            cid = e.cascade_id or ontology.get_cascade(e.frame_id)
-            return bool(cid) and ontology.get_cascade_spec(cid) is not None
-
-        h.registered_cascade_coverage = (
-            sum(1 for e in edges if _in_reg_cascade(e)) / len(edges))
+        h.registered_frame_coverage_strict = h.registered_frame_coverage
+        # 分级计数（仅诊断，不参与覆盖率）
+        h.n_reliability_ontology = sum(
+            1 for e in edges
+            if frame_reliability(ontology, e.frame_id) >= RELIABILITY_ONTOLOGY)
 
     # ---- 告警 ----
     if h.avg_arity < arity_floor:

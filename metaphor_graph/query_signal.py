@@ -154,6 +154,13 @@ def compose(components: Dict[str, float], *, n_seed: int,
     4. ``use_completeness`` True → 结果乘观测完备度（Ω 的做法）。
     5. ``outer_zero``      True → 无激活（n_seed=0）时严格为 0（Ω 的外层特判）。
 
+    ⚠️ **``outer_zero`` 是死开关（实测）**：`n_seed <= 0` 已在函数开头提前
+    `return 0.0`，故末尾三元式 `geo if not outer_zero or n_seed > 0 else 0.0`
+    中的 `n_seed > 0` 恒为真 —— 该参数对结果**无任何影响**。
+    实测：2⁴=16 组合只产生 **8 种**不同结果（等价于 2³）。
+    因此 `experiments/gen3/REPORT_emergent.md` 所称「2⁴ 全因子」实为 2³；
+    结论（合成方式不是 Ω 退化的原因）不受影响，但因子数应更正。
+
     有了它，「Ω 的信号是哪一步丢的」就不再是论证，而是逐开关的实测对照。
     """
     if n_seed <= 0:

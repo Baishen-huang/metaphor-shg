@@ -6,8 +6,9 @@
 > **口径**：以代码为唯一真源（`metaphor_graph/`，main 分支，2026-09-27）。
 > 文档公式逐字引自论文 / docstring / 实验报告。**本文件的核心价值是核对，不是转录。**
 >
-> **已发现 12 处「文档 ≠ 代码」的实质分歧**（§D），全部给出可复现的验证命令：
-> **5 处 ★**（影响结论或指标：D.1–D.5）＋ **7 处 ☆/⚠️**（表述/口径/数字问题：D.6–D.12）。
+> **已发现 13 处「文档 ≠ 代码」的实质分歧**（§D），全部给出可复现的验证命令：
+> **6 处 ★**（影响结论或指标：D.1–D.5、D.13）＋ **6 处 ☆**（表述/口径/未披露：D.6–D.11）
+> ＋ **1 处 ⚠️**（数字错误：D.12）。
 >
 > **实证状态四档**：`validated`（实测支持）｜`refuted`（实测证伪）｜
 > `diagnostic-only`（可算但无下游用途）｜`untested`（无实测）。
@@ -48,22 +49,23 @@
 | M26 | 7 维特征 | `training.py:41/106/148` | sem/struct/clue/type/same_frame/same_cascade/ground_jaccard | ❌ `ground_jaccard` **两条路径定义不同** | 无本体时 3 维恒 0；`struct` 85.1% 饱和到 1.0 | validated（1 维 sem 即达标） |
 | M27 | HAND_WEIGHTS | `training.py:76` | `_normalized(_LEARNED_SHARE)` | ✅ 一致 | LEGACY 未覆盖 3 个新维 → 权重 0 | validated（重标定 +5.7pp） |
 | M28 | 全量 AUC | `evaluate_hgnn.py::_auc_full:316` | `P(pos>neg)+0.5·P(pos=neg)` | ✅ 一致（三实现逐位相同） | 全并列 → 恒 0.5（配对准确率则 → 0） | validated |
+| **M28b** | **「全量 AUC」的两种口径** | `measure_h4`（配对抽样）vs `auc_h4.py`（穷举负样本） | 论文称「全量负样本 ROC-AUC」 | ⚠️ **一词两义**（0.915 vs 0.9414） | 两种口径下 `flat≈hgnn` 均成立 | validated |
 | M29 | 诚实覆盖率 | `health.py:184` | `min(reg_frame_cov, reg_cascade_cov)` | ❌ **两次赋值冲突，hc 与字段可矛盾** | 无 `frame_id` 的边被第二段误判为「已登记」 | validated（82.4% < 85% 门槛） |
 | M30 | 报出覆盖率 | `health.py:162` | `min(frame_cov, cascade_cov)` | ✅ 一致 | 由 `C_ADHOC_*` 事后补建撑到 100% | refuted（注水） |
 | M31 | multi_clue_retrieval | `retrieval.py:217` | 「≥2 个触发词支持的映射」 | ❌ **判据是分数和，不是触发词个数** | 重复触发词被重复计数 | untested |
 | M32 | cross_domain 候选分 | `retrieval.py:170` | — | 文档未给出 | 无上界；同 chunk 累加 | validated |
 
-**计数**：32 个数学对象。
+**计数**：**33 条登记**（32 个对象 + 1 个术语歧义条目 M28b）。
 
 | 汇总表状态 | 个数 | 对象 |
 |---|---|---|
 | ✅ 公式一致 | **23** | M1–M4、M6–M8、M11–M17、M19–M23、M25、M27、M28、M30 |
-| ⚠️ 文档未警示 / 表述不准确 | **3** | M5（重叠计数未说明）、M10（「等价几何平均」不准确）、M24（「按分数降序」未实现） |
+| ⚠️ 文档未警示 / 表述不准确 | **4** | M5（重叠计数未说明）、M10（「等价几何平均」不准确）、M24（「按分数降序」未实现）、M28b（「全量 AUC」一词两义） |
 | ❌ 实质不一致 | **5** | M9（死开关）、M18（等价性声明失效）、M26（两路径定义不同）、M29（两次赋值冲突）、M31（判据语义错） |
 | 文档未给出公式 | **1** | M32 |
-| 合计 | **32** | ✓ |
+| 合计 | **33** | ✓ |
 
-**§D 的 12 处分歧**与上表**不是一一对应**：
+**§D 的 13 处分歧**与上表**不是一一对应**：
 
 | §D 编号 | 对应对象 | 是否改变上表状态 |
 |---|---|---|
@@ -79,6 +81,7 @@
 | D.10 | M23 | 否（默认参数下不越界，仅自定义参数时） |
 | D.11 | M2 | 否（模块 docstring 已写，**论文/README 未披露**） |
 | D.12 | M10 | 是（→ ⚠️） |
+| D.13 | M28b | 是（→ ⚠️） |
 
 ---
 
@@ -1061,10 +1064,22 @@
   - `_jaccard([], []) = 0.0`（**空集对返回 0 而非 1**，有意为之）。
   - `_jaccard` 值域 `[0,1]`；对称；对集合去重（`set(a)`）。
 - **退化条件**：
-  - **无 ontology 时**：`same_frame = same_cas = 0.0`（`if ontology is not None` 守卫）
-    → 3 维恒 0。且 `type_ok` 回落 `DEFAULT_ONTOLOGY`（种子本体，20 框架）。
-  - **`centrality={}`**（空字典而非 None）→ `centrality.get(cand.id, 0.0) = 0.0`
-    → `struct` 恒 0（静默退化）。
+  - **`same_frame`/`same_cascade` 的退化取决于锚点**（实测）：
+    | 锚点 | `ontology=None` | `ontology=O` |
+    |---|---|---|
+    | 边锚点 `extract_features` | `[1.0, 1.0]`（自比） | `[1.0, 1.0]` |
+    | 文本锚点 `extract_text_features` | `[0.0, 0.0]` | **`[0.0, 0.0]`** |
+    → 文本锚点**必须** ontology（要用 `_trigger_index` 把查询词映射成框架集）；
+    边锚点不需要（直接比 `frame_id`）。**两维在文本锚点上恒为 0**
+    是一个容易被忽略的口径事实（`_query_edges` 非空时走边锚点，否则走文本锚点）。
+  - **`type` 维的三档**（实测）：
+    | 输入 | 取值 |
+    |---|---|
+    | `frame_id=None` | `0.0`（`TYPE_RELIABILITY_INVALID`） |
+    | `frame_id` 未注册 | `0.5`（`TYPE_RELIABILITY_FALLBACK`） |
+    | `frame_id` 已注册 且 `type_valid` 通过 | `1.0` |
+    | `frame_id` 已注册 但 `type_valid` 失败 | `0.0` |
+  - **`centrality={}`（空字典）→ `struct` 恒 0**（见上）。
   - **改写型查询下**：`same_frame`/`same_cascade`/`ground_jaccard` 全部失效
     （AUC 0.505–0.530），仅剩 `sem`（AUC 0.62）→
     论文 §6.1 逐字：**语义通路在改写型查询上退化为纯语义相似度检索**。
@@ -1187,8 +1202,43 @@
     （α=0.5 时打印「依赖跨层传播 ✅」）。论文 §7 逐字：
     > HGNN 加源项 ｜ 打破 flat/HGNN 平局 ｜ 18 个 (α,ε) 配置下 \|ΔAUC\| ≤ 0.005，
     > 95% CI 跨 0 ｜ **平局非算子退化所致**；源项只在 layers ≥ 50 有意义
-- **实证状态**：`validated`（作为主指标被采纳；实测
-  `auc_h4.csv`：`auc_hgnn=0.9414 / auc_flat=0.9409 / auc_raw=0.5500 / auc_gru=0.9400`）。
+
+### M28b ★「全量 AUC」一词有两种互不相同的含义
+
+> **这是核对过程中发现的一处术语歧义**，直接影响论文 §6.3 表的可复现性。
+
+| 实现 | 「全量」指什么 | 负样本池 | 实测（α=1, ε=0） |
+|---|---|---|---|
+| `evaluate_hgnn._auc_full`（经 `measure_h4`） | 用**全部 pos×neg 对**（400 对）而非 n=20 配对比较 | **仍是配对抽样**（每 src 抽 1 个，`n_neg=20`） | hgnn **0.9150** / flat **0.9100** / raw 0.5500 / gru 0.9450 |
+| `experiments/auc_h4.py` | 负样本**穷举全部跨框架候选** | **穷举**（`n_neg=752`，其中 150 同分量） | hgnn **0.9414** / flat **0.9409** / raw 0.5500 / gru 0.9400 |
+
+- **论文 §6.3 的表（0.915 / 0.910 / 0.550 / 0.945）来自 `measure_h4`**，
+  即第一种含义；但表格标题写的是「**全量负样本 ROC-AUC**」，
+  按字面读会被理解为第二种（穷举负样本）。
+- 实测复现（`$PY -c "from metaphor_graph.evaluate_hgnn import measure_h4; print(measure_h4(1.0,0.0))"`）：
+  ```
+  hgnn        acc=0.9500 n_pairs=20 auc_full=0.9150 n_pos=20 n_neg=20
+  flat        acc=0.9500 n_pairs=20 auc_full=0.9100 n_pos=20 n_neg=20
+  raw         acc=0.1500 n_pairs=20 auc_full=0.5500 n_pos=20 n_neg=20
+  flat_gru    acc=1.0000 n_pairs=20 auc_full=0.9450 n_pos=20 n_neg=20
+  ```
+  与论文表**逐位一致** → 确认来源。
+- **影响**：结论不受影响（两种口径下 `flat ≈ hgnn` 都成立），
+  但「全量负样本」这一措辞在论文中**指代了两种不同的采样策略**。
+  建议论文改为「**配对样本上的全对 AUC**」（对应 `measure_h4`）
+  与「**穷举负样本 AUC**」（对应 `auc_h4.py`）两个明确名称。
+- **验证命令**：
+  ```bash
+  $PY -c "from metaphor_graph.evaluate_hgnn import measure_h4; r=measure_h4(1.0,0.0); [print(m, r[m]['auc_full'], r[m]['n_neg']) for m in r]"
+  # hgnn 0.915 20 / flat 0.91 20 / raw 0.55 20 / flat_gru 0.945 20
+  head -2 experiments/auc_h4.csv   # n_pos=20 n_neg=752  -> 另一口径
+  ```
+- **实证状态**：`validated`（作为主指标被采纳）。
+  ⚠️ **「全量 AUC」一词在本项目有两种互不相同的含义**（详见 M28b）：
+  论文 §6.3 表的 0.915/0.910/0.550/0.945 来自 `measure_h4`
+  （`n_pos=20, n_neg=20`，配对抽样 + 全对比较）；
+  `experiments/auc_h4.py` 是另一口径（`n_pos=20, n_neg=752`，穷举负样本，
+  同配置下 hgnn=0.9414 / flat=0.9409）。两种口径下 `flat ≈ hgnn` 都成立。
 
 ---
 
@@ -1377,8 +1427,8 @@
 
 ## D. 「文档与代码不一致」清单（完整）
 
-> 共 **12 处**。按严重程度排序：
-> `★` = 影响结论或指标（D.1–D.5，5 处）；
+> 共 **13 处**。按严重程度排序：
+> `★` = 影响结论或指标（D.1–D.5、D.13，6 处）；
 > `☆` = 表述 / 口径 / 未披露（D.6–D.11，6 处）；
 > `⚠️` = 数字错误（D.12，1 处）。
 
@@ -1636,6 +1686,29 @@
   "   # 4.276666 4.276666
   ```
 
+### D.13 ★ M28b 论文「全量负样本 ROC-AUC」一词指代两种采样策略
+
+- **文档**：论文 §6.3 表标题「**主指标为全量负样本 ROC-AUC**」，
+  表中数字 0.915 / 0.910 / 0.550 / 0.945。
+- **代码**：该组数字来自 `evaluate_hgnn.measure_h4`，其中
+  **负样本仍是「每 src 随机抽 1 个」的配对抽样**（`n_neg=20`），
+  「全量」指的是**用全部 pos×neg 对做比较**（400 对）而非穷举负样本。
+  另有一个同名文件 `experiments/auc_h4.py`，它才是**穷举全部跨框架候选**
+  （`n_neg=752`），docstring 自称「全量正/负对 ROC-AUC」。
+- **实测**：
+  ```
+  measure_h4(1.0, 0.0): hgnn 0.9150  flat 0.9100  raw 0.5500  gru 0.9450   n_neg=20
+  auc_h4.py          : hgnn 0.9414  flat 0.9409  raw 0.5500  gru 0.9400   n_neg=752
+  ```
+- **影响**：结论不受影响（两口径下 `flat ≈ hgnn` 均成立），
+  但「全量负样本」在论文与实验脚本中**指代不同的负样本池**，
+  是复现时的实际障碍。建议论文改名为「配对样本全对 AUC」与「穷举负样本 AUC」。
+- **验证命令**：
+  ```bash
+  $PY -c "from metaphor_graph.evaluate_hgnn import measure_h4; r=measure_h4(1.0,0.0); [print(m, r[m]['auc_full'], r[m]['n_neg']) for m in r]"
+  head -2 experiments/auc_h4.csv
+  ```
+
 ---
 
 ## E. 退化条件汇总
@@ -1649,7 +1722,8 @@
 |---|---|---|---|
 | **Ω_N** | `min(1, n_em/n_seed) ≡ 1` | `n_emergent ≥ n_seed` | `source` n_seed=1 层：23 档 → 2 档，82/102 饱和；`source_type` 114/114 饱和 |
 | Ω_E | `min(1, n_frames/n_seed) ≡ 1` | `n_seed = 1`（且 `n_frames ≥ 1`，恒真） | gen3 §2.4：该层 102 条全部 Ω_E=1.0，`ρ(Ω,Ω_E)=nan` |
-| `struct` 维 | `min(1, 0.5|g|+0.5) ≡ 1` | `|ground| ≥ 1` 且 `cascade_id` 非空 | `REPORT_exp-source.md:186`：85.1% 候选对恰为 1.0 |
+| `struct` 维 | `min(1, 0.5|g|+0.5) ≡ 1` | `(\|g\|≥1 且有级联)` 或 `(\|g\|≥2 且无级联)` | `REPORT_exp-source.md:186`：85.1% 候选对恰为 1.0 |
+| `struct` 维（另一路） | 恒 0 | `centrality={}`（空字典） | 实测：`centrality={} → 0.0` vs `None → 1.0` |
 | `type` 维 | 恒为常数 | 无 ontology 或所有候选同状态 | §6.2 原表：`type` 取值 `{1.0: 7437}` 全为 1.0 |
 | 几何平均 ε 下界 | `v ≤ ε` 压成一点 | 任一分量 ≤ 1e-3 | 实测 `g(0)=g(1e-4)=0.1`（保序性在这些点丢失） |
 | `clue` 维 | `min(1, 0.5·hits) ≡ 1` | 触发词重合 ≥ 2 | 单特征 AUC≈1.0（自监督 chunk 模式） |
@@ -1663,7 +1737,7 @@
 | `evidence_coverage` | 恒 0 | 无人写入 Evidence | 实测 `evidence_coverage = 0.0` → 触发告警 |
 | `deprecated_rate` | 恒 0 | 无人标记软删除 | 实测 `deprecated_rate = 0.0` |
 | `avg_provenance_reliability` | 恒 1.0 | 所有框架都已登记 | 实测 `= 1.0`（`degraded_edge_rate = 0.0`） |
-| `same_frame`/`same_cascade` | 恒 0 | `ontology=None` | 代码 `if ontology is not None` 守卫 |
+| `same_frame`/`same_cascade` | 文本锚点恒 0 | `extract_text_features`（查询无命中框架时走此路） | 实测：边锚点 `[1.0,1.0]` vs 文本锚点 `[0.0,0.0]` |
 
 ### E.3 算子收敛型（迭代抹掉信息）
 
@@ -1691,10 +1765,12 @@
 | `registered_frame_coverage` | `get_frame is not None`（严格）vs `frame_reliability >= 1`（宽，把 `None` 当已登记） | 构造反例：1.0 vs 0.5 |
 | `registered_cascade_coverage` | `get_cascade(frame_id)` vs `e.cascade_id or get_cascade` | 构造反例：1.0 vs 0.0 |
 | `ground_jaccard` | 真 Jaccard（边锚点）vs 包含率（文本锚点） | 4.76%（113/2375） |
-| `sem` | `max(0, cos)`（训练）vs `cos`（人工加权，无 clamp） | 当前语料无负 cos，换真实向量后分歧 |
+| `sem` | ~~`max(0, cos)`（训练）vs `cos`（人工加权，无 clamp）~~ | **已统一**：`metaphor_retriever_score` 现走 `_pair_features`，两条路径都 clamp |
 | `type` | 曾有两套（已修，现统一 `type_reliability_of`） | 修复前 22.0% |
 | `n_emergent` vs `n_new_domains` | 目标域口径 vs 「目标域 ∪ 源域」口径 | 定义不同，数值不可比 |
 | `Ω_N` vs `emergence_ratio` | `min(1, n_em/n_seed)` vs `n_em/(n_direct+n_em)` | 实测 `'泥潭'`：1.0 vs 0.6667 |
+| **「全量 AUC」** | `measure_h4`（配对抽样 `n_neg=20`）vs `auc_h4.py`（穷举 `n_neg=752`） | 同配置 0.9150 vs 0.9414 |
+| `struct` 的 `centrality` | `None`（现算式）vs `{}`（`dict.get` 默认 0） | 实测 1.0 vs 0.0 |
 
 ### E.6 空/边界型
 
@@ -1711,6 +1787,21 @@
 | `ContextBudget.pack` | 单项超预算 → 丢弃（跳过，不 break） | 预算 100、单项 200 → `[]` |
 | `encode()` 未知词 | 静默回退到最近实体的 H | 语义替换 |
 | `Multi_clue` | 单高置信触发词即可通过 | `conf=0.9 ≥ 2×0.3` |
+| `struct` 维 | `centrality={}` → 恒 0 | 实测 0.0 vs `None` 的 1.0 |
+| `same_frame`/`same_cascade` | 文本锚点恒 0 | 实测 `[0,0]` vs 边锚点 `[1,1]` |
+| `_clue_count` | 死代码（无调用方） | 全仓仅定义处一处 |
+
+### E.7 度量口径歧义型（同一名字指不同量）
+
+| 名字 | 口径 A | 口径 B | 实测差异 |
+|---|---|---|---|
+| 「全量 AUC」 | `measure_h4`：配对抽样 + 全对比较（`n_neg=20`） | `auc_h4.py`：穷举跨框架负样本（`n_neg=752`） | 0.9150 vs 0.9414 |
+| 「密度 Δ」 | 平均度（总关联数/端点数） | 标准超图密度（关联数/(节点×超边)） | 量纲不同；本项目用前者 |
+| 「观测完备度」 | 字符覆盖率（含重叠重复计数） | 直觉上的「触发词覆盖率」 | 重叠时虚高 |
+| 「n_emergent」 | 目标域口径（Ω/gen2） | 「目标域 ∪ 源域」口径（检索/gen3） | 定义不同，数值不可比 |
+| 「可靠性」 | `frame_reliability`（0.5/1.0 两档） | `reliability_factor`（`[floor,1]` 连续） | 前者是输入，后者是输出 |
+| 「权重」 | `HAND_WEIGHTS`（7 维归一化） | `HAND_WEIGHTS_LEGACY`（4 维，未覆盖 3 新维） | 数值不可直接比 |
+| 「准确率」 | 配对准确率（并列计错） | ROC-AUC（并列计 0.5） | 全并列：0.0 vs 0.5 |
 
 ---
 
@@ -1780,6 +1871,28 @@ print("--- M28 AUC 三实现一致 ---")
 pos = np.array([0.,1.,2.,3.,4.]); neg = np.array([0.,0.,1.,1.,2.])
 print("  _auc_full =", _auc_full(pos, neg)[0])
 print("  暴力 gt+0.5eq =", (pos[:,None]>neg[None,:]).mean() + 0.5*(pos[:,None]==neg[None,:]).mean())
+
+print("--- M28b 「全量 AUC」两种口径 ---")
+from metaphor_graph.evaluate_hgnn import measure_h4
+r = measure_h4(1.0, 0.0)
+print("  measure_h4: n_neg =", r["hgnn"]["n_neg"],
+      " hgnn =", round(r["hgnn"]["auc_full"], 4),
+      " flat =", round(r["flat"]["auc_full"], 4))
+import csv as _csv
+_c = list(_csv.DictReader(open('experiments/auc_h4.csv', encoding='utf-8')))[0]
+print("  auc_h4.py : n_neg =", _c["n_neg"],
+      " hgnn =", round(float(_c["auc_hgnn"]), 4),
+      " flat =", round(float(_c["auc_flat"]), 4))
+
+print("--- M26 ground_jaccard 两路径分歧 ---")
+from metaphor_graph.training import extract_features, extract_text_features
+from metaphor_graph.models import MetaphorHyperedge as _MHE
+_e = _MHE(id="E", source_domain="s", target_domain="t",
+          ground=["a","b","c"], triggers=["x"])
+print("  边锚点(自比) =", extract_features(_e, _e, centrality={})[6],
+      " 文本锚点('a') =", extract_text_features("a", _e, centrality={})[6])
+
+print("\nALL CHECKS COMPLETED")
 PY
 ```
 
@@ -1797,6 +1910,7 @@ PY
 | M14–M16 | `$PY -c "from metaphor_graph.provenance import *; print([reliability_factor(r) for r in [0,.25,.5,.75,1]])"` |
 | M17–M21 | 见 F.1 的谱性质段；`$PY experiments/convergence_check.py`（完整版） |
 | M21 坍缩 | `$PY experiments/auc_h4.py`（写 `auc_h4.csv/json`） |
+| **M28b 口径对照** | `$PY -c "from metaphor_graph.evaluate_hgnn import measure_h4; r=measure_h4(1.0,0.0); [print(m, round(r[m]['auc_full'],4), r[m]['n_neg']) for m in r]"` → `n_neg=20`；`head -2 experiments/auc_h4.csv` → `n_neg=752` |
 | M22/M23 | `$PY -c "from metaphor_graph.context_budget import graph_density, AdaptiveThreshold; print(graph_density(10,4)); print(AdaptiveThreshold().regime(2.35), AdaptiveThreshold().regime(5.0), AdaptiveThreshold().regime(9.0))"` |
 | M24 | `$PY -c "from metaphor_graph.context_budget import ContextBudget; print([len(t) for t in ContextBudget(max_tokens=100,chars_per_token=1.0).pack(['x'*60,'y'*10],[],[]).hyperedges])"` → `[10]` |
 | M25 | `$PY -c "from metaphor_graph.retrieval import _rrf; print(_rrf(['a','b','c']))"` |
