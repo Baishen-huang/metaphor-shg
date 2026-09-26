@@ -156,6 +156,45 @@ def _chunk_ids_of(edge) -> Set[str]:
     return {s.chunk_id for s in edge.chunk_spans}
 
 
+PARAPHRASE_CACHE = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.abspath(__file__))),
+    "data", "llm_cache_paraphrase.json")
+
+
+def build_paraphrased_sets(gshg, max_q: int = 0
+                           ) -> Dict[str, List[Tuple[str, Set[str]]]]:
+    """改写型查询（含触发词被程序化禁用），映射到全局池上。
+
+    原 §6.1 的"三通路分解"是在**改写型**查询上测的（字面 0.000 / 级联 0.042 /
+    语义超图 1.000），而 `build_query_sets` 产出的是**重叠型**（查询=触发词拼接，
+    字面通路天然占优）。两者是不同查询族，不可直接对比。
+
+    本函数用 LLM 改写缓存（key = "<doc>|<原触发词查询>"）把改写查询映射到
+    全局池的金标上，从而在修复后的池规模下重测改写型查询的三通路。
+    """
+    import json
+    base = build_query_sets(gshg)
+    if not os.path.exists(PARAPHRASE_CACHE):
+        return {"anchored": [], "deanchor": []}
+    with open(PARAPHRASE_CACHE, encoding="utf-8") as f:
+        para = json.load(f)
+    out: Dict[str, List[Tuple[str, Set[str]]]] = {"anchored": [], "deanchor": []}
+    # 反向映射：改写问句 → 原触发词查询
+    for key, rewritten in para.items():
+        if not isinstance(rewritten, str):
+            continue
+        orig = key.split("|", 1)[1] if "|" in key else key
+        for fam in ("anchored", "deanchor"):
+            for q, gold in base[fam]:
+                if q == orig:
+                    out[fam].append((rewritten, gold))
+                    break
+    for fam in out:
+        if max_q:
+            out[fam] = out[fam][:max_q]
+    return out
+
+
 def build_query_sets(gshg, max_q: int = 0) -> Dict[str, List[Tuple[str, Set[str]]]]:
     """三种口径的查询/金标。
 
@@ -233,6 +272,40 @@ def rank_all(eng: RetrievalEngine, scorer, query: str,
              else hand_weighted_score(feats[m.id], weights=weights))
         chunk_score[cid] = max(chunk_score.get(cid, -1e9), s)
     return sorted(chunk_score.items(), key=lambda x: -x[1])
+
+
+def pathway_rankings(eng, query: str, exclude: Set[str]
+                     ) -> Dict[str, List[Tuple[str, float]]]:
+    """三条检索通路的排序（在**同一全局候选池**上比较）。
+
+    §6.1 的核心主张是"三通路分解"，但原实现在池 ≤10 的基准上测，
+    字面/级联两路的失效与语义超图路的 1.000 都无法与池规模解耦。
+    本函数在修复后基准（池=1,100）上重测三路：
+
+      literal  字面包含：查询词面子串命中候选 chunk 原文
+      cascade  触发词级联：查询触发词 → 框架/级联 → 目标域 → chunk
+      semantic 语义超图：超边渲染后向量化，7 维特征排序（= rank_all）
+    """
+    out: Dict[str, List[Tuple[str, float]]] = {}
+
+    # ---- 字面通路：查询词在 chunk 原文中的子串命中 ----
+    lit: Dict[str, float] = {}
+    q = query.strip()
+    for cid, text in eng._chunk_text.items():
+        if cid in exclude:
+            continue
+        if q and q in text:
+            lit[cid] = 1.0
+    out["literal"] = sorted(lit.items(), key=lambda x: -x[1])
+
+    # ---- 触发词级联通路 ----
+    res = eng.cross_domain_retrieve(query)
+    out["cascade"] = [(c, 1.0 - i * 1e-6) for i, c in enumerate(res.chunk_ids)
+                      if c not in exclude]
+
+    # ---- 语义超图通路 ----
+    out["semantic"] = rank_all(eng, None, query, exclude)
+    return out
 
 
 def metrics(ranked: Sequence[Tuple[str, float]], gold: Set[str],
@@ -328,6 +401,39 @@ def main():
          n_chunks=gs["n_chunks"])
 
     print("\n" + "=" * 88)
+    print("【三通路分解】同一全局候选池上比较（§6.1 的核心主张）")
+    print("=" * 88)
+    pq = build_paraphrased_sets(gshg)
+    for key, title in (("anchored", "口径 A anchored（重叠型）"),
+                       ("deanchor", "口径 B deanchor（重叠型）"),
+                       ("anchored", "口径 A anchored（改写型）"),
+                       ("deanchor", "口径 B deanchor（改写型）")):
+        qset = pq[key] if "改写型" in title else qs[key]
+        if not qset:
+            continue
+        agg = {p: defaultdict(float) for p in ("literal", "cascade", "semantic")}
+        nonempty = {p: 0 for p in agg}
+        n = 0
+        for q, gold in qset:
+            n += 1
+            paths = pathway_rankings(eng, q, set())  # 每查询只算一次
+            for pname, ranked in paths.items():
+                if ranked:
+                    nonempty[pname] += 1
+                for k, v in metrics(ranked, gold).items():
+                    agg[pname][k] += v
+        print(f"  [{title}] n={n}")
+        print(f"    {'通路':<10}{'MRR':>9}{'Hits@3':>10}{'Hits@10':>10}{'Recall@10':>12}")
+        for pname, label in (("literal", "字面包含"), ("cascade", "触发词级联"),
+                             ("semantic", "语义超图")):
+            a = agg[pname]
+            print(f"    {label:<10}{a['mrr']/n:>9.4f}{a['hits@3']/n:>10.4f}"
+                  f"{a['hits@10']/n:>10.4f}{a['recall@10']/n:>12.4f}")
+        for pname, label in (("literal", "字面包含"), ("cascade", "触发词级联"),
+                             ("semantic", "语义超图")):
+            print(f"    {label} 非空率 {nonempty[pname]}/{n} = "
+                  f"{nonempty[pname]/n:.3f}")
+
     print("【评测自我审计】")
     print("=" * 88)
     rnd = random_baseline(gs["n_chunks"], 1)

@@ -179,13 +179,34 @@ Cleaning (removing self-loops, clearing simile-marked-as-metaphor labels, suppor
 | Trigger-word cascade pathway | 0.500 (diagnosis/treatment set) | **0.042** |
 | **Semantic hypergraph pathway** | 1.000 ⚠️ | **1.000** ⚠️ |
 
-> **⚠️ Correction (measured; see §4.1/§6.7)**: the two 1.000 values above are
+> **⚠️ Correction (all three pathways re-measured on the repaired benchmark; see
+> `experiments/三通路重测_修复后基准.md`)**: the two 1.000 values above are
 > **trivially saturated**—the candidate pool is ≤10 (median 7–8), and Recall@10 is
 > identically 1.0 for **any** ranker that returns all candidates. The literal (0.000) and
 > trigger-cascade (0.042) figures remain **genuine failures** (those paths return nothing),
 > but 1.000 is not a performance achievement. Repaired counterparts (global pool of 1,100):
 > **anchored Hits@10 = 0.9748 / de-anchored Hits@10 = 0.4597**, and the **de-anchored MRR is
 > 34× the random baseline** (§6.7)—the latter is the valid evidence for this pathway's ability.
+>
+> **Full re-measurement on the global pool (1,100 chunks), paraphrased queries (n=777)**:
+>
+> | Pathway | Hits@10 | Recall@10 | **Non-empty rate** |
+> |---|---|---|---|
+> | Literal | **0.0000** | 0.0000 | **0/777 = 0.000** (complete failure) |
+> | Trigger-cascade | **0.0206** | 0.0206 | 149/777 = 0.192 |
+> | **Semantic hypergraph** | **0.1918** | **0.1918** | 777/777 = 1.000 |
+>
+> The **relative** conclusion holds (semantic remains the only effective pathway: MRR 0.1183
+> = **17.1×** random; Hits@10 is **9.3×** the cascade path; the literal path fails entirely),
+> but the **absolute figures must be revised down sharply**—the original 1.000 overstates by
+> ~5.2×; the pathway actually recalls 19.2% of relevant chunks.
+>
+> **Important qualification**: the architecture's ability **depends heavily on whether the
+> query contains trigger words**—overlap-type semantic MRR 0.9200 vs paraphrased 0.1183
+> (**7.8× gap**). Once paraphrasing severs the triggers, query-side structure cannot activate,
+> and three of the seven features (`same_frame`/`same_cascade`/`ground_jaccard`) become
+> uninformative (AUC 0.505–0.530), leaving only `sem` (AUC 0.62)—i.e. **on paraphrased
+> queries the semantic pathway degenerates into plain semantic-similarity retrieval**.
 
 Once paraphrased queries cut off the trigger-word shortcut, both the literal and cascade pathways fail. **The two claims—"graph structure provides relations inexpressible via vector retrieval" and "semantically rendered hyperedge ranking carries robust recall"—hold simultaneously**—but the gain manifests on a specific query distribution, not in a single-point comparison against the vector baseline (under real sentence embeddings, a pure vector baseline can also transfer across domains; see §6.4).
 

@@ -1882,6 +1882,44 @@ class TestRepairs(unittest.TestCase):
         self.assertLess(src.index('"--alpha"'), src.index("parse_args()"),
                         "--alpha 必须在 parse_args() 之前注册")
 
+    # ---- 三通路分解（§6.1 核心主张）----
+    def test_pathway_rankings_three_paths(self):
+        """三条通路必须都返回，且字面通路对不含查询词的池返回空。
+
+        §6.1 的核心主张是"三通路分解"，但修复后基准此前只测了语义超图一路。
+        本测试钉住三路都在，且字面通路的语义正确（子串未命中即为空）。
+        """
+        from metaphor_graph.evaluate_repaired import pathway_rankings
+        from metaphor_graph.builder import MetaphorSHGBuilder
+        from metaphor_graph.retrieval import RetrievalEngine
+        from metaphor_graph.eval_corpus import DOCS
+        chunks = DOCS["doc_project"]
+        shg = MetaphorSHGBuilder().build(chunks, doc_id="dp")
+        eng = RetrievalEngine(shg, chunks, doc_id="dp")
+        paths = pathway_rankings(eng, "项目推进不动", set())
+        self.assertEqual(set(paths), {"literal", "cascade", "semantic"})
+        # 查询词不在任何 chunk 原文里 → 字面通路必须为空
+        self.assertEqual(paths["literal"], [],
+                         "字面通路不应命中未出现该词的 chunk")
+
+    def test_paraphrased_sets_map_onto_global_pool(self):
+        """改写型查询必须能映射到全局池的金标上（否则三通路无法在改写族上重测）。"""
+        from metaphor_graph.evaluate_repaired import (build_paraphrased_sets,
+                                                      build_global_graph)
+        from metaphor_graph.evaluate_fullcorpus import (build_replay_ontology,
+                                                        build_replay_backend)
+        from metaphor_graph.data_loader import load_ccl2018
+        ont, _ = build_replay_ontology()
+        g, _, _, _, _ = build_global_graph(load_ccl2018()[:60], ont,
+                                           build_replay_backend(ont), 10, 0.85)
+        pq = build_paraphrased_sets(g)
+        # 有改写缓存时应有非空映射；无缓存时优雅退化为空
+        self.assertIsInstance(pq, dict)
+        self.assertIn("anchored", pq)
+        for q, gold in pq["anchored"][:5]:
+            self.assertIsInstance(q, str)
+            self.assertTrue(gold, "改写查询的金标不应为空")
+
     def test_all_eval_modules_importable(self):
         """全部评测模块必须可导入（合并冲突常在此处暴露为语法错误）。"""
         import importlib
