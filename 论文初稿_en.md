@@ -305,8 +305,27 @@ rather than the trivially saturated 1.000; (3) weight recalibration only helps u
 recall 1.000" was **trivially saturated** (with a pool ≤10, Recall@10 is identically 1.0 for any
 ranker that returns all candidates). The literal path (0.000) and trigger-cascade path (0.042)
 remain **genuine failures** (those paths return nothing), but "1.000" must not be reported as a
-performance achievement. The repaired counterparts are anchored Hits@10 = 0.9748 and de-anchored
-Hits@10 = 0.4597.
+performance achievement.
+
+Re-measured on the global pool (1,100) **separately by query family** (full three-pathway
+comparison in `experiments/三通路重测_修复后基准.md`):
+
+| Query family | Literal H@10 | Cascade H@10 | **Semantic H@10** | Semantic MRR / random |
+|---|---|---|---|---|
+| Overlap (n=60) | 0.8833 | 0.2000 | **1.0000** | 133× |
+| Overlap de-anchored (n=60) | 0.2667 | 0.1500 | **0.5667** | 36× |
+| **Paraphrased (n=777)** | **0.0000** | **0.0206** | **0.1918** | **17.1×** |
+| **Paraphrased de-anchored (n=508)** | **0.0000** | 0.0295 | **0.1752** | **12.8×** |
+
+The **relative** ordering holds (semantic ≫ cascade ≫ literal; the literal path fails entirely),
+but the **absolute figures vary sharply by query family**—overlap 1.000 vs paraphrased 0.1918
+(**5.2× gap**). The reported 1.000 **holds only for overlap-type queries**, and its nature must be
+stated precisely: at pool=1,100 it is *not* trivially saturated (random Hits@10 = 0.0091), **yet it
+remains governed by construction anchoring** (the query is the concatenation of the gold edge's
+triggers, and the gold is the chunk that produced that edge). **Paraphrased = 0.1918** is the level
+after removing the trigger shortcut; de-anchored = 0.1752—i.e. **roughly 0.18–0.19 of genuine
+ability survives de-anchoring**, far below the overlap figure. The paraphrased setting is the
+architecture's actual target scenario.
 
 **Robustness under real sentence embeddings (new)**: re-measured with real sentence embeddings
 (embedding-3, 512-dim; `evaluate_repaired_real.py`), the **anchoring effect is orthogonal to the
