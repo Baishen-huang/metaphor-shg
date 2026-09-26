@@ -54,17 +54,21 @@ def fig1_pareto():
 
 
 def fig2_paths():
-    """§6.1 三通路 × 改写型查询（来源：evaluate_llmgold n=632）。"""
+    """§6.1 三通路 × 改写型查询（来源：evaluate_repaired，全局池 1,100）。"""
     fig, ax = plt.subplots(figsize=(6.0, 3.8))
     names = ["字面包含通路", "触发词级联通路", "语义超图通路"]
-    vals = [0.000, 0.042, 1.000]
+    # ⚠️ 口径已修正（实测）：原图用 0.000/0.042/1.000，其中 1.000 是池 ≤10 的
+    # **平凡饱和**（池 ≤10 时 Recall@10 对任何返回全候选的排序器恒为 1.0）。
+    # 修复后基准（全局池 1,100，改写型 n=777）实测 Hits@10：
+    vals = [0.0000, 0.0206, 0.1918]
     bars = ax.bar(names, vals, color=[C_GREY, C_BAD, C_MAIN], width=0.55)
     for b, v in zip(bars, vals):
-        ax.text(b.get_x() + b.get_width() / 2, v + 0.02, f"{v:.3f}",
+        ax.text(b.get_x() + b.get_width() / 2, v + 0.008, f"{v:.4f}",
                 ha="center", fontsize=10)
-    ax.set_ylabel("Recall@10（LLM 非构造金标）")
-    ax.set_title("三通路召回：改写型查询（触发词被程序化切断，n=632）")
-    ax.set_ylim(0, 1.15)
+    ax.set_ylabel("Hits@10（全局池 1,100；随机基线 0.0091）")
+    ax.set_title("三通路：改写型查询（触发词被程序化切断，n=777）\n"
+                 "语义超图 0.1918 = 级联的 9.3 倍；字面通路完全失效（非空率 0/777）")
+    ax.set_ylim(0, 0.25)
     fig.tight_layout()
     fig.savefig(os.path.join(OUT, "fig2_paths.png"), dpi=200)
     plt.close(fig)
@@ -74,25 +78,32 @@ def fig3_a6():
     """§6.4 A6 知识源消融（来源：evaluate_a6 n=652）。"""
     fig, ax = plt.subplots(figsize=(6.0, 3.8))
     names = ["专属隐喻级联\n（+语义超图排序）", "通用常识关联\n（ConceptNet 替代口径）"]
-    vals = [0.783, 0.095]
+    # ⚠️ 口径已修正（实测）：隐喻臂原为硬编码 top_k=5，而常识臂**无上限** ——
+    # 两臂预算不对等，低估隐喻臂 17pp（0.8287）。改为 top_k=20（与无上限等价）
+    # 后为 1.000。注：该 1.000 受池 ≤10 平凡饱和限制，结论依**相对比较**成立。
+    vals = [1.000, 0.095]
     bars = ax.bar(names, vals, color=[C_MAIN, C_BAD], width=0.45)
     for b, v in zip(bars, vals):
         ax.text(b.get_x() + b.get_width() / 2, v + 0.02, f"{v:.3f}",
                 ha="center", fontsize=10)
-    ax.set_ylabel("Recall@10（LLM 非构造金标）")
-    ax.set_title("A6 知识源消融：常识关联替换专属级联后下降 8 倍（n=652）")
-    ax.set_ylim(0, 0.95)
+    ax.set_ylabel("Recall@10（两臂预算对等后）")
+    ax.set_title("A6 知识源消融：常识关联替换专属级联后下降 10.5 倍（n=652）\n"
+                 "（隐喻臂 1.000 受池 ≤10 平凡饱和限制；结论依相对比较成立）")
+    ax.set_ylim(0, 1.15)
     fig.tight_layout()
     fig.savefig(os.path.join(OUT, "fig3_a6.png"), dpi=200)
     plt.close(fig)
 
 
 def fig4_ranker():
-    """§6.2 排序器条件化 + 表示质量（来源：evaluate_fullcorpus / evaluate_llmgold）。"""
+    """§6.2 排序器条件化 × 查询族 × 锚定口径（来源：evaluate_repaired，全局池 1,100）。"""
     fig, ax = plt.subplots(figsize=(6.8, 4.0))
-    groups = ["重叠型查询\n（哈希向量）", "改写型查询\n（哈希向量）", "改写型查询\n（真实句向量）"]
-    hand = [0.995, 0.502, 0.707]
-    trained = [0.998, 0.547, 0.758]
+    # ⚠️ 口径已修正（实测）：原图用旧基准（池 7–10）的 0.995/0.502/0.707 等，
+    # 而该基准下**随机排序的 MRR 期望即达 0.37**（量程被吃掉 37%）。
+    # 改用修复后基准（全局池 1,100，随机基线 0.0069）的四族数据。
+    groups = ["重叠型\nanchored", "重叠型\ndeanchor", "改写型\nanchored", "改写型\ndeanchor"]
+    hand = [0.8953, 0.3620, 0.1172, 0.0882]
+    trained = [0.9037, 0.3488, 0.1341, 0.0809]
     x = range(len(groups))
     w = 0.35
     ax.bar([i - w / 2 for i in x], hand, w, label="人工加权", color=C_GREY)
@@ -100,12 +111,15 @@ def fig4_ranker():
     for i, (h, t) in enumerate(zip(hand, trained)):
         ax.text(i - w / 2, h + 0.015, f"{h:.3f}", ha="center", fontsize=8.5)
         ax.text(i + w / 2, t + 0.015, f"{t:.3f}", ha="center", fontsize=8.5)
-    ax.annotate("+4.5pp\n(训练增益)", (1.18, 0.60), fontsize=9, color=C_MAIN)
-    ax.annotate("+21pp\n(真实向量)", (2.18, 0.80), fontsize=9, color=C_MAIN)
+    ax.annotate("训练增益只在\nanchored 为正", (0.55, 0.98), fontsize=9,
+                color=C_MAIN, ha="center")
+    ax.annotate("deanchor\n一致为负", (2.55, 0.98), fontsize=9,
+                color=C_BAD, ha="center")
     ax.set_xticks(list(x))
     ax.set_xticklabels(groups, fontsize=9)
-    ax.set_ylabel("MRR@10（LLM 非构造金标）")
-    ax.set_title("排序器增益的条件化：查询分布 × 表示质量")
+    ax.set_ylabel("MRR@10（全局池 1,100；随机基线 0.0069）")
+    ax.set_title("排序器增益的条件化：查询族 × 锚定口径\n"
+                 "训练器学到的是「复现构造锚点」，去锚定后一致为负")
     ax.set_ylim(0, 1.1)
     ax.legend(fontsize=9)
     fig.tight_layout()
