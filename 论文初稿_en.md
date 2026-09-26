@@ -100,7 +100,23 @@ Two-step node→hyperedge→node propagation with residual connections injects f
 
 ---
 
-### 4.1 Benchmark Self-Audit and Repair (new)
+### 4.1 Comparison-Fairness Statement (new)
+
+Comparative experiments (two-arm contrasts) must have **equal search budgets, comparable
+candidate-pool sizes, and consistent gold standards**. This was not systematically checked
+before; a re-audit found **three instances of the same defect class**:
+
+| Location | Symptom | Impact |
+|---|---|---|
+| §6.1 three pathways | Pool ≤10 makes Hits@10 trivially saturated | All arms equally saturated, but "1.000" was misread as an achievement |
+| §6.2 ranker | Manual weights mismatched by 37× + construction anchoring | "Training gain" distorted |
+| §6.4 A6 | Commonsense arm unbounded vs metaphor arm `top_k=5` | Metaphor arm understated by 17pp |
+
+**Rules adopted**: ① declare both arms' search budgets and keep them comparable;
+② report pool size and check for trivial saturation; ③ keep gold standards consistent.
+Automated check: `python -m metaphor_graph.audit_fairness`.
+
+### 4.2 Benchmark Self-Audit and Repair (new)
 
 In response to the two defects above (overly small candidate pool, construction anchoring), we
 rebuilt the retrieval benchmark (`evaluate_repaired.py`) to separate **architectural ability** from

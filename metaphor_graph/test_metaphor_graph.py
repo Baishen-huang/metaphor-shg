@@ -1920,6 +1920,33 @@ class TestRepairs(unittest.TestCase):
             self.assertIsInstance(q, str)
             self.assertTrue(gold, "改写查询的金标不应为空")
 
+    def test_no_hardcoded_budget_in_comparisons(self):
+        """比较型实验不得有硬编码的搜索预算（两臂预算必须对等）。
+
+        回归护栏：A6 的常识通路无上限、隐喻通路硬编码 top_k=5，
+        导致隐喻通路被低估 17pp（0.8287 vs 1.0000）。
+        本测试扫描各评测脚本，确保预算类参数走 argparse 而非硬编码。
+        """
+        import re
+        from metaphor_graph.audit_fairness import TARGETS, scan
+        bad = []
+        for fname in TARGETS:
+            info = scan(fname)
+            if not info.get("exists"):
+                continue
+            if info.get("hardcoded_calls"):
+                bad.append((fname, info["hardcoded_calls"]))
+        self.assertEqual(bad, [],
+                         f"以下实验仍有硬编码预算，需确认两臂对等：{bad}")
+
+    def test_a6_metaphor_arm_has_adjustable_budget(self):
+        """A6 的隐喻通路预算必须可调（原为硬编码 5，比常识臂小）。"""
+        import inspect
+        from metaphor_graph import evaluate_a6 as a6
+        src = inspect.getsource(a6.main)
+        self.assertIn("meta_top_k", src,
+                      "A6 隐喻通路预算必须走 --meta-top-k 参数")
+
     def test_all_eval_modules_importable(self):
         """全部评测模块必须可导入（合并冲突常在此处暴露为语法错误）。"""
         import importlib
