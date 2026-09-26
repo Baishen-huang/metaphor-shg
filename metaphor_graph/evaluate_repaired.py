@@ -383,7 +383,13 @@ def main():
         scorer, ds = train_from_shg(gshg, chunk_order=chunk_order,
                                     chunks=cmap, ontology=ont)
         assert len(ds) > 0, "训练集为空 —— chunks 映射或 positive_mode 有误"
-        print(f"【排序器】自监督训练集 n={len(ds)}")
+        # 泄漏自检：`trivial_separators` 的 docstring 写着"上报任何指标前先跑"，
+        # 但此前**没有任何脚本强制调用它**（审计器把该函数判为"仅测试可达"）。
+        # 自检不被接线就不是自检 —— 故在训练后立即断言。
+        from metaphor_graph.training import trivial_separators
+        _leaks = trivial_separators(ds)
+        print(f"【排序器】自监督训练集 n={len(ds)}"
+              + (f"  ⚠️ 泄漏自检命中：{_leaks}" if _leaks else "  泄漏自检：通过"))
     except Exception as e:
         print(f"【排序器】训练失败，仅测人工加权：{e}")
         scorer = None

@@ -2921,6 +2921,45 @@ class TestQuerySignal(unittest.TestCase):
         self.assertEqual(measure_signal(q, self.ont).to_dict(), v1)
 
 
+class TestLeakSelfCheckIsWired(unittest.TestCase):
+    """泄漏自检必须被真正调用 —— 自检不接线就不是自检。
+
+    回归护栏：`training.trivial_separators` 的 docstring 写着
+    "上报任何指标前先跑"，但审计器判其为「仅测试可达」（生产脚本无一调用）。
+    现已在 evaluate_repaired 训练后断言。
+    """
+
+    def test_repaired_calls_trivial_separators(self):
+        import inspect
+        from metaphor_graph import evaluate_repaired as er
+        src = inspect.getsource(er.main)
+        self.assertIn("trivial_separators", src,
+                      "evaluate_repaired 必须在训练后调用泄漏自检")
+
+    def test_separators_detect_constructed_leak(self):
+        """自检本身必须真的能检出泄漏（否则接线了也没用）。"""
+        import numpy as np
+        from metaphor_graph.training import (TrainingSet, trivial_separators,
+                                             FEATURE_NAMES)
+        n = 40
+        X = np.zeros((n, len(FEATURE_NAMES)))
+        y = np.array([1.0] * (n // 2) + [0.0] * (n // 2))
+        # 让 clue 维完美可分（模拟 cascade 模式的构造泄漏）
+        ci = FEATURE_NAMES.index("clue")
+        X[: n // 2, ci] = 1.0
+        leaks = trivial_separators(TrainingSet(X, y))
+        self.assertIn("clue", leaks, "自检未能检出人为构造的完美可分特征")
+
+    def test_separators_pass_on_clean_set(self):
+        import numpy as np
+        from metaphor_graph.training import (TrainingSet, trivial_separators,
+                                             FEATURE_NAMES)
+        rng = np.random.default_rng(0)
+        X = rng.normal(size=(60, len(FEATURE_NAMES)))
+        y = np.array([1.0] * 30 + [0.0] * 30)
+        self.assertEqual(trivial_separators(TrainingSet(X, y)), [])
+
+
 class TestBatchDegradationIsVisible(unittest.TestCase):
     """批处理整批降级必须**可见**（计数 + print），不能只靠 logger。
 
