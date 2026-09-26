@@ -363,9 +363,17 @@ README §7.0 的「**P2 覆盖率 100% ✅**」在诚实口径下**不达标**�
 3. **应该**修正 P2 覆盖率口径（§5.4）。
 4. **若要真正压这 7 条 FP**：让 discover 候选也过 refine（§4.6），成本 7 次调用。
    这直接攻击 FP 的成因（绕过校验），而不是绕路降权。
-5. 通道本身**保留**（代码已入库、默认关闭、测试齐备）：它作为**可观测性**有价值
+5. 通道本身**保留**（代码已入库、测试齐备）：它作为**可观测性**有价值
    （诚实覆盖率、退化边占比、`avg_provenance_reliability`），
-   只是不能承担「影响 P1」的职责。默认 `reliability_floor=1.0` 语义等价于关闭。
+   只是不能承担「影响 P1」的职责。
+
+   > **⚠️ 口径更正（实测）**：本报告原写"默认关闭"，与代码不符。
+   > `provenance.RELIABILITY_FLOOR = 0.5`，而 `RetrievalEngine` 的
+   > `reliability_floor` 参数默认取该常量 —— 即**通道默认开启**。
+   > 实测（200 句生产重放，220 条边）：**48 条（21.8%）被打折**。
+   > `reliability_floor=1.0` 才是关闭（`RELIABILITY_FLOOR_OFF`）。
+   > 受影响路径：`rank_mappings`（→ A6）与 `cross_domain_retrieve`（→ §6.1 级联通路）；
+   > `score_conditions`（§6.2 数字来源）用显式 opt-in 臂，不受影响。
 
 ---
 
