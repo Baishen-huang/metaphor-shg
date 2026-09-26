@@ -286,10 +286,14 @@ The repaired benchmark of §4.1 (global pool of 1,100 chunks + de-anchored setti
 set of retrieval numbers that **separate architectural ability from construction anchoring**
 (full 634 / 385 queries, offline zero cost):
 
-| Setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Random |
+| Query family / setting | Queries | Manual (recalibrated) | Manual (legacy) | Trained | Trained − recalibrated |
 |---|---|---|---|---|---|
-| anchored (gold = producing chunk) | 634 | **0.8956** | 0.8390 | **0.9006** | 0.0069 |
-| **de-anchored (producing chunk removed)** | 385 | **0.2330** | 0.2307 | 0.2211 | 0.0069 |
+| Overlap anchored | 634 | **0.8956** | 0.8390 | **0.9006** | **+0.0050** |
+| Overlap de-anchored | 385 | **0.2330** | 0.2307 | 0.2211 | **−0.0119** |
+| **Paraphrased anchored** | 777 | **0.1172** | 0.0775 | **0.1341** | **+0.0169** |
+| **Paraphrased de-anchored** | 508 | 0.0882 | 0.0935 | 0.0809 | **−0.0073** |
+
+(Random baseline MRR = 0.0069.)
 
 **Four conclusions**: (1) anchoring inflates MRR by ≈ **+0.66**; (2) the architecture retains
 **genuine cross-domain retrieval ability**—the de-anchored MRR is **34× the random baseline**, so

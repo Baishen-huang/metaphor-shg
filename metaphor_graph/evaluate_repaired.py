@@ -388,22 +388,22 @@ def main():
         print(f"【排序器】训练失败，仅测人工加权：{e}")
         scorer = None
 
-    print("\n" + "=" * 88)
-    print("【口径 A】anchored —— 金标=产出 chunk（现行口径，但池已全局化）")
-    print("=" * 88)
-    _run(qs["anchored"], eng, scorer, chunk_texts, exclude_own=False,
-         n_chunks=gs["n_chunks"])
+    pq = build_paraphrased_sets(gshg)
 
-    print("\n" + "=" * 88)
-    print("【口径 B】deanchor —— 产出 chunk 从池中移除，金标=同框架其它 chunk")
-    print("=" * 88)
-    _run(qs["deanchor"], eng, scorer, chunk_texts, exclude_own=True,
-         n_chunks=gs["n_chunks"])
+    for key, fam, title in (
+            ("anchored", qs, "口径 A anchored —— 金标=产出 chunk（重叠型查询）"),
+            ("deanchor", qs, "口径 B deanchor —— 产出 chunk 移出池（重叠型查询）"),
+            ("anchored", pq, "口径 A anchored（**改写型查询**）"),
+            ("deanchor", pq, "口径 B deanchor（**改写型查询**）")):
+        print("\n" + "=" * 88)
+        print(f"【{title}】")
+        print("=" * 88)
+        _run(fam[key], eng, scorer, chunk_texts,
+             exclude_own=(key == "deanchor"), n_chunks=gs["n_chunks"])
 
     print("\n" + "=" * 88)
     print("【三通路分解】同一全局候选池上比较（§6.1 的核心主张）")
     print("=" * 88)
-    pq = build_paraphrased_sets(gshg)
     for key, title in (("anchored", "口径 A anchored（重叠型）"),
                        ("deanchor", "口径 B deanchor（重叠型）"),
                        ("anchored", "口径 A anchored（改写型）"),
