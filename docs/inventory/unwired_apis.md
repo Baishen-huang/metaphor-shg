@@ -29,7 +29,7 @@
 | `observability.py::ObservabilityMeter.gate` | §7 负面结果（Ω 门控） | 实现；Ω 方向已被证伪 | 保留作为负面结论的可复现证据 |
 | `provenance.py::frame_provenance` | 溯源分级标签 | 实现但未接入 | 与 `frame_reliability` 配套的审计接口 |
 | `hgnn.py::MetaphorHGNN.propagation_matrix` | §6.3 谱分析 | 实现；仅测试与谱分析用 | 保留（`exp/dynamics` 的谱性质结论依赖它） |
-| `training.py::MetaphorScorer.save` | — | 实现但未接入 | 排序器持久化接口 |
+| `training.py::MetaphorScorer.save` | — | 实现但未接入生产路径 | 排序器持久化接口。**有配对的 `load`**（`training.py:559`），二者由 `test_metaphor_graph.py:940-941` 成对测试（存→读→分数一致）。审计器只把 `save` 报为孤立，是因为 `load` 被测试调用而 `save` 只在测试内被调用 —— 属**分析器粒度问题，不是半个接口** |
 
 ## 2. 测试专用自检工具（3 项）
 
@@ -76,5 +76,7 @@
 
 1. **在评测脚本入口调用 `trivial_separators`** —— 让自检真正生效（1 行断言）。
 2. **论文 §3.4/§4.6 标注 RRF 与 Neo4j 的接入状态** —— 避免"声称已实现"的误读。
-3. **考虑删除 `MetaphorScorer.save`** —— 无对应 `load`，是半个接口。
-4. 其余 13 项保持现状（有理由的 API 表面）。
+3. ~~考虑删除 `MetaphorScorer.save`~~ —— **此建议已撤回**。核对后确认
+   `load` 存在（`training.py:559`）且与 `save` 成对测试通过，
+   `save` 是完整接口的一半配对，不该删。（本条原写"无对应 load"是我的核对错误。）
+4. 其余 14 项保持现状（有理由的 API 表面）。
