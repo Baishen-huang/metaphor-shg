@@ -2921,6 +2921,36 @@ class TestQuerySignal(unittest.TestCase):
         self.assertEqual(measure_signal(q, self.ont).to_dict(), v1)
 
 
+class TestLiteralStopwordGuardIsDataDriven(unittest.TestCase):
+    """字面干扰的豁免源域必须来自数据表，不得硬编码在判定逻辑里。
+
+    回归护栏：`extractor.emit` 曾写死 `frame.source_domain not in ("水果","自然物")`，
+    与已修的 mipvu bug 同型 —— 硬编码白名单在换本体后静默漂移。
+    """
+
+    def test_exempt_domains_come_from_table(self):
+        from metaphor_graph.extractor import (LITERAL_STOPWORDS,
+                                              literal_exempt_source_domains)
+        for w, rec in LITERAL_STOPWORDS.items():
+            self.assertIsInstance(rec, tuple, f"{w} 的记录应为 (说明, 源域集)")
+            note, exempt = rec
+            self.assertIsInstance(note, str)
+            self.assertIsInstance(exempt, frozenset)
+            self.assertEqual(literal_exempt_source_domains(w), exempt)
+
+    def test_unknown_word_has_no_exemption(self):
+        from metaphor_graph.extractor import literal_exempt_source_domains
+        self.assertEqual(literal_exempt_source_domains("不存在的词"), frozenset())
+
+    def test_emit_has_no_hardcoded_domain_tuple(self):
+        """判定逻辑里不得再出现硬编码的源域元组。"""
+        import inspect
+        from metaphor_graph import extractor as ex
+        src = inspect.getsource(ex.MetaphorExtractor.extract)
+        self.assertNotIn('("水果", "自然物")', src,
+                         "豁免源域又被硬编码了 —— 应从 LITERAL_STOPWORDS 读取")
+
+
 class TestHonestCoverageConsistency(unittest.TestCase):
     """诚实覆盖率三个字段必须自洽：hc == min(fc, cc)。
 

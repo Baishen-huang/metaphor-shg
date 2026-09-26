@@ -31,10 +31,25 @@ from . import provenance
 from .llm_backend import LLMCandidate, LLMRefine, MetaphorLLMBackend
 
 # 字面干扰词表（用于演示「字面抗干扰」测试，§6.1 第四类）
+#
+# 结构：词 → (说明, 允许豁免的源域集合)
+#
+# ⚠️ 豁免源域**不要**硬编码在判定逻辑里（原实现写死 `("水果", "自然物")`）。
+# 这与已修的 mipvu bug 同型：硬编码白名单在换本体后**静默漂移**。
+# 判定逻辑必须从本表读取，本表是唯一真源。
 LITERAL_STOPWORDS = {
-    "苹果": "水果公司名",  # "苹果发布了新手机" → 不应判为隐喻
-    "水": "饮品", "火": "物理明火", "路": "物理道路",
+    # "苹果发布了新手机" → 不应判为隐喻；除非该框架确实以水果为源域
+    "苹果": ("水果公司名", frozenset({"水果", "自然物"})),
+    "水": ("饮品", frozenset({"自然物", "液体"})),
+    "火": ("物理明火", frozenset({"自然物", "现象"})),
+    "路": ("物理道路", frozenset({"自然物", "建筑"})),
 }
+
+
+def literal_exempt_source_domains(word: str) -> frozenset:
+    """某字面干扰词允许豁免的源域集合（数据驱动，供判定逻辑调用）。"""
+    rec = LITERAL_STOPWORDS.get(word)
+    return rec[1] if rec else frozenset()
 
 
 class MetaphorExtractor:
@@ -176,10 +191,13 @@ class MetaphorExtractor:
             # 阶段二（前置）：类型安全约束 —— 字面误判过滤器
             if not self.ont.type_valid(frame.source_type, frame.mapping_type):
                 return None  # 类型不匹配 → 大概率字面误判，直接丢弃
-            # 字面干扰特例：触发词本身就是字面用法
-            if any(LITERAL_STOPWORDS.get(t) for t in triggers_found) and \
-               frame.source_domain not in ("水果", "自然物"):
-                return None
+            # 字面干扰特例：触发词本身就是字面用法。
+            # 豁免源域从 LITERAL_STOPWORDS 读取 —— 原为硬编码元组
+            # ("水果","自然物")，换本体后会静默漂移（与已修的 mipvu bug 同型）。
+            for _t in triggers_found:
+                _exempt = literal_exempt_source_domains(_t)
+                if _exempt and frame.source_domain not in _exempt:
+                    return None
             # 置信度：触发词命中数 / 语义通道置信度提示
             base = conf_hint if conf_hint is not None else \
                 min(1.0, 0.4 + 0.2 * len(triggers_found))

@@ -375,11 +375,11 @@ path even more severely on real representations.
 | Ablation | Expected | Observed | Conclusion |
 |---|---|---|---|
 | A1 Remove type-safety constraints | P1 recovers >30% | P1 unchanged (blocked 24 erroneous bindings) | **H1 falsified**: constraints govern structural correctness (which frame to attach), not precision (whether to add the edge); precision is handled by refine + thresholds |
-| A2 Revert to LLM clustering | Cost rises 10× | 0→187 calls per thousand edges | H2 holds |
-| A3 Three channels | — | Without refine P1 43.4% → with refine 0.0% | refine is the precision safeguard |
+| A2 Revert to LLM clustering | Cost rises 10× | 0→187 calls **per 1,100-sentence test set** (not per thousand edges; the "~20/thousand edges" figure is a dict-lookup count, never measured by a script) | H2 holds qualitatively |
+| A3 Three channels | — | Rule-side (triggers+semantic field) without refine: P1 **43.4%**; with LLM the three channels give recall 0.132→0.138→**0.696** (P1 0.092) | refine is the precision safeguard; open discovery drives the recall breakthrough |
 | A4 Remove bootstrapped ontology | — | Recall drops −1.8pp | Value lies in P0 resources |
 | A5 Remove cross-chunk extended edges | Disambiguation drops | P3 F1 1.000→0.000 | L1.5 is a necessary condition for disambiguation |
-| A6 Replace with general commonsense knowledge | Performance drops | Commonsense pathway 0.095 vs metaphor pathway 0.783 (n=652) | ✅ Domain-specific metaphor knowledge is irreplaceable |
+| A6 Replace with general commonsense knowledge | Performance drops | Commonsense pathway 0.095 vs metaphor pathway **1.000** (post budget-fix, n=652) | ✅ Domain-specific metaphor knowledge is irreplaceable |
 | A7 Training vs. manual | Training superior | Conditionalized (§6.2) | **H5 holds conditionally** |
 | A8 Turn off adaptive thresholds | — | No difference on either sparse or dense graphs | Neutral |
 | A9 Remove role features | MRR drops | Completely unchanged | **H7 falsified** |
