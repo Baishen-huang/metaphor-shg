@@ -49,7 +49,7 @@ python -m metaphor_graph.download_datasets
 `论文初稿.md` / `论文初稿_en.md` 各含 **1 条** CCL2018 测试集句子，作为说明
 "标注存疑"的**单句引用示例**（学术评论语境下的合理引用）。代码与本体资源中
 已**不含任何**语料原文——`test_metaphor_graph.py`、`demo_llm.py` 等文件中原有的
-示例句已替换为人工构造的等价句（功能完全一致，116 项单测通过）。
+示例句已替换为人工构造的等价句（功能完全一致，224 项单测通过）。
 
 ### 本体资源的派生许可提示
 
@@ -106,7 +106,7 @@ venv_jieba/Scripts/python.exe -m pip install -r requirements.txt   # Windows
 自检：
 
 ```bash
-python -m unittest metaphor_graph.test_metaphor_graph    # 应为 116 项通过
+python -m unittest metaphor_graph.test_metaphor_graph    # 应为 224 项通过
 ```
 
 ---

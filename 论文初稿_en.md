@@ -177,7 +177,15 @@ Cleaning (removing self-loops, clearing simile-marked-as-metaphor labels, suppor
 |---|---|---|
 | Literal containment pathway | 0.000 | **0.000** |
 | Trigger-word cascade pathway | 0.500 (diagnosis/treatment set) | **0.042** |
-| **Semantic hypergraph pathway** | 1.000 | **1.000** |
+| **Semantic hypergraph pathway** | 1.000 ⚠️ | **1.000** ⚠️ |
+
+> **⚠️ Correction (measured; see §4.1/§6.7)**: the two 1.000 values above are
+> **trivially saturated**—the candidate pool is ≤10 (median 7–8), and Recall@10 is
+> identically 1.0 for **any** ranker that returns all candidates. The literal (0.000) and
+> trigger-cascade (0.042) figures remain **genuine failures** (those paths return nothing),
+> but 1.000 is not a performance achievement. Repaired counterparts (global pool of 1,100):
+> **anchored Hits@10 = 0.9748 / de-anchored Hits@10 = 0.4597**, and the **de-anchored MRR is
+> 34× the random baseline** (§6.7)—the latter is the valid evidence for this pathway's ability.
 
 Once paraphrased queries cut off the trigger-word shortcut, both the literal and cascade pathways fail. **The two claims—"graph structure provides relations inexpressible via vector retrieval" and "semantically rendered hyperedge ranking carries robust recall"—hold simultaneously**—but the gain manifests on a specific query distribution, not in a single-point comparison against the vector baseline (under real sentence embeddings, a pure vector baseline can also transfer across domains; see §6.4).
 
