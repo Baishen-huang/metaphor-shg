@@ -14,7 +14,7 @@
 | **贝叶斯** | [bayes.md](bayes.md) | 3 个模型：2 个负面、1 个正面；**附带发现全局状态污染** | ⚠️ 部分（正面在"扣偏差"而非"排序变好"） |
 | **拓扑** | [topology.md](topology.md) | 图拓扑非平凡（β₁=837）但拓扑对链质量**零判别力**（AUC 0.5000） | ❌ 否（干净的负面结果） |
 | **拓扑损失** | [topological_loss.md](topological_loss.md) | 64 配置扫描：**有效但效应小**（deanchor +0.0097）；优于度匹配随机图 2.8× | ⚠️ **弱正面**（零梯度问题只存在于路 A） |
-| **Lean 形式化** | [lean_formalization.md](lean_formalization.md) | `Core.lean` **9 定理编译通过**（0 错误 0 sorry） | ✅ 是（真实验证） |
+| **Lean 形式化** | [lean_formalization.md](lean_formalization.md) | **整个项目 `lake build` 成功**：Core 9 定理全验证；Basic 纯定义 0 sorry；Spectral 27 定理/定义含 19 sorry | ✅ 是（真实验证 + 明确标注未证部分） |
 
 ---
 
@@ -36,12 +36,26 @@
 
 ### 1.2 Lean 真实验证（lean_formalization）
 
-`lean/MetaphorSHG/Core.lean` —— **9 条定理，Lean 4.15.0 编译通过，0 错误 0 sorry**。
-含 6 个 `#check` 与 6 个具体 `example`，编译期求值。
+**整个 Lean 项目 `lake build` 成功（exit 0）**，Mathlib 源码编译已完成
+（5843 文件，约 1.5 小时）：
 
-**诚实限定**：验证的是**代数骨架**（交换律、分配律、零保护、不可逆的充分条件），
-**不是谱定理本身**（Lean core 无 `Rat`/`Finset`，谱性质需 Mathlib，
-仍在草稿状态）。
+| 文件 | 编译 | `sorry` | 说明 |
+|---|---|---|---|
+| `Core.lean` | ✅ | **0** | **9 定理全部机器验证** |
+| `Basic.lean` | ✅ | **0** | 纯定义（14 def），无定理待证 |
+| `Spectral.lean` | ✅ | **19** | 27 定理/定义；19 条已定类型未证明 |
+
+**「编译通过」≠「全部验证」**：前者指陈述类型正确、已写证明被内核接受；
+19 个 `sorry` 是未证明的陈述。
+
+**修复了 4 类真实错误**（原文件从未编译过，故此前不可见）：
+① `Mathlib.LinearAlgebra.Matrix.Notation` 模块不存在（正确为 `Data.Matrix.Notation`）；
+② `λ` 不能作 Lean 4 绑定变量名（6 处改 `mu`）；
+③ `G.IsEigenvalue` 应为 `Hypergraph.IsEigenvalue`（8 处，它们是普通函数非方法）；
+④ `List.sum` 不存在，改用 `List.foldl`。
+
+**诚实限定**：`Core.lean` 验证的是**代数骨架**（交换律、分配律、零保护），
+**不是谱定理本身** —— 谱定理在 `Spectral.lean`，含 19 个 `sorry`。
 
 ### 1.3 全局状态污染（bayes 附带发现）
 
@@ -136,9 +150,8 @@
 **已做到**：安装 Lean 4.15.0 → `lake update` 拉取 Mathlib（729 MB）→
 `Core.lean` 编译通过。
 
-**未做到**：Mathlib 预编译缓存（ProofWidgets release 不可达）；
-源码编译进行中（**1384/5843**，后台运行）。故 `Basic.lean`（1 sorry）与
-`Spectral.lean`（21 sorry）仍未验证。
+**已做到（后续补完）**：Mathlib 预编译缓存因 ProofWidgets release 不可达而失败，
+但**源码编译成功**（5843 文件，约 1.5 小时）。**整个项目 `lake build` 成功**。
 
 ---
 

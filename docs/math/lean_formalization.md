@@ -17,9 +17,26 @@
 以及 **`MetaphorSHG/Core.lean` —— 9 条定理，已在 Lean 4.15.0 上编译通过，
 0 错误 0 `sorry`**。
 
-**没做完**：依赖 Mathlib 的两个文件（`Basic.lean` 1 个 `sorry`、
-`Spectral.lean` 21 个 `sorry`）**仍未编译** —— Mathlib 预编译缓存因
-ProofWidgets 的 GitHub release 不可达而获取失败；源码编译需数小时（后台进行中）。
+**做完了（更正）**：**Mathlib 源码编译已完成**（5843 文件，约 1.5 小时），
+**整个 Lean 项目现在 `lake build` 成功（exit 0）**：
+
+| 文件 | 编译 | `sorry` | 性质 |
+|---|---|---|---|
+| `MetaphorSHG/Core.lean` | ✅ | **0** | 9 定理全部机器验证 |
+| `MetaphorSHG/Basic.lean` | ✅ | **0** | **纯定义**（14 个 def，无定理待证） |
+| `MetaphorSHG/Spectral.lean` | ✅ | **19** | 27 定理/定义；19 条陈述已定类型但未证明 |
+
+**关键区分**：「编译通过」= 所有**陈述**类型正确 + 已写的证明被内核接受；
+19 个 `sorry` 是**未证明的陈述**，不可声称已验证。
+
+**修复过程中发现并解决 4 类真实错误**（原文件从未编译过，故这些错误此前不可见）：
+1. `import Mathlib.LinearAlgebra.Matrix.Notation` —— 该模块**不存在**，
+   正确路径是 `Mathlib.Data.Matrix.Notation`
+2. `λ` 作为绑定变量名 —— Lean 4 中 `λ` 是保留符号，**不能作标识符**
+   （6 处，已改为 `mu`）
+3. `G.IsEigenvalue` —— 这些是**普通函数**（接受矩阵参数），
+   不是 `Hypergraph` 的方法，须写 `Hypergraph.IsEigenvalue`（8 处）
+4. `List.sum` —— 该版本 Mathlib 中不存在，改用 `List.foldl`
 
 ### §1b 环境更正（我先前的判断错了）
 

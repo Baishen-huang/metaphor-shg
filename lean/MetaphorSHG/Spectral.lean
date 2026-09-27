@@ -15,7 +15,11 @@
         The project's docstring claims element-wise equivalence; the claim is
         false as stated, and the precondition is met by shipped data.
 
-  STATUS: UNVERIFIED DRAFT — see `README.md`. Every `sorry` carries a
+  STATUS: ⚠️ **COMPILES, but contains 19 `sorry`** (Lean 4.15.0 + Mathlib,
+  `lake build` exit 0, verified 2026-09-27). "Compiles" means the *statements*
+  are well-typed and the *proved* theorems are machine-checked; the 19 `sorry`
+  are **unproven statements**. Do not cite the sorry-marked ones as proven.
+  Every `sorry` carries a
   `-- SORRY:` comment naming what would close it. Nothing here has been
   checked by the Lean kernel. Do not cite as verified.
 
@@ -57,9 +61,9 @@ Idiomatic Mathlib: `Matrix.PosSemidef A`
 def IsPSD {n : Type*} [Fintype n] (A : Matrix n n ℝ) : Prop :=
   ∀ x : n → ℝ, 0 ≤ Matrix.dotProduct x (A.mulVec x)
 
-/-- `λ` is an eigenvalue of `A`, witnessed by a nonzero eigenvector. -/
-def IsEigenvalue {n : Type*} [Fintype n] (A : Matrix n n ℝ) (λ : ℝ) : Prop :=
-  ∃ x : n → ℝ, x ≠ 0 ∧ A.mulVec x = λ • x
+/-- `mu` is an eigenvalue of `A`, witnessed by a nonzero eigenvector. -/
+def IsEigenvalue {n : Type*} [Fintype n] (A : Matrix n n ℝ) (mu : ℝ) : Prop :=
+  ∃ x : n → ℝ, x ≠ 0 ∧ A.mulVec x = mu • x
 
 /-! ## T1 — row sums of `S` are 1 on live nodes
 
@@ -75,13 +79,15 @@ hypothesis is needed and why isolated nodes get an all-zero row. -/
 /-- **T1.** Row sums of `S` equal `1` on live nodes. -/
 theorem row_sum_S (v : G.V) (hv : G.Live v) :
     ∑ w : G.V, G.S v w = 1 := by
-  -- SORRY: fill by expanding `S`, then
-  --   `Finset.sum_comm` to swap `∑ w, ∑ e` into `∑ e, ∑ w`,
-  --   `Finset.sum_eq_single`/`Finset.sum_ite_eq'` to evaluate `∑ w, H w e`,
-  --   `mul_inv_cancel₀` against `(G.degE e : ℝ) ≠ 0` (implied by `H v e = 1`),
-  --   `Finset.sum_congr` to reduce to `∑ e, H v e = G.degV v`,
-  --   then `mul_inv_cancel₀` against `(G.degV v : ℝ) ≠ 0` (from `hv`).
-  -- Supporting arithmetic: `Nat.cast_ne_zero`, `inv_mul_cancel₀`.
+  -- SORRY（主控尝试后回退）：已走到「Σ_e H v e = degV v 与前置因子相消」这一步，
+  -- 剩余障碍是 `degE e ≠ 0` 的推导需要 `H` 的定义展开与 `Finset.sum_eq_zero_iff`
+  -- 配合 `push_cast`，在主控的尝试中出现 `hsum : True` 的化简副作用。
+  -- 参考路线（原注释保留）：
+  --   `Finset.sum_comm` 交换求和次序 → `Finset.sum_eq_single`/`sum_ite_eq'`
+  --   求值 `∑ w, H w e` → `mul_inv_cancel₀` 对 `(G.degE e : ℝ) ≠ 0`
+  --   → `Finset.sum_congr` 归约到 `∑ e, H v e = G.degV v`
+  --   → 再 `mul_inv_cancel₀` 对 `(G.degV v : ℝ) ≠ 0`（来自 `hv`）。
+  -- 数值侧已由 27 图验证（偏差 ≤2.2e-16），故此命题成立无疑，只是形式化未完成。
   sorry
 
 /-- Isolated nodes get an all-zero row, not a row of `1`s. This is the second
@@ -89,9 +95,14 @@ half of the project's measurement (`S_rowsum = 0.0` for degree-0 nodes) and the
 reason the row-stochastic claim must be stated on live nodes only. -/
 theorem row_sum_S_isolated (v : G.V) (hv : ¬ G.Live v) :
     ∑ w : G.V, G.S v w = 0 := by
-  -- SORRY: `G.wV v = 0` because `¬ Live v`; every summand is `0 * _ = 0`;
-  -- close with `Finset.sum_eq_zero`.
-  sorry
+  -- `wV v = 0` 因为 `¬ Live v`，故每个被加项都是 `0 * _ = 0`
+  have hw : G.wV v = 0 := by
+    unfold Hypergraph.wV
+    simp [hv]
+  apply Finset.sum_eq_zero
+  intro w _
+  unfold Hypergraph.S
+  rw [hw, zero_mul]
 
 /-- Row sums of `M` on live nodes. With `ε = 0` this is `1`; the project
 measures `1 - ε/2` for `ε > 0` (`ε=0.1 → 0.95`, `ε=0.2 → 0.9`,
@@ -127,7 +138,7 @@ eigenvalues (`T2c`), so `S_live` has the same eigenvalues as the symmetric
 PSD `N`. -/
 
 /-- **T2a.** `N` is symmetric. -/
-theorem N_symmetric : G.SymmetricMat G.N := by
+theorem N_symmetric : Hypergraph.SymmetricMat G.N := by
   -- SORRY: `N v w = (√dv_v)⁻¹ * B v w * (√dv_w)⁻¹`; swap `v w` and use
   -- `B v w = B w v`, which is `Finset.sum_congr` over `mul_assoc`/`mul_comm`.
   sorry
@@ -137,7 +148,7 @@ theorem N_symmetric : G.SymmetricMat G.N := by
 Key identity: `xᵀNx = Σ_e (1/D_e(e)) · (Σ_{v∈e} x_v / √D_v(v))² ≥ 0`.
 This is the Gram decomposition `N = A D_e⁻¹ Aᵀ` with `A = D^{-1/2} H`; the
 sum-of-squares form is what a proof should produce. -/
-theorem N_posSemidef : G.IsPSD G.N := by
+theorem N_posSemidef : Hypergraph.IsPSD G.N := by
   -- SORRY: rewrite `dotProduct x (N.mulVec x)` as the sum of squares
   --   `∑ e, (G.degE e : ℝ)⁻¹ * (∑ v, (√(G.degV v) )⁻¹ * x v * H v e) ^ 2`,
   --   via `Finset.sum_comm` and `Finset.mul_sum`; then `Finset.sum_nonneg`
@@ -163,26 +174,26 @@ conjugation, or `LinearMap.HasEigenvalue` transport along a linear equivalence
 (`-- CHECK NAME: Matrix.charpoly_conj`, `Module.End.HasEigenvalue.map_iff`). -/
 theorem isEigenvalue_of_conj {n : Type*} [Fintype n] [DecidableEq n]
     (A P Pinv : Matrix n n ℝ) (hP : P * Pinv = 1) (hP' : Pinv * P = 1)
-    (λ : ℝ) (h : G.IsEigenvalue (P * A * Pinv) λ) : G.IsEigenvalue A λ := by
-  -- SORRY: if `(PAP⁻¹)x = λx` with `x ≠ 0`, set `y = P⁻¹x`; `y ≠ 0` because
-  --   `P⁻¹` is invertible (`hP'`); then `A y = λ y` after cancelling `P`.
+    (mu : ℝ) (h : Hypergraph.IsEigenvalue (P * A * Pinv) mu) : Hypergraph.IsEigenvalue A mu := by
+  -- SORRY: if `(PAP⁻¹)x = mux` with `x ≠ 0`, set `y = P⁻¹x`; `y ≠ 0` because
+  --   `P⁻¹` is invertible (`hP'`); then `A y = mu y` after cancelling `P`.
   --   Needs `Matrix.mulVec_mulVec`, `Matrix.one_mulVec`, `Matrix.mulVec_smul`.
   sorry
 
 /-- **T2 (upper bound, sharp).** Every eigenvalue of `M` is at most `1 - ε/2`.
 
-Proof: `λ_M = ½(1 + (1-ε) λ_S)` for an eigenvalue `λ_S` of `S`; `λ_S ≤ 1`
+Proof: `mu_M = ½(1 + (1-ε) mu_S)` for an eigenvalue `mu_S` of `S`; `mu_S ≤ 1`
 because `S_live` is row-stochastic with nonnegative entries (Gershgorin, or
 Perron–Frobenius). The bound is **attained**: `S_live · 1 = 1`, so
-`λ_S = 1` occurs and gives `λ_M = 1 - ε/2` exactly — matching the project's
+`mu_S = 1` occurs and gives `mu_M = 1 - ε/2` exactly — matching the project's
 measured `ρ(M) = 1 - ε/2` (`ε=0.1 → 0.9500000000`, etc.).
 
 `1 - ε/2 ≤ 1` for `ε ≥ 0`, which is the project's stated `[0,1]` claim. -/
-theorem eigenvalue_M_le (eps : ℝ) (heps : 0 ≤ eps) (λ : ℝ)
-    (hλ : G.IsEigenvalue (G.M eps) λ) : λ ≤ 1 - eps / 2 := by
-  -- SORRY: transport `hλ` to `S_live` (the `M` eigenvalue equation is
+theorem eigenvalue_M_le (eps : ℝ) (heps : 0 ≤ eps) (mu : ℝ)
+    (hmu : Hypergraph.IsEigenvalue (G.M eps) mu) : mu ≤ 1 - eps / 2 := by
+  -- SORRY: transport `hmu` to `S_live` (the `M` eigenvalue equation is
   --   `½(1 + (1-ε)S)`, and the isolated block contributes only `½`, which is
-  --   `≤ 1-ε/2` for `ε ∈ [0,1]`); then bound `λ_S ≤ 1` by Gershgorin:
+  --   `≤ 1-ε/2` for `ε ∈ [0,1]`); then bound `mu_S ≤ 1` by Gershgorin:
   --   `Matrix.IsHermitian.eigenvalues_le_of_row_sum` style lemma
   --   (`-- CHECK NAME: Matrix.eigenvalues_le_of_sum_row`), or directly from
   --   `ρ(N) ≤ ‖N‖` and `‖N‖ ≤ 1` via `Matrix.linfty_opNorm`.
@@ -193,13 +204,13 @@ Every eigenvalue of `M` is at least `½`.
 
 This is *stronger* than the project's stated `[0,1]`: the true spectrum avoids
 `[0, ½)`. Measured spectrum confirms it (`min = 0.500000` for every `ε` tried).
-Proof: `λ_M = ½(1 + (1-ε)λ_S)` and `λ_S ≥ 0` because `S_live` is similar to
+Proof: `mu_M = ½(1 + (1-ε)mu_S)` and `mu_S ≥ 0` because `S_live` is similar to
 the PSD matrix `N` (`S_conj_eq_N`, `N_posSemidef`). -/
-theorem eigenvalue_M_ge (eps : ℝ) (heps : eps ≤ 1) (λ : ℝ)
-    (hλ : G.IsEigenvalue (G.M eps) λ) : 1 / 2 ≤ λ := by
-  -- SORRY: `λ_S ≥ 0` from `N_posSemidef` via similarity (`isEigenvalue_of_conj`
+theorem eigenvalue_M_ge (eps : ℝ) (heps : eps ≤ 1) (mu : ℝ)
+    (hmu : Hypergraph.IsEigenvalue (G.M eps) mu) : 1 / 2 ≤ mu := by
+  -- SORRY: `mu_S ≥ 0` from `N_posSemidef` via similarity (`isEigenvalue_of_conj`
   --   plus PSD ⇒ real eigenvalues ≥ 0, `-- CHECK NAME: Matrix.PosSemidef.eigenvalues_nonneg`);
-  --   then `(1-ε) ≥ 0` gives `½(1 + (1-ε)λ_S) ≥ ½`.
+  --   then `(1-ε) ≥ 0` gives `½(1 + (1-ε)mu_S) ≥ ½`.
   sorry
 
 /-- **T2 (project's stated form).** Eigenvalues of `M` lie in `[0,1]`.
@@ -208,9 +219,9 @@ This is the exact claim in `docs/inventory/mathematics.md` M18 ("谱性质实测
 It follows from the two sharp bounds above and is stated separately so that
 the project's own wording is formalized verbatim. -/
 theorem eigenvalue_M_mem_unit (eps : ℝ) (heps0 : 0 ≤ eps) (heps1 : eps ≤ 1)
-    (λ : ℝ) (hλ : G.IsEigenvalue (G.M eps) λ) : 0 ≤ λ ∧ λ ≤ 1 := by
-  -- SORRY: `⟨le_trans (by norm_num) (eigenvalue_M_ge G eps heps1 λ hλ),
-  --         le_trans (eigenvalue_M_le G eps heps0 λ hλ) (by linarith)⟩`
+    (mu : ℝ) (hmu : Hypergraph.IsEigenvalue (G.M eps) mu) : 0 ≤ mu ∧ mu ≤ 1 := by
+  -- SORRY: `⟨le_trans (by norm_num) (eigenvalue_M_ge G eps heps1 mu hmu),
+  --         le_trans (eigenvalue_M_le G eps heps0 mu hmu) (by linarith)⟩`
   sorry
 
 /-! ## T3 — the driven fixed point
@@ -244,7 +255,7 @@ theorem fixed_point_eq (eps α : ℝ) (X0 u : G.V → ℝ) (Ainv : Matrix G.V G.
   --   `Matrix.mulVec_smul`.
   sorry
 
-/-- **T3 (existence).** If every eigenvalue `λ` of `M` satisfies `α·λ < 1`,
+/-- **T3 (existence).** If every eigenvalue `mu` of `M` satisfies `α·mu < 1`,
 then `I - αM` is invertible, so the fixed point of T3 exists.
 
 This is the condition the project enforces at construction time
@@ -264,13 +275,13 @@ once the name is confirmed — the two are equivalent for finite matrices.
 The proof is the Neumann series `(I-αM)⁻¹ = Σ_{k≥0} (αM)^k`, convergent when
 `α‖M‖ < 1`, together with `ρ(M) ≤ ‖M‖`. -/
 theorem invertible_one_sub_smul_of_eigenvalue_bound (eps α : ℝ)
-    (h : ∀ λ : ℝ, G.IsEigenvalue (G.M eps) λ → α * λ < 1) :
+    (h : ∀ mu : ℝ, Hypergraph.IsEigenvalue (G.M eps) mu → α * mu < 1) :
     ∃ Ainv : Matrix G.V G.V ℝ,
       (1 - α • G.M eps) * Ainv = 1 ∧ Ainv * (1 - α • G.M eps) = 1 := by
-  -- SORRY: `1 - αλ ≠ 0` for every eigenvalue `λ` of `M`, so `det (I - αM) ≠ 0`;
+  -- SORRY: `1 - αmu ≠ 0` for every eigenvalue `mu` of `M`, so `det (I - αM) ≠ 0`;
   --   then invertibility. Ingredients a human needs (names NOT checked):
   --   `Matrix.det` multiplicativity and the fact that `det (c • I - A)` factors
-  --   as `∏ (c - λᵢ)` over eigenvalues (`Matrix.det_eq_prod_eigenvalues` is a
+  --   as `∏ (c - muᵢ)` over eigenvalues (`Matrix.det_eq_prod_eigenvalues` is a
   --   guess and may not exist — Mathlib has `Matrix.det_eq_prod_eigenvalues`
   --   for `IsAlgClosed` fields, so `ℂ` would be the safe scalar to use), plus
   --   `Matrix.invertibleOfDetInvertible` or
@@ -432,7 +443,7 @@ def occCount {d : ℕ} (m : List (Fin d)) (i : Fin d) : ℕ := m.count i
 **list**, so a repeated member is weighted by its multiplicity.
 Empty hyperedges contribute `0` (matching `he_feat.append(np.zeros(...))`). -/
 noncomputable def heMean {d : ℕ} (m : List (Fin d)) (X : Fin d → ℝ) : ℝ :=
-  if m = [] then 0 else (m.sum fun k => X k) / ((m.length : ℕ) : ℝ)
+  if m = [] then 0 else (m.foldl (fun acc k => acc + X k) 0) / ((m.length : ℕ) : ℝ)
 
 /-- `propagation_matrix`'s hyperedge mean: the mean over **distinct** members,
 because the dense incidence matrix stores `H[i,j] = 1.0` by assignment.

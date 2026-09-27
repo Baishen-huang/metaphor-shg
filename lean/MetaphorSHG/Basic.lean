@@ -10,15 +10,17 @@
     - `metaphor_graph/hgnn.py::propagation_matrix` — the dense form
     - `experiments/_common.py::{incidence,S_matrix,M_matrix}`
 
-  STATUS: UNVERIFIED DRAFT — see `README.md`. Every `sorry` is marked with a
-  `-- SORRY:` comment naming what would close it. Do not cite as verified.
+  STATUS: ✅ **COMPILES** (Lean 4.15.0 + Mathlib, `lake build` exit 0,
+  verified 2026-09-27). This file is **definitions only** (no theorems to
+  prove), hence **zero `sorry`**. The propositions *about* these definitions
+  live in `Spectral.lean` (which has 19 `sorry`).
 -/
 
 import Mathlib.Data.Matrix.Basic
 import Mathlib.Data.Real.Basic
 import Mathlib.Data.Real.Sqrt
 import Mathlib.Algebra.BigOperators.Fin
-import Mathlib.LinearAlgebra.Matrix.Notation
+import Mathlib.Data.Matrix.Notation
 import Mathlib.Tactic
 
 open Classical BigOperators Matrix

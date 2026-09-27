@@ -2,7 +2,30 @@
 
 本目录是**隐喻超图（MetaphorSHG）谱性质**的 Lean 4 形式化草稿。
 
-> ## ⚠️ 最重要的一句话
+> ## ✅ 状态更新（2026-09-27，主控补完）
+>
+> **本目录的 Lean 代码现在已被 Lean 编译器检查过。**
+> Mathlib 源码编译已完成（5843 文件，约 1.5 小时），
+> **整个项目 `lake build` 成功（exit 0）**：
+>
+> | 文件 | 编译 | `sorry` |
+> |---|---|---|
+> | `MetaphorSHG/Core.lean` | ✅ | **0**（9 定理全部验证） |
+> | `MetaphorSHG/Basic.lean` | ✅ | **0**（纯定义，无定理待证） |
+> | `MetaphorSHG/Spectral.lean` | ✅ | **19**（陈述已定类型，未证明） |
+>
+> **请注意区分**：「编译通过」= 陈述类型正确 + 已写证明被内核接受；
+> **19 个 `sorry` 是未证明的陈述**，不可声称已验证。
+>
+> 补完过程中修复了 4 类真实错误（原文件从未编译过，故此前不可见）：
+> ① `Mathlib.LinearAlgebra.Matrix.Notation` 模块不存在（正确为 `Data.Matrix.Notation`）；
+> ② `λ` 不能作 Lean 4 绑定变量名（6 处改 `mu`）；
+> ③ `G.IsEigenvalue` 应为 `Hypergraph.IsEigenvalue`（8 处，它们是普通函数）；
+> ④ `List.sum` 不存在，改用 `List.foldl`。
+>
+> 以下原文保留作为历史记录。
+
+> ## ⚠️ 最重要的一句话（历史记录，已过时）
 >
 > **本目录下的 Lean 代码从未被 Lean 编译器检查过。**
 > 它包含 19 个 `sorry`，且作者**未能完成 Mathlib 依赖的获取**。
