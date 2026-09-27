@@ -21,11 +21,20 @@
 
 ## 1. 论文/README 声称的能力（7 项）
 
-| API | 论文出处 | 状态 | 处置建议 |
+> ⚠️ **本节结论已更正（主控复核）**：我原先假设"论文声称了 RRF/Neo4j 但未接入"，
+> 逐词核对论文全文后**该假设不成立** —— **论文从未提及 RRF、Neo4j、多线索汇聚**
+> （`grep -c` 均为 0）。这些能力只出现在**方案文档**（`知识隐喻分析任务方案.md`）
+> 与 `metaphor_graph/README.md`（开发日志）中。
+> 论文实际提到的三个相关名词都**准确**：`HL-index`（§2 相关工作，引用他人工作）、
+> `U-Retrieval`（§3.4，且 `cross_domain_retrieve` 确实被三个评测脚本调用）、
+> `元图`（§1/§2 概念讨论）。
+> **故无需在论文加任何"未接入"标注。** 下表仅为工程侧清点。
+
+| API | 出现位置 | 状态 | 处置建议 |
 |---|---|---|---|
-| `retrieval.py::RetrievalEngine.rrf_fusion` | §3.4 检索层（RRF 融合） | 实现但未接入生产路径 | 论文应标注"实现了 RRF 融合接口，但主实验的三通路分解未使用它" |
-| `models.py::merge_evidence` / `resolve_conflict` | 演化治理（知识管理） | 实现但未接入 | 论文未主张，属预留能力 |
-| `storage.py::Neo4jStore` | §4.6 存储选型 | 实现但未接入（实验用内存图） | 论文应说明"生产存储层已实现，实验在内存图上进行" |
+| `retrieval.py::RetrievalEngine.rrf_fusion` | 方案文档 §4.6（论文未提） | 实现但未接入生产路径 | 无需改论文；方案文档可标注为"已实现未用于主实验" |
+| `models.py::merge_evidence` / `resolve_conflict` | 方案文档（演化治理） | 实现但未接入 | 同上 |
+| `storage.py::Neo4jStore` | 方案文档 §4.6（论文未提） | 实现但未接入（实验用内存图） | 同上 |
 | `observability.py::ObservabilityMeter.gate` | §7 负面结果（Ω 门控） | 实现；Ω 方向已被证伪 | 保留作为负面结论的可复现证据 |
 | `provenance.py::frame_provenance` | 溯源分级标签 | 实现但未接入 | 与 `frame_reliability` 配套的审计接口 |
 | `hgnn.py::MetaphorHGNN.propagation_matrix` | §6.3 谱分析 | 实现；仅测试与谱分析用 | 保留（`exp/dynamics` 的谱性质结论依赖它） |
@@ -75,7 +84,9 @@
 ## 5. 建议的后续动作（按价值排序）
 
 1. **在评测脚本入口调用 `trivial_separators`** —— 让自检真正生效（1 行断言）。
-2. **论文 §3.4/§4.6 标注 RRF 与 Neo4j 的接入状态** —— 避免"声称已实现"的误读。
+2. ~~论文 §3.4/§4.6 标注 RRF 与 Neo4j 的接入状态~~ —— **此建议已撤回**：
+   逐词核对确认**论文从未提及这两者**（只在方案文档里），不存在"声称已实现"的误读。
+   若要标注，改方案文档即可，与投稿稿无关。
 3. ~~考虑删除 `MetaphorScorer.save`~~ —— **此建议已撤回**。核对后确认
    `load` 存在（`training.py:559`）且与 `save` 成对测试通过，
    `save` 是完整接口的一半配对，不该删。（本条原写"无对应 load"是我的核对错误。）
