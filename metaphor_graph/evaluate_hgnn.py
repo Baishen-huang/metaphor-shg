@@ -314,11 +314,19 @@ def measure_h4(alpha: float = 1.0, leak: float = 0.0,
 
 
 def _auc_full(pos: np.ndarray, neg: np.ndarray) -> Tuple[float, int, int]:
-    """ROC-AUC = P(pos > neg) + 0.5·P(pos == neg)，用全量正负对。
+    """ROC-AUC = P(pos > neg) + 0.5·P(pos == neg)，**对所有 pos×neg 组合**计算。
 
-    这是 exp/dynamics 建议的 H4 主指标：n=20 的配对准确率功效不足
-    （分辨率 0.05，18 个配置下 |Δacc| ≤ 0.05 全部落在噪声内），
-    而全量负样本 AUC 在同样配置下稳定（|ΔAUC| ≤ 0.005）。
+    ⚠️ **命名澄清（清单审计发现）**：函数名含 "full"，但 `measure_h4` 传给它的
+    是**配对抽样**的 20 正 × 20 负 = 400 对，**不是穷举负样本**。
+    另有 `experiments/auc_h4.py` 用**穷举**负样本（20 正 × 752 负），
+    同配置下得 0.9416/0.9409 —— 与本文的 0.915/0.910 **不同**。
+
+    故论文 §6.3 的"全量 AUC"一词有歧义：它指"对所有 pos×neg 组合算"，
+    而非"穷举全部候选负样本"。引用时须说明 n_pos×n_neg。
+
+    本函数的价值在于**正确处理并列**（tie 计 0.5），这是 exp/dynamics 建议
+    替换 n=20 配对准确率的原因：后者分辨率 0.05，18 个配置下 |Δacc| ≤ 0.05
+    全落在噪声内，而本指标在同样配置下稳定（|ΔAUC| ≤ 0.005）。
     """
     if len(pos) == 0 or len(neg) == 0:
         return float("nan"), len(pos), len(neg)
@@ -398,7 +406,9 @@ def main():
     print("\n【H4·改口径】判别信号来源分解（同一组配对样本：真 L1 边 vs 跨框架负样本）")
     h4 = measure_h4()
     print(f"{'表示':16s} {'真边连贯度':>10s} {'负样本':>8s} "
-          f"{'配对判别':>8s} {'全量AUC':>9s}  (配对 n / 正×负)")
+          f"{'配对判别':>8s} {'全组合AUC':>10s}  (配对 n / 正×负)")
+    print("  注：'全组合AUC' = 对所有 pos×neg 组合计算（正确处理并列），"
+          "此处 20×20=400 对；")
     for m, label in (("hgnn", "HGNN 完整跨层"), ("flat", "仅L1超边(flat)"),
                      ("raw", "原始嵌入"), ("flat_gru", "GRU共成员序列"),
                      ("hgnn_driven", "HGNN+源项"), ("flat_driven", "flat+源项")):
@@ -406,7 +416,9 @@ def main():
         print(f"{label:16s} {r['pos_mean']:>10.3f} {r['neg_mean']:>8.3f} "
               f"{r['acc']:>8.3f} {r['auc_full']:>9.3f}  "
               f"({r['n_pairs']} / {r['n_pos']}×{r['n_neg']})")
-    print("  注：主指标为**全量AUC**（正确处理并列）。配对判别 n=20 时分辨率仅 0.05，")
+    print("      与 experiments/auc_h4.py 的**穷举**负样本口径（20×752）不同，"
+          "两者数值不可互换。")
+    print("  主指标为全组合AUC。配对判别 n=20 时分辨率仅 0.05，")
     print("      结论字符串会随无关参数抖动翻转（exp/dynamics 实测），仅作历史兼容。")
     # 判定改用全量 AUC（高功效）；配对准确率仅作参考
     a_flat, a_hgnn = h4["flat"]["auc_full"], h4["hgnn"]["auc_full"]
