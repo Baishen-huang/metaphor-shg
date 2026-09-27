@@ -1,0 +1,12 @@
+{
+  "meta": {
+    "graph_diam": 13.0,
+    "graph_edges": 6481,
+    "rand_graph_edges": 6481,
+    "rand_graph_deg_same": true,
+    "tp_G": 2432.0,
+    "tp_G_rand": 1532.0
+  },
+  "covered": 856,
+  "n_cand": 861
+}
