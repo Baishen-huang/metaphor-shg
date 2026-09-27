@@ -141,6 +141,14 @@ def extract_text_features(query_text: str,
         same_cas = 1.0 if cand.cascade_id in cascades else 0.0
 
     g = set(cand.ground)
+    # ⚠️ 口径说明（清单审计发现，实测分歧率 4.76%）：
+    # 文本锚点路径（本函数）用**包含率** |g ∩ text| / |g| —— 因为"查询文本"
+    # 没有可比的集合边界，真 Jaccard 的分母 |g ∪ text| 无意义。
+    # 边锚点路径（extract_features）用**真 Jaccard** |∩| / |∪|。
+    # 两者**同名不同义**。这是有意为之（各自在其语境下合理），但名字有误导性：
+    # 训练期与推理期若混用同一名字的不同语义，就是特征漂移。
+    # 当前设计下两条路径不会互相比较，故无害；若要统一，须改名（如
+    # ground_containment vs ground_jaccard）而非改公式。
     gj = (len({w for w in g if w in query_text}) / max(1, len(g))) if g else 0.0
     return [sem, struct, clue, type_ok, same_frame, same_cas, gj]
 

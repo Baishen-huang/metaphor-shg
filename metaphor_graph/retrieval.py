@@ -216,7 +216,23 @@ class RetrievalEngine:
     # ----------------------------------------------------- 2. 多线索汇聚检索
     def multi_clue_retrieval(self, triggers: List[str],
                              threshold: float = 0.3) -> List[tuple]:
-        """被 ≥2 个触发词支持的映射优先返回（§4.4.2）。"""
+        """多线索汇聚：被多个触发词支持的映射优先返回（§4.4.2）。
+
+        ⚠️ **判据与文档不符（清单审计发现，实测确认）**：
+        docstring 原写"被 **≥2 个触发词**支持"，但实现是
+        `s >= 2 * threshold` —— 即**同一目标域的 confidence 之和**达阈值即可。
+        实测：`["泥潭","战壕","护城河"]` 下 `护城河` 单触发词即贡献 2.8
+        （三条边 confidence 1.0+0.8+1.0），故**单个触发词就能通过**。
+
+        **处置：不改实现，只改文档。** 理由：
+        - 该函数**不在生产路径上**（仅 `demo.py` 与单测调用）；
+        - 论文 §4.4.2 描述的是 MetaphorBoost 式的"多线索汇聚"设计意图，
+          而当前实现是"confidence 累加"这一更宽松的启发式；
+        - 单方面改实现会改变 demo 行为且无实验依据支撑哪个更优。
+
+        **待办**：若要让 §4.4.2 的主张成立，需按"不同触发词计数"重写并
+        在真实检索集上验证（当前它是 demo 级功能，不影响任何已上报数字）。
+        """
         candidate_scores: Dict[str, float] = defaultdict(float)
         for trig in triggers:
             for m in self.get_mappings(trig):
