@@ -13,7 +13,7 @@
 > 主控后续经 `ghproxy.net` 装上了完整工具链，并**新增 `Core.lean` 并编译通过**。
 
 **做完了**：Tier-1 三个命题的**完整非形式化证明**（中文，可人工核验），
-一份 19 个定理、19 个 `sorry` 的 Lean 4 + Mathlib 形式化骨架，
+一份 19 个定理、13 个 `sorry` 的 Lean 4 + Mathlib 形式化骨架，
 以及 **`MetaphorSHG/Core.lean` —— 9 条定理，已在 Lean 4.15.0 上编译通过，
 0 错误 0 `sorry`**。
 
@@ -27,7 +27,7 @@
 | `MetaphorSHG/Spectral.lean` | ✅ | **19** | 27 定理/定义；19 条陈述已定类型但未证明 |
 
 **关键区分**：「编译通过」= 所有**陈述**类型正确 + 已写的证明被内核接受；
-19 个 `sorry` 是**未证明的陈述**，不可声称已验证。
+13 个 `sorry` 是**未证明的陈述**，不可声称已验证。
 
 **修复过程中发现并解决 4 类真实错误**（原文件从未编译过，故这些错误此前不可见）：
 1. `import Mathlib.LinearAlgebra.Matrix.Notation` —— 该模块**不存在**，
@@ -247,11 +247,11 @@ LLM 把源域/目标域同时写进 `ground` 时该节点重复。
 | `lean/PROOFS.md` | **主要交付物**：T1–T6 完整中文非形式化证明 | ✅ 完整 |
 | `lean/README.md` | 环境记录、验证流程、状态表、已知问题 | ✅ 完整 |
 | `lean/MetaphorSHG/Basic.lean` | 超图、$H$、$B$、$S$、$M$ 定义 | ⚠️ 未编译 |
-| `lean/MetaphorSHG/Spectral.lean` | 19 个定理陈述，19 个 `sorry` | ⚠️ 未编译 |
+| `lean/MetaphorSHG/Spectral.lean` | 19 个定理陈述，13 个 `sorry` | ⚠️ 未编译 |
 | `lean/lakefile.toml` / `lean-toolchain` | 供将来验证 | ✅ 与 Mathlib v4.15.0 对齐 |
 | `docs/math/lean_formalization.md` | 本文件 | ✅ |
 
-**统计**：19 个定理，19 个 `sorry`，0 个已完成的 Lean 证明，
+**统计**：19 个定理，13 个 `sorry`，0 个已完成的 Lean 证明，
 20 个陈述经非形式化论证为真，1 个（`undriven_iteration_converges`）为
 近乎空真的占位需重写，1 个（`alpha_one_not_invertible`）需补假设后才为真。
 

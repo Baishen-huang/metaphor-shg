@@ -249,9 +249,14 @@ It follows from the two sharp bounds above and is stated separately so that
 the project's own wording is formalized verbatim. -/
 theorem eigenvalue_M_mem_unit (eps : ℝ) (heps0 : 0 ≤ eps) (heps1 : eps ≤ 1)
     (mu : ℝ) (hmu : Hypergraph.IsEigenvalue (G.M eps) mu) : 0 ≤ mu ∧ mu ≤ 1 := by
-  -- SORRY: `⟨le_trans (by norm_num) (eigenvalue_M_ge G eps heps1 mu hmu),
-  --         le_trans (eigenvalue_M_le G eps heps0 mu hmu) (by linarith)⟩`
-  sorry
+  -- 由两条 sharp 界组合：½ ≤ mu（更强）与 mu ≤ 1-ε/2 ≤ 1
+  constructor
+  · -- 0 ≤ mu：从 ½ ≤ mu 传递
+    have hge : 1 / 2 ≤ mu := eigenvalue_M_ge G eps heps1 mu hmu
+    linarith
+  · -- mu ≤ 1：从 mu ≤ 1-ε/2 与 ε ≥ 0 传递
+    have hle : mu ≤ 1 - eps / 2 := eigenvalue_M_le G eps heps0 mu hmu
+    linarith
 
 /-! ## T3 — the driven fixed point
 

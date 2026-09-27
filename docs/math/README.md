@@ -46,7 +46,7 @@
 | `Spectral.lean` | ✅ | **19** | 27 定理/定义；19 条已定类型未证明 |
 
 **「编译通过」≠「全部验证」**：前者指陈述类型正确、已写证明被内核接受；
-19 个 `sorry` 是未证明的陈述。
+13 个 `sorry` 是未证明的陈述。
 
 **修复了 4 类真实错误**（原文件从未编译过，故此前不可见）：
 ① `Mathlib.LinearAlgebra.Matrix.Notation` 模块不存在（正确为 `Data.Matrix.Notation`）；
@@ -55,7 +55,7 @@
 ④ `List.sum` 不存在，改用 `List.foldl`。
 
 **诚实限定**：`Core.lean` 验证的是**代数骨架**（交换律、分配律、零保护），
-**不是谱定理本身** —— 谱定理在 `Spectral.lean`，含 19 个 `sorry`。
+**不是谱定理本身** —— 谱定理在 `Spectral.lean`，含 13 个 `sorry`。
 
 ### 1.3 全局状态污染（bayes 附带发现）
 

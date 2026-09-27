@@ -12,10 +12,10 @@
 > |---|---|---|
 > | `MetaphorSHG/Core.lean` | ✅ | **0**（9 定理全部验证） |
 > | `MetaphorSHG/Basic.lean` | ✅ | **0**（纯定义，无定理待证） |
-> | `MetaphorSHG/Spectral.lean` | ✅ | **19**（陈述已定类型，未证明） |
+> | `MetaphorSHG/Spectral.lean` | ✅ | **13**（6 条已机器验证，13 条未证明） |
 >
 > **请注意区分**：「编译通过」= 陈述类型正确 + 已写证明被内核接受；
-> **19 个 `sorry` 是未证明的陈述**，不可声称已验证。
+> **13 个 `sorry` 是未证明的陈述**，不可声称已验证。
 >
 > 补完过程中修复了 4 类真实错误（原文件从未编译过，故此前不可见）：
 > ① `Mathlib.LinearAlgebra.Matrix.Notation` 模块不存在（正确为 `Data.Matrix.Notation`）；
