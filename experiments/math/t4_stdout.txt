@@ -1,0 +1,57 @@
+==========================================================================================================
+T4 —— 严格次随机性：S ← (1-ε)S 的谱 / 不动点 / 等价重参数化
+==========================================================================================================
+
+[T4.1 行随机（Σ_j S_ij = 1）的精确后果]
+                 图        S 行和(活)         ρ(S)         ρ(M)  mult(λ=1)  dim ker(I−M)   cond(I−M)
+       doc_project 1.000000000000 1.0000000000 1.0000000000          5             5   4.237e+16
+            ccl200 1.000000000000 1.0000000000 1.0000000000         63            63   1.113e+17
+           ccl1100 1.000000000000 1.0000000000 1.0000000000        168           168   3.878e+17
+
+[T4.2 ε-阻尼的谱：λ(S_ε)=(1−ε)λ(S)，ρ(M_ε)=1−ε/2]
+  [ccl200]      ε       S_ε 行和       ρ(S_ε)     预测 1-ε       ρ(M_ε)     预测 1-ε/2      λ2(M_ε)   α 上界 2/(2-ε)
+                    0.000  1.000000000  1.000000000   1.000000  1.000000000  1.000000000  0.997576002       1.000000
+                    0.001  0.999000000  0.999000000   0.999000  0.999500000  0.999500000  0.999500000       1.000500
+                    0.010  0.990000000  0.990000000   0.990000  0.995000000  0.995000000  0.995000000       1.005025
+                    0.050  0.950000000  0.950000000   0.950000  0.975000000  0.975000000  0.975000000       1.025641
+                    0.100  0.900000000  0.900000000   0.900000  0.950000000  0.950000000  0.950000000       1.052632
+                    0.200  0.800000000  0.800000000   0.800000  0.900000000  0.900000000  0.900000000       1.111111
+                    0.500  0.500000000  0.500000000   0.500000  0.750000000  0.750000000  0.750000000       1.333333
+                    0.900  0.100000000  0.100000000   0.100000  0.550000000  0.550000000  0.550000000       1.818182
+                    0.990  0.010000000  0.010000000   0.010000  0.505000000  0.505000000  0.505000000       1.980198
+
+[T4.3 ε 的等价重参数化：u*_ε(α) ∝ (1−g)(I−gS)^{-1}X₀，g = α(1−ε)/(2−α)]
+  （标量因子不改变余弦；因此 ε 的语义效果完全由 g 承载）
+       α      ε   g=α(1-ε)/(2-α)   cos(u*_ε(α),X0)   cos(u*(g)|ε=0,X0)          差
+    0.50   0.00         0.333333       0.987285685         0.996133567   2.07e-02
+    0.50   0.20         0.266667       0.992540825         0.997832135   1.23e-02
+    0.50   0.50         0.166667       0.997417962         0.999294366   4.30e-03
+    0.80   0.30         0.466667       0.969773385         0.989801209   4.58e-02
+    0.90   0.50         0.409091       0.978703447         0.993146729   3.36e-02
+C:\Users\huang\.workbuddy\binaries\python\versions\3.13.12\venv_jieba\Lib\site-packages\numpy\_core\fromnumeric.py:3862: RuntimeWarning: Mean of empty slice
+  return _methods._mean(a, axis=axis, dtype=dtype,
+C:\Users\huang\.workbuddy\binaries\python\versions\3.13.12\venv_jieba\Lib\site-packages\numpy\_core\_methods.py:142: RuntimeWarning: invalid value encountered in scalar divide
+  ret = ret.dtype.type(ret / rcount)
+    1.00   0.50         0.500000               nan         0.987285685   9.98e-01
+    1.20   0.50         0.750000      -0.865658802         0.937334008   1.97e+00
+    0.99   0.90         0.098020       0.999173275         0.999782601   1.37e-03
+
+  [加强验证] 向量方向（单位化）是否逐节点一致：
+    α=0.5, ε=0.2: 单位向量 maxdiff = 8.678e-02; 逐元素比值 max−min = 1.157e+17 (应 ≈ 0 → 仅差一个全局标量)
+    α=0.8, ε=0.3: 单位向量 maxdiff = 1.569e-01; 逐元素比值 max−min = 3.637e+16 (应 ≈ 0 → 仅差一个全局标量)
+Traceback (most recent call last):
+  File "E:\02_AI项目\元图隐喻分析\.wt\spectral\experiments\math\t4_epsilon.py", line 290, in <module>
+    main()
+    ~~~~^^
+  File "E:\02_AI项目\元图隐喻分析\.wt\spectral\experiments\math\t4_epsilon.py", line 200, in main
+    dmax = float(np.max(np.linalg.norm(u1[k] / n1[k][:, None]
+                 ~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+                                      - u2[k] / n2[k][:, None], axis=1)))
+                                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\huang\.workbuddy\binaries\python\versions\3.13.12\venv_jieba\Lib\site-packages\numpy\_core\fromnumeric.py", line 3161, in max
+    return _wrapreduction(a, np.maximum, 'max', axis, None, out,
+                          keepdims=keepdims, initial=initial, where=where)
+  File "C:\Users\huang\.workbuddy\binaries\python\versions\3.13.12\venv_jieba\Lib\site-packages\numpy\_core\fromnumeric.py", line 83, in _wrapreduction
+    return ufunc.reduce(obj, axis, dtype, out, **passkwargs)
+           ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+ValueError: zero-size array to reduction operation maximum which has no identity
