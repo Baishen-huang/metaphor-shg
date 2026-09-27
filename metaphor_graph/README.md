@@ -61,7 +61,7 @@
 | 超超图构建 P2 | ✅ 达标 | L2/L3 覆盖率 **100%**（>85%） |
 | 扩展隐喻 P3 | ✅ 机制验证 | 跨 chunk 消歧 F1 **1.000**（精选诊疗集）；全量语料上扩展链天然稀疏（5 条/110 文档） |
 | HGNN 检测器 P4 | 🟡 口径重定 | 第三道校验信号 **0.95**（P4-B）；**H4 分解：信号来自 L1 n 元共现而非跨层层级** |
-| 消融 P5 | ✅ 全部完成 | H1–H4 + A5–A9 全部已测（A6 以 LLM 生成常识关联替代 ConceptNet：0.095 vs 0.783，8 倍差距） |
+| 消融 P5 | ✅ 全部完成 | H1–H4 + A5–A9 全部已测（A6 以 LLM 生成常识关联替代 ConceptNet：0.095 vs 1.000，10.5 倍差距） |
 | 单元测试 | ✅ 全绿 | **114/114** |
 | 依赖与成本 | ✅ 零额外依赖 | LLM 直连 urllib；全量 1100 句 ≈ ¥0.6–1.2 |
 
@@ -181,7 +181,7 @@ data/CCL2018-Chinese-Metaphor-Analysis/   # download_datasets.py 克隆，含 tr
 ```bash
 cd E:\02_AI项目\元图隐喻分析
 python -m metaphor_graph.demo        # 端到端中文样例（10 个验证环节）
-python -m unittest metaphor_graph.test_metaphor_graph -v   # 单元测试（114 项）
+python -m unittest metaphor_graph.test_metaphor_graph -v   # 单元测试（256 项）
 
 # LLM 后端（§6.6）
 python -m metaphor_graph.demo_llm                # 离线模式，无需密钥
@@ -640,7 +640,7 @@ python -m metaphor_graph.evaluate_fullcorpus       # 用该本体跑全量建图
 | **P2** 超超图构建 | L2/L3 覆盖率 >85% | **100%** | ✅ |
 | **P3** 扩展隐喻 | 跨 chunk 消歧准确率 >70% | **1.000 (F1)** | ✅ 已测（精选诊疗集） |
 | **P4** HGNN 检测器 | 抽取 F1 提升 >5pp | **另测**（见 §7.4） | 🟡 口径不匹配，已测真实贡献 |
-| **P5** 消融实验 | 6 组消融符合预期 | **全部 6 组完成**（A6 以 LLM 生成常识关联替代口径补齐：0.095 vs 0.783） | ✅ |
+| **P5** 消融实验 | 6 组消融符合预期 | **全部 6 组完成**（A6 以 LLM 生成常识关联替代口径补齐：0.095 vs 1.000） | ✅ |
 
 复现 P0–P2（本体来自 train、评估在 test）：见 §6.9 的两条命令。
 P2 之前被开放发现打穿（临时框架不属任何级联，覆盖率仅 2.4%），
@@ -711,7 +711,7 @@ python -m metaphor_graph.ablation --cache data/llm_cache_deepseek.json ^
 | H3 去掉隐喻通路仅留字面 | 跨域 Recall 降至 B1 | ✅ 成立（见 §7.3） | `evaluate_retrieval.measure_h3` |
 | H4 HGNN 改回普通 GRU | F1 下降 >3pp | ✅ 已测（**改口径**：信号来源分解，见 §7.4） | `evaluate_hgnn.measure_h4` |
 | A5 去掉跨 chunk 超边 | 扩展隐喻消歧准确率下降 | ✅ 成立（见 §7.3） | `evaluate_retrieval.measure_p3_flag` |
-| A6 换通用常识知识 | 性能下降 | ✅ 成立（LLM 生成常识关联替代 ConceptNet 口径：Recall@10 0.095 vs 隐喻通路 0.783，n=652；`evaluate_a6.py`） | `evaluate_a6.py` |
+| A6 换通用常识知识 | 性能下降 | ✅ 成立（LLM 生成常识关联替代 ConceptNet 口径：Recall@10 0.095 vs 隐喻通路 1.000，n=652；`evaluate_a6.py`。原报 0.783 系隐喻臂硬编码 top_k=5 而常识臂无上限所致） | `evaluate_a6.py` |
 | 附加 A7 训练排序器 | H5 训练有增益 | ❌ 不成立（见 §7.3；更大基准复验见 §7.3 末） | `evaluate_retrieval` |
 | 附加 A9 角色特征 | H7 角色不可被替代 | ❌ 不成立（见 §7.3；更大基准精确复现） | `evaluate_retrieval` |
 | A8 关自适应阈值 | — | ✅ 无差异（见 §7.3，已在更大集复验） | `evaluate_retrieval.measure_a8` |
@@ -1099,7 +1099,7 @@ judge 模型高度敏感**：生成质量主张必须真人评估仲裁，组件
 | ~~P1~~ ✅ | ~~双语对齐（MetaNet → 中文生产本体）~~ | **已完成**（`ontology_bilingual.py` → `ontology_bilingual.json`） | 全量 100% 对齐（AI 翻译补全 835 域词；三级标注保留） |
 | ~~P2~~ ✅ | ~~H4（改口径）~~ | **已完成**（`evaluate_hgnn.measure_h4`） | 信号来源分解：L1 n 元共现 0.950 = 完整跨层 0.950 > 原始嵌入 0.150（§7.4） |
 | ~~P2~~ ✅ | ~~Neo4j 运行期驱动~~ | **已完成并真库验证**（Docker neo4j:5.26-community；250 语句写入/幂等重导/四层遍历全通过） | 真库抓出并修复「schema 与数据混事务」bug（mock 测不到） |；**D1 完成**：容器改用持久化 volume（neo4j_metaphor_data）重建并复测 ✅
-| ~~P2~~ ✅ | ~~A6（换常识知识源）~~ | **已完成**（`evaluate_a6.py`：LLM 生成常识关联替代 ConceptNet——502 阻塞的替代口径） | 常识通路 0.095 vs 隐喻通路 0.783（n=652）；ConceptNet 恢复后可复测 |
+| ~~P2~~ ✅ | ~~A6（换常识知识源）~~ | **已完成**（`evaluate_a6.py`：LLM 生成常识关联替代 ConceptNet——502 阻塞的替代口径） | 常识通路 0.095 vs 隐喻通路 1.000（n=652）；ConceptNet 恢复后可复测 |
 | ~~P3~~ ✅ | ~~训练排序器收口（离线部分）~~ | **已完成**（`training.build_weak_refine_set` + `evaluate_fullcorpus --weak-refine`） | clue AUC 1.0→0.931、leakage 136→23；检索增益待非构造金标（§7.3 A7-weak） |
 | P1 | **B1 双段管线生产接入** | ✅ 完成（`MetaphorSHGBuilder(llm_verify_extended=, verify_cache_path=)`，MIPVU 口径语义校验） | 语料精度 16.7%→66.7%→**跨模型累计 71.4%**（10/14） |
 | ~~P3~~ ✅ | ~~排序器增益证明~~ | **已完成**（`evaluate_llmgold.py`，LLM 非构造金标 n=604） | **H5 条件化翻案**：改写查询下训练 +4.8pp MRR（0.545 vs 人工 0.497）；语义超图通路 Recall 1.000 vs 级联 0.043（§7.5） |

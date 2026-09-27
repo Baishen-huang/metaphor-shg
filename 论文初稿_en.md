@@ -271,6 +271,12 @@ The value of the hierarchy (L2/L3) should be stated as **retrieval organization 
 > per-query pool is min=5 / median=8 / max=10 (**100% ≤10**), so Recall@10 is identically 1.0
 > for any ranker returning all candidates; it must not be read as "recalls 100% of relevant evidence".
 
+> **⚠️ A6's gold is also anchored (measured)**: an independent check (edge-level, n=655) shows
+> **96.5% of queries have an LLM gold set containing the producing edge, and 69.3% contain only it**
+> — the same phenomenon as §6.1's 632/632 / 619/632. A6's **absolute figures** therefore cannot be
+> extrapolated to "how much relevant evidence can be recalled"; its conclusion holds because it is a
+> **relative** comparison (both arms share the same gold and query set, so anchoring cancels).
+
 **A6 holds**: after replacement with general commonsense knowledge, recall drops **10.5-fold**—cross-domain mappings such as "no progress → quagmire" are not commonsense associations, and the dedicated metaphor cascade is irreplaceable. Failure examples corroborate this: the commonsense pathway, for "人生如戏" (life is a play), only hits chunks literally related to "人生" (life), while the metaphor pathway follows the EVENT_IS_PERFORMANCE cascade to hit "舞台/演员" (stage/actor) chunks.
 
 **Note on the `Raw embeddings` row (corrected)**: the paired accuracy of 0.150 is below chance
@@ -397,7 +403,7 @@ path even more severely on real representations.
 | A5 Remove cross-chunk extended edges | Disambiguation drops | P3 F1 1.000→0.000 | L1.5 is a necessary condition for disambiguation |
 | A6 Replace with general commonsense knowledge | Performance drops | Commonsense pathway 0.095 vs metaphor pathway **1.000** (post budget-fix, n=652) | ✅ Domain-specific metaphor knowledge is irreplaceable |
 | A7 Training vs. manual | Training superior | Conditionalized (§6.2) | **H5 holds conditionally** |
-| A8 Turn off adaptive thresholds | — | No difference on either sparse or dense graphs | Neutral |
+| A8 Turn off adaptive thresholds | Should help on dense graphs | **No difference, and structurally so** | Neutral (not merely "undetectable"): all 110 pseudo-documents have Δ∈[1.000, 1.659], **every one in the `low` regime** (boundaries 2.35/5.0; 0/110 in `high`); and `min_keep=50` exceeds the candidate-pool ceiling, so τ never decays. Both activation paths are inert — `adaptive` and `False` are identical in the returned set |
 | A9 Remove role features | MRR drops | Completely unchanged | **H7 falsified** |
 
 > **Provenance warning for A7/A9 (measured)**: on `evaluate_fullcorpus` the three arms of
