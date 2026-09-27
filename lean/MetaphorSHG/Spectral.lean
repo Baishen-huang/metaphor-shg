@@ -120,9 +120,38 @@ The project records this (`ε=0` and `ε=0.2` both give `0.5`); it is a useful
 sanity condition because it shows the `ε` damping only touches live mass. -/
 theorem row_sum_M_isolated (eps : ℝ) (v : G.V) (hv : ¬ G.Live v) :
     ∑ w : G.V, G.M eps v w = 1 / 2 := by
-  -- SORRY: `row_sum_S_isolated` kills the `S` term; only the identity
-  -- contributes; `Finset.sum_ite_eq'` then `ring`.
-  sorry
+  -- M = ½(I + (1-eps)S)；孤立节点上 S 整行为 0（已证 row_sum_S_isolated），
+  -- 故 Σ_w M v w = ½ Σ_w (if v=w then 1 else 0) = ½·1 = ½
+  have hS0 : (∑ w : G.V, G.S v w) = 0 := row_sum_S_isolated G v hv
+  -- 逐项展开 M，拆成单位阵部分与 S 部分
+  have hsplit : ∀ w : G.V, G.M eps v w
+      = (1/2) * (if v = w then 1 else 0) + (1/2) * ((1 - eps) * G.S v w) := by
+    intro w
+    unfold Hypergraph.M
+    ring
+  simp only [hsplit]
+  rw [Finset.sum_add_distrib]
+  -- 第二项：(1/2)(1-eps) Σ_w S v w = 0
+  have h2 : (∑ w : G.V, (1/2) * ((1 - eps) * G.S v w)) = 0 := by
+    rw [← Finset.mul_sum]
+    have : (∑ w : G.V, (1 - eps) * G.S v w) = (1 - eps) * (∑ w : G.V, G.S v w) := by
+      rw [Finset.mul_sum]
+    rw [this, hS0, mul_zero, mul_zero]
+  rw [h2, add_zero]
+  -- 第一项：(1/2) Σ_w (if v=w then 1 else 0) = (1/2)*1
+  have h1 : (∑ w : G.V, (1/2) * (if v = w then (1:ℝ) else 0)) = 1/2 := by
+    rw [← Finset.mul_sum]
+    -- 用 sum_eq_single 挑出 w = v 这一项（避开 sum_ite_eq' 的条件方向问题）
+    have hsingle : (∑ w : G.V, (if v = w then (1:ℝ) else 0)) = 1 := by
+      rw [Finset.sum_eq_single v]
+      · simp
+      · intro b _ hb
+        -- 目标 ¬(v = b)，而假设是 b ≠ v，取对称
+        simp [Ne.symm hb]
+      · intro hv_notin
+        exact absurd (Finset.mem_univ v) hv_notin
+    rw [hsingle, mul_one]
+  exact h1
 
 /-! ## T2 — the similarity transform, then eigenvalue bounds
 
@@ -371,23 +400,32 @@ both inputs in Python and are taken as hypotheses here. -/
 theorem reliabilityFactor_mem (floor r : ℝ) (h0 : 0 ≤ floor) (h1 : floor ≤ 1)
     (hr0 : 0 ≤ r) (hr1 : r ≤ 1) :
     floor ≤ reliabilityFactor floor r ∧ reliabilityFactor floor r ≤ 1 := by
-  -- SORRY: unfold; `mul_nonneg` for the lower bound, `mul_le_of_le_one_left`
-  --   for the upper, then `linarith`. Entirely elementary — a good warm-up
-  --   and the first `sorry` a human should close.
-  sorry
+  unfold reliabilityFactor
+  have h1f : (0:ℝ) ≤ 1 - floor := by linarith
+  constructor
+  · -- floor ≤ floor + (1-floor)*r  ⟸  0 ≤ (1-floor)*r
+    have : 0 ≤ (1 - floor) * r := mul_nonneg h1f hr0
+    linarith
+  · -- floor + (1-floor)*r ≤ 1  ⟸  (1-floor)*r ≤ 1-floor  ⟸  r ≤ 1
+    have : (1 - floor) * r ≤ (1 - floor) * 1 :=
+      mul_le_mul_of_nonneg_left hr1 h1f
+    linarith
 
 /-- **T5b.** The factor is monotone in `r`. -/
 theorem reliabilityFactor_mono (floor : ℝ) (hf : floor ≤ 1) :
     Monotone (reliabilityFactor floor) := by
-  -- SORRY: `floor + (1-floor)*r` is affine in `r` with slope `1-floor ≥ 0`;
-  --   `monotone_const.add (Monotone.const_mul_of_nonneg _ (by linarith))`.
-  sorry
+  intro a b hab
+  unfold reliabilityFactor
+  have h1f : (0:ℝ) ≤ 1 - floor := by linarith
+  have : (1 - floor) * a ≤ (1 - floor) * b :=
+    mul_le_mul_of_nonneg_left hab h1f
+  linarith
 
 /-- **T5c.** `floor = 1` switches the channel off: the factor is identically
 `1`, which the project calls "关闭该通道（历史口径的精确复原开关）". -/
 theorem reliabilityFactor_floor_one (r : ℝ) : reliabilityFactor 1 r = 1 := by
-  -- SORRY: `ring`.
-  sorry
+  unfold reliabilityFactor
+  ring
 
 /-! ## T6 — a false claim in the source: `_conv` vs `propagation_matrix`
 
