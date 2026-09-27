@@ -2930,11 +2930,26 @@ class TestLeakSelfCheckIsWired(unittest.TestCase):
     """
 
     def test_repaired_calls_trivial_separators(self):
+        """泄漏自检必须被调用（代码可能位于 main 或其拆出的 _main_body）。"""
+        import inspect
+        from metaphor_graph import evaluate_repaired as er
+        src = inspect.getsource(er.main) + inspect.getsource(er._main_body)
+        self.assertIn("trivial_separators", src,
+                      "evaluate_repaired 必须在训练后调用泄漏自检")
+
+    def test_repaired_guards_global_type_constraints(self):
+        """evaluate_repaired 必须在建图前后快照/恢复全局 TYPE_CONSTRAINTS。
+
+        回归护栏：`build_llm_ontology` 就地扩充模块级 `TYPE_CONSTRAINTS`
+        （实测 +1070 条），使结果依赖调用顺序（同脚本 MRR@10 差 2.5pp）。
+        """
         import inspect
         from metaphor_graph import evaluate_repaired as er
         src = inspect.getsource(er.main)
-        self.assertIn("trivial_separators", src,
-                      "evaluate_repaired 必须在训练后调用泄漏自检")
+        self.assertIn("type_constraints_snapshot", src,
+                      "必须在建图前取全局状态快照")
+        self.assertIn("reset_type_registrations", src,
+                      "必须在跑完后恢复全局状态")
 
     def test_separators_detect_constructed_leak(self):
         """自检本身必须真的能检出泄漏（否则接线了也没用）。"""

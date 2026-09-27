@@ -356,6 +356,28 @@ def main():
     ap.add_argument("--seed", type=int, default=20260925)
     args = ap.parse_args()
 
+    # ⚠️ 全局状态守卫（实测，见 docs/math/bayes.md §6）：
+    # `build_llm_ontology()` 会就地扩充 `ontology.TYPE_CONSTRAINTS`（模块级 dict），
+    # 使同一份代码的结果依赖调用顺序（实测同脚本 MRR@10 差 2.5pp）。
+    # 本脚本在建图前记录快照，跑完后恢复，保证**可重复**。
+    from metaphor_graph.llm_ontology import (type_constraints_snapshot,
+                                             reset_type_registrations)
+    from metaphor_graph.llm_ontology import (type_registration_count,
+                                             is_type_constraints_dirty)
+    _tc_snapshot = type_constraints_snapshot()
+    _dirty_before = is_type_constraints_dirty()
+    try:
+        _main_body(args)
+    finally:
+        if is_type_constraints_dirty() or not _dirty_before:
+            n = type_registration_count()
+            if n:
+                print(f"\n[全局状态守卫] 本次运行向 TYPE_CONSTRAINTS 注册了 {n} 条"
+                      f"映射类型（模块级副作用），已恢复快照")
+        reset_type_registrations(_tc_snapshot)
+
+
+def _main_body(args):
     ont, n_frames = build_replay_ontology()
     backend = build_replay_backend(ont)
     samples = load_ccl2018()

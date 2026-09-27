@@ -63,6 +63,55 @@ _CANON_USER = (
 )
 
 
+# ---------------------------------------------------------------------------
+# 全局类型注册的可见性设施（应对 TYPE_CONSTRAINTS 的模块级副作用）
+# ---------------------------------------------------------------------------
+# `TYPE_CONSTRAINTS` 定义在 `ontology.py`，是模块级 dict。`build_llm_ontology()`
+# 会就地扩充它（实测 +1081 条），导致**同一份代码的结果依赖调用顺序**。
+# 以下设施让这一副作用可见、可重置，从而可被测试与评测脚本显式管理。
+_TYPE_REGISTRATION_COUNT: int = 0
+_TYPE_CONSTRAINTS_DIRTY: list = [False]
+
+
+def type_registration_count() -> int:
+    """本次进程内因自举而新增的映射类型条数（用于诊断与断言）。"""
+    return _TYPE_REGISTRATION_COUNT
+
+
+def is_type_constraints_dirty() -> bool:
+    """全局 TYPE_CONSTRAINTS 是否已被本模块修改过。"""
+    return bool(_TYPE_CONSTRAINTS_DIRTY[0])
+
+
+def reset_type_registrations(restore: dict = None) -> None:
+    """把全局 TYPE_CONSTRAINTS 恢复到指定快照（默认为导入时的快照）。
+
+    供测试与评测脚本在**需要顺序无关**的场景下显式调用。
+    """
+    from .ontology import TYPE_CONSTRAINTS
+    global _TYPE_REGISTRATION_COUNT
+    snap = restore if restore is not None else _TYPE_CONSTRAINTS_SNAPSHOT
+    TYPE_CONSTRAINTS.clear()
+    for k, v in snap.items():
+        TYPE_CONSTRAINTS[k] = list(v)
+    _TYPE_REGISTRATION_COUNT = 0
+    _TYPE_CONSTRAINTS_DIRTY[0] = False
+
+
+def type_constraints_snapshot() -> dict:
+    """当前 TYPE_CONSTRAINTS 的浅拷贝快照（供 reset 用）。"""
+    from .ontology import TYPE_CONSTRAINTS
+    return {k: list(v) for k, v in TYPE_CONSTRAINTS.items()}
+
+
+def _import_time_snapshot() -> dict:
+    from .ontology import TYPE_CONSTRAINTS
+    return {k: list(v) for k, v in TYPE_CONSTRAINTS.items()}
+
+
+_TYPE_CONSTRAINTS_SNAPSHOT: dict = _import_time_snapshot()
+
+
 def _stable_id(prefix: str, *parts: str) -> str:
     """稳定 id：同样的输入永远得到同样的 id（本体是长期资产，id 必须可复现）。"""
     h = hashlib.md5("||".join(parts).encode("utf-8")).hexdigest()[:8]
@@ -350,9 +399,22 @@ def build_llm_ontology(path: str = DEFAULT_OUT,
         # 会被 type_valid 全判非法 —— 整个自举本体都失效。
         # 这也点出了开放发现与封闭类型系统的本质张力：
         # 每接受一个新映射，就必须扩充一次类型系统（见 README §7.1 A1）。
+        #
+        # ⚠️ **已知副作用（实测，见 docs/math/bayes.md §6）**：
+        # `TYPE_CONSTRAINTS` 是 `ontology.py` 的**模块级 dict**，本函数就地
+        # 修改它 —— 实测条目数 23 → 1104（+1081）。后果是**结果依赖调用顺序**：
+        # 先建自举本体再评分，与直接评分，`type` 特征会得到 1.0 vs 0.0，
+        # 同一脚本的 MRR@10 因此差 2.5pp（0.5487 vs 0.5241，实测）。
+        #
+        # 这是**注册行为**（新映射类型必须可用），不能简单删掉；但必须
+        # **可见且可控**：此处加计数与一次性告警，并暴露 reset 接口，
+        # 使调用方能显式决定是否接受该全局变更。
+        global _TYPE_REGISTRATION_COUNT
+        _TYPE_CONSTRAINTS_DIRTY[0] = True
         TYPE_CONSTRAINTS.setdefault(spec.source_type, [])
         if spec.mapping_type not in TYPE_CONSTRAINTS[spec.source_type]:
             TYPE_CONSTRAINTS[spec.source_type].append(spec.mapping_type)
+            _TYPE_REGISTRATION_COUNT += 1
         ont.frames.setdefault(spec.id, spec)
     for cd in payload.get("cascades", []):
         spec = CascadeSpec(**cd)
