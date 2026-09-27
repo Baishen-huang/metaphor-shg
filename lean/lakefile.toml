@@ -1,0 +1,14 @@
+# Lean 4 project for the MetaphorSHG spectral formalization.
+# See README.md for the verification plan.
+
+name = "metaphor_shg"
+defaultTargets = ["MetaphorSHG"]
+
+# Mathlib is the only dependency. Pinned to the tag matching `lean-toolchain`.
+[[require]]
+name = "mathlib"
+scope = "leanprover-community"
+rev = "v4.15.0"
+
+[[lean_lib]]
+name = "MetaphorSHG"
