@@ -116,6 +116,24 @@ before; a re-audit found **three instances of the same defect class**:
 ② report pool size and check for trivial saturation; ③ keep gold standards consistent.
 Automated check: `python -m metaphor_graph.audit_fairness`.
 
+**Seed-sensitivity rule (new)**: any experiment involving **training or random
+initialization** must report multi-seed results (≥5 seeds) with the between-seed
+standard deviation; **if the effect size is smaller than that standard deviation,
+the effect must not be claimed**.
+
+This rule came from a measured lesson: while exploring "topological quantities as loss
+functions", a 64-configuration sweep (7 λ values × multiple arms) produced a positive
+effect of +0.0097 MRR (de-anchored) for `pers_w1`, and we initially reported it as
+"effective but small". After re-testing with 8 independent seeds the **sign flipped to
+−0.0108 (95% CI covering 0)**, and a per-query paired test showed it significantly
+degrades most queries (+7/−132, p<1e-4). The mechanism is that the topological gradient
+term **amplifies training randomness** (between-seed σ rises from 0.0021 to 0.0094,
+≈4.5×), and the single seed happened to land in the upper tail.
+
+**Contrast under the same rule**: the §6.2 training gain re-tested across 3 seeds gives
+Δ = +0.0084 / +0.0085 / +0.0084 (fluctuation ≤0.0001) — **robust**.
+See `docs/math/seed_sensitivity_audit.md`.
+
 ### 4.2 Benchmark Self-Audit and Repair (new)
 
 In response to the two defects above (overly small candidate pool, construction anchoring), we
