@@ -14,7 +14,8 @@
 | **贝叶斯** | [bayes.md](bayes.md) | 3 个模型：2 个负面、1 个正面；**附带发现全局状态污染** | ⚠️ 部分（正面在"扣偏差"而非"排序变好"） |
 | **拓扑** | [topology.md](topology.md) | 图拓扑非平凡（β₁=837）但拓扑对链质量**零判别力**（AUC 0.5000） | ❌ 否（干净的负面结果） |
 | **拓扑损失** | [topological_loss.md](topological_loss.md) | **多种子检验推翻单种子结论**：8 种子下 ΔMRR = **−0.0108**（CI 跨 0），配对检验显著为负 | ❌ **否**（+0.0097 是 seed=42 偶然） |
-| **Lean 形式化** | [lean_formalization.md](lean_formalization.md) | **整个项目 `lake build` 成功**：Core 9 定理全验证；Basic 纯定义 0 sorry；Spectral 27 定理/定义含 19 sorry | ✅ 是（真实验证 + 明确标注未证部分） |
+| **种子敏感性** | [seed_sensitivity_audit.md](seed_sensitivity_audit.md) | §6.2 **稳健**（Δ=+0.0084±0.0001）；拓扑损失**单 seed 假象**；§6.3 **零方差**（缺口全关闭） | ✅ 是（方法学审计） |
+| **Lean 形式化** | [lean_formalization.md](lean_formalization.md) | **整个项目 `lake build` 成功**：Core 9 定理全验证；Basic 纯定义 0 sorry；Spectral 27 定理/定义含 **13** sorry（已闭合 6 条） | ✅ 是（真实验证 + 明确标注未证部分） |
 
 ---
 
@@ -185,13 +186,14 @@ docs/math/
   spectral.md                  谱理论（27 图验证 + 闭式预测）
   bayes.md                     贝叶斯（3 模型 + 全局状态污染发现）
   topology.md                  同调/持续同调/Euler 特征
-  topological_loss.md          拓扑损失（结构性否定）
+  topological_loss.md          拓扑损失（多种子检验否定）
+  seed_sensitivity_audit.md    种子敏感性审计（§6.2 稳健 / 拓扑损失假象 / §6.3 零方差）
   lean_formalization.md        Lean 形式化状态
   ENV_lean_unavailable.md      （已标注过时）环境排查过程记录
 
 lean/
-  MetaphorSHG/Core.lean        ✅ 已验证（9 定理）
-  MetaphorSHG/Basic.lean       ⚠️ 草稿（1 sorry，需 Mathlib）
+  MetaphorSHG/Core.lean        ✅ 已验证（9 定理，0 sorry）
+  MetaphorSHG/Basic.lean       ✅ 编译通过（纯定义，0 sorry）
   MetaphorSHG/Spectral.lean    ⚠️ 草稿（21 sorry，需 Mathlib）
   PROOFS.md                    完整中文非形式化证明
 
