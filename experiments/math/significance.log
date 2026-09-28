@@ -1,0 +1,28 @@
+=== 多种子显著性检验（每臂 8 个种子）===
+[ctx] anchored: all=634 dev=319 test=315
+[ctx] deanchor: all=385 dev=203 test=182
+[ctx] para_anchored: all=777 dev=393 test=384
+[ctx] para_deanchor: all=508 dev=253 test=255
+[ctx] 候选覆盖 856/861
+  baseline                 deanchor MRR = 0.3296 ± 0.0021  (n=8)
+  pers_w1                  deanchor MRR = 0.3188 ± 0.0094  (n=8)
+  pers_tp                  deanchor MRR = 0.3282 ± 0.0110  (n=8)
+  ctrl_randgraph           deanchor MRR = 0.3251 ± 0.0088  (n=8)
+  ctrl_randgrad:pers_w1    deanchor MRR = 0.3296 ± 0.0021  (n=8)
+
+=== 裁决 1：相对 baseline 的 ΔMRR（多种子）===
+arm                          ΔMRR 均值       标准差                95% CI    跨 0?
+pers_w1                      -0.0108    0.0104    [-0.0267, +0.0019]       是
+pers_tp                      -0.0014    0.0109    [-0.0159, +0.0083]       是
+ctrl_randgraph               -0.0045    0.0091    [-0.0159, +0.0078]       是
+ctrl_randgrad:pers_w1        +0.0000    0.0000    [+0.0000, +0.0000]       是
+
+=== 裁决 2：per-query 配对检验（种子 = 第一个）===
+（配对检验功效更高：两种排序器面对同一批查询）
+arm                       Δper-query        bootstrap 95% CI      符号检验 p
+pers_w1                      -0.0285      [-0.0471, -0.0135]      0.0000   (+7/-132)
+pers_tp                      -0.0129      [-0.0256, -0.0025]      0.0000   (+85/-23)
+ctrl_randgraph               -0.0153      [-0.0297, -0.0042]      0.1238   (+55/-40)
+ctrl_randgrad:pers_w1        +0.0000      [+0.0000, +0.0000]      1.0000   (+0/-0)
+
+[写出] E:\02_AI项目\元图隐喻分析\.wt\toploss\experiments\math\_out\significance.json
